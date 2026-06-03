@@ -884,8 +884,8 @@ footer{
   <!-- FILTERS -->
   <div class="filters-bar">
     <div class="filter-tabs" id="filterTabs">
-      <button class="filter-tab active" data-filter="all">All Products <span class="tab-count" id="count-all">6</span></button>
-      <button class="filter-tab" data-filter="goat">🐐 Goat <span class="tab-count" id="count-goat">3</span></button>
+      <button class="filter-tab active" data-filter="all">All Products <span class="tab-count" id="count-all">9</span></button>
+      <button class="filter-tab" data-filter="goat">🐐 Goat <span class="tab-count" id="count-goat">6</span></button>
       <button class="filter-tab" data-filter="chicken">🐓 Chicken <span class="tab-count" id="count-chicken">1</span></button>
       <button class="filter-tab" data-filter="fish">🐟 Fish <span class="tab-count" id="count-fish">1</span></button>
       <button class="filter-tab" data-filter="eggs">🥚 Eggs <span class="tab-count" id="count-eggs">1</span></button>
@@ -900,7 +900,7 @@ footer{
 
   <!-- RESULTS COUNT -->
   <div class="results-bar">
-    <p class="results-count">Showing <strong id="resultsNum">6</strong> products</p>
+    <p class="results-count">Showing <strong id="resultsNum">9</strong> products</p>
   </div>
 
   <!-- PRODUCT GRID -->
@@ -1034,6 +1034,69 @@ footer{
             <span class="product-price-unit">per goat</span>
           </div>
           <button class="btn-add" onclick="event.preventDefault();addToCart('Full Goat',8500)">+</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- 7. Goat Legs -->
+    <a href="product-detail.html?id=goat-legs" class="product-card fade-up" data-category="goat" data-price="400" data-name="Goat Legs" data-order="7">
+      <div class="product-img-wrap">
+        <img src="product/legs.png" alt="Goat Legs" class="main-img">
+        <div class="product-badge">🦵 Village Fresh</div>
+        <div class="product-fresh">FRESH<br>TODAY</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Meka Kalu</div>
+        <div class="product-name">Goat Legs</div>
+        <div class="product-desc">Collagen-rich village goat legs — perfect for paya curry, slow masala, and bone broth. Deeply nourishing.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹400</span>
+            <span class="product-price-unit">for 4 pieces</span>
+          </div>
+          <button class="btn-add" onclick="event.preventDefault();addToCart('Goat Legs',400)">+</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- 8. Goat Liver -->
+    <a href="product-detail.html?id=goat-liver" class="product-card fade-up" data-category="goat" data-price="1000" data-name="Goat Liver" data-order="8">
+      <div class="product-img-wrap">
+        <img src="product/liver.png" alt="Goat Liver" class="main-img">
+        <div class="product-badge">💎 Premium Offal</div>
+        <div class="product-fresh">FRESH<br>TODAY</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Meka Kalleja</div>
+        <div class="product-name">Goat Liver</div>
+        <div class="product-desc">Farm-fresh goat liver — extraordinarily rich in iron, B12, and Vitamin A. Village goat, processed same day.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹1,000</span>
+            <span class="product-price-unit">per kilogram</span>
+          </div>
+          <button class="btn-add" onclick="event.preventDefault();addToCart('Goat Liver',1000)">+</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- 9. Goat Head -->
+    <a href="product-detail.html?id=goat-head" class="product-card fade-up" data-category="goat" data-price="520" data-name="Goat Head" data-order="9">
+      <div class="product-img-wrap">
+        <img src="product/head.png" alt="Goat Head" class="main-img">
+        <div class="product-badge">🐐 Whole</div>
+        <div class="product-fresh">ORDER<br>AHEAD</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Meka Tala</div>
+        <div class="product-name">Goat Head</div>
+        <div class="product-desc">Whole village goat head — prized for the brain, cheek meat, and tongue. Basis of the classic tala masala.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹520</span>
+            <span class="product-price-unit">per head</span>
+          </div>
+          <button class="btn-add" onclick="event.preventDefault();addToCart('Goat Head',520)">+</button>
         </div>
       </div>
     </a>

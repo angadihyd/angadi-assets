@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;--red:#E57373;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;display:flex;align-items:center;justify-content:space-between;padding:0 4rem;height:70px;background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:height 0.4s;}
+nav.scrolled{height:60px;}
+.nav-logo{display:flex;align-items:center;text-decoration:none;}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{text-decoration:none;font-size:0.88rem;font-weight:500;color:rgba(246,237,216,0.7);letter-spacing:0.08em;text-transform:uppercase;transition:color 0.3s;}
+.nav-links a:hover,.nav-links a.active{color:var(--clay-l);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.nav-cart{position:relative;background:none;border:1px solid var(--border);color:var(--cream);width:42px;height:42px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all 0.3s;text-decoration:none;}
+.nav-cart:hover{border-color:var(--clay);}
+.cart-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--clay);font-size:0.65rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.btn-nav{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.6rem 1.5rem;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-nav:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{display:none;position:fixed;inset:0;z-index:998;background:rgba(8,5,3,0.97);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.08em;color:var(--cream);text-decoration:none;}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--cream);font-size:1.8rem;cursor:pointer;}
+
+/* ── PAGE ── */
+.page{padding-top:70px;min-height:100vh;}
+
+/* ── BREADCRUMB ── */
+.breadcrumb-bar{background:var(--ink-2);border-bottom:1px solid var(--border);padding:0.9rem 4rem;display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(246,237,216,0.4);}
+.breadcrumb-bar a{color:rgba(246,237,216,0.4);text-decoration:none;transition:color 0.3s;}
+.breadcrumb-bar a:hover{color:var(--clay-l);}
+.breadcrumb-bar span{color:var(--clay-l);}
+
+/* ── PROFILE HERO ── */
+.profile-hero{background:var(--ink-2);padding:3rem 4rem;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.profile-hero::before{content:'';position:absolute;top:-120px;right:-120px;width:400px;height:400px;background:radial-gradient(circle,rgba(196,98,45,0.07) 0%,transparent 70%);pointer-events:none;}
+.profile-hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.profile-avatar-wrap{position:relative;flex-shrink:0;}
+.profile-avatar{
+  width:88px;height:88px;border-radius:50%;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--cream);
+  border:3px solid rgba(196,98,45,0.3);
+  box-shadow:0 8px 28px rgba(196,98,45,0.25);
+}
+.avatar-verified{position:absolute;bottom:2px;right:2px;width:22px;height:22px;background:var(--green);border-radius:50%;border:2px solid var(--ink-2);display:flex;align-items:center;justify-content:center;font-size:0.65rem;}
+.profile-info{flex:1;}
+.profile-eyebrow{font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--clay);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;}
+.profile-eyebrow::before{content:'';display:block;width:14px;height:1px;background:var(--clay);}
+.profile-name{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem;}
+.profile-contact{display:flex;gap:1.5rem;flex-wrap:wrap;}
+.profile-contact-item{display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:rgba(246,237,216,0.5);}
+.profile-contact-item span{font-size:0.9rem;}
+.profile-stats{display:flex;gap:2rem;margin-left:auto;flex-wrap:wrap;}
+.profile-stat{text-align:center;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1.4rem;}
+.profile-stat-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;color:var(--gold);}
+.profile-stat-label{font-size:0.65rem;font-weight:500;color:rgba(246,237,216,0.35);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+
+/* ── BODY ── */
+.profile-body{max-width:1100px;margin:0 auto;padding:2.5rem 4rem 5rem;display:grid;grid-template-columns:240px 1fr;gap:2rem;align-items:start;}
+
+/* ── SIDEBAR NAV ── */
+.sidebar-nav{position:sticky;top:90px;}
+.sidebar-menu{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.sidebar-item{display:flex;align-items:center;gap:0.8rem;padding:0.9rem 1.2rem;font-size:0.85rem;font-weight:500;color:rgba(246,237,216,0.5);cursor:pointer;transition:all 0.25s;border-bottom:1px solid rgba(196,98,45,0.06);text-decoration:none;}
+.sidebar-item:last-child{border-bottom:none;}
+.sidebar-item:hover{background:rgba(255,255,255,0.02);color:var(--cream);}
+.sidebar-item.active{background:rgba(196,98,45,0.1);color:var(--cream);border-left:3px solid var(--clay);}
+.sidebar-item .icon{font-size:1rem;flex-shrink:0;}
+.sidebar-item.danger{color:rgba(229,115,115,0.6);}
+.sidebar-item.danger:hover{color:var(--red);background:rgba(229,115,115,0.06);}
+.sidebar-divider{height:1px;background:var(--border);margin:0.4rem 0;}
+
+/* ── SECTIONS ── */
+.profile-section{display:none;}
+.profile-section.active{display:block;}
+.section-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem;}
+.section-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem;}
+.section-card-sub{font-size:0.8rem;color:rgba(246,237,216,0.4);margin-bottom:1.8rem;line-height:1.5;}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-row.full{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;}
+.form-label{font-family:'Space Mono',monospace;font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.4);}
+.form-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;font-size:0.88rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;width:100%;}
+.form-input::placeholder{color:rgba(246,237,216,0.18);}
+.form-input:focus{border-color:var(--clay);background:rgba(196,98,45,0.04);}
+.form-input:disabled{opacity:0.45;cursor:not-allowed;}
+.form-input.success{border-color:var(--green);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E8956A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;cursor:pointer;}
+.form-select option{background:var(--ink-2);color:var(--cream);}
+.pw-wrap{position:relative;}
+.pw-wrap .form-input{padding-right:3rem;}
+.pw-toggle{position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(246,237,216,0.3);cursor:pointer;font-size:1rem;padding:0.2rem;}
+.pw-toggle:hover{color:var(--clay-l);}
+.form-hint{font-size:0.7rem;color:rgba(246,237,216,0.28);margin-top:0.2rem;}
+
+/* ── BUTTONS ── */
+.btn-primary{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.85rem 2rem;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:0.5rem;}
+.btn-primary:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-2px);box-shadow:0 10px 28px rgba(196,98,45,0.4);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-ghost{background:transparent;color:rgba(246,237,216,0.55);border:1px solid var(--border);padding:0.75rem 1.5rem;border-radius:10px;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-ghost:hover{border-color:var(--clay-l);color:var(--cream);}
+.btn-danger{background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.2);color:var(--red);padding:0.75rem 1.5rem;border-radius:10px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-danger:hover{background:rgba(229,115,115,0.15);border-color:var(--red);}
+.form-actions{display:flex;gap:0.8rem;margin-top:1.5rem;align-items:center;flex-wrap:wrap;}
+.spinner{width:16px;height:16px;border:2px solid rgba(246,237,216,0.3);border-top-color:var(--cream);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── STATUS ── */
+.save-status{font-size:0.82rem;font-weight:500;display:none;align-items:center;gap:0.4rem;}
+.save-status.visible{display:flex;}
+.save-status.success{color:var(--green);}
+.save-status.error{color:var(--red);}
+
+/* ── ADDRESS CARDS ── */
+.address-grid{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;}
+.address-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:1.2rem;transition:all 0.3s;position:relative;}
+.address-card:hover{border-color:rgba(196,98,45,0.35);}
+.address-card.default{border-color:rgba(196,98,45,0.4);background:rgba(196,98,45,0.05);}
+.address-default-badge{position:absolute;top:1rem;right:1rem;background:rgba(196,98,45,0.15);border:1px solid var(--border);border-radius:100px;padding:0.2rem 0.65rem;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;}
+.address-type{font-size:0.7rem;font-weight:600;color:var(--clay-l);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;}
+.address-text{font-size:0.88rem;color:var(--cream);line-height:1.6;margin-bottom:0.8rem;}
+.address-actions{display:flex;gap:0.5rem;}
+.btn-address-action{background:none;border:1px solid var(--border);border-radius:7px;padding:0.35rem 0.8rem;font-size:0.75rem;color:rgba(246,237,216,0.45);cursor:pointer;transition:all 0.25s;}
+.btn-address-action:hover{border-color:rgba(196,98,45,0.35);color:var(--cream);}
+.btn-address-action.danger:hover{border-color:rgba(229,115,115,0.3);color:var(--red);}
+.btn-add-address{width:100%;background:rgba(255,255,255,0.02);border:1px dashed rgba(196,98,45,0.3);border-radius:12px;padding:1rem;font-size:0.85rem;color:rgba(246,237,216,0.35);cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+.btn-add-address:hover{border-color:var(--clay);color:var(--clay-l);background:rgba(196,98,45,0.04);}
+
+/* Add address form */
+.address-form-wrap{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-top:1rem;display:none;}
+.address-form-wrap.open{display:block;}
+
+/* ── NOTIFICATIONS ── */
+.notif-list{display:flex;flex-direction:column;gap:0.8rem;}
+.notif-item{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;transition:all 0.3s;}
+.notif-item:hover{border-color:rgba(196,98,45,0.3);}
+.notif-left{display:flex;align-items:center;gap:1rem;}
+.notif-icon{font-size:1.2rem;}
+.notif-info-title{font-size:0.88rem;font-weight:600;color:var(--cream);}
+.notif-info-sub{font-size:0.75rem;color:rgba(246,237,216,0.4);margin-top:0.1rem;}
+/* Toggle switch */
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:24px;cursor:pointer;transition:background 0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:rgba(246,237,216,0.5);border-radius:50%;transition:transform 0.3s,background 0.3s;}
+.toggle input:checked + .toggle-slider{background:var(--clay);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--cream);}
+
+/* ── DANGER ZONE ── */
+.danger-zone{background:rgba(229,115,115,0.04);border:1px solid rgba(229,115,115,0.15);border-radius:16px;padding:2rem;}
+.danger-zone-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--red);margin-bottom:0.3rem;}
+.danger-zone-sub{font-size:0.8rem;color:rgba(246,237,216,0.4);margin-bottom:1.5rem;line-height:1.5;}
+.danger-actions{display:flex;gap:0.8rem;flex-wrap:wrap;}
+
+/* ── FOOTER ── */
+footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4rem 1.5rem;}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.footer-bottom p{font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+
+/* ── WA FLOAT ── */
+.wa-float{position:fixed;bottom:2rem;right:2rem;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 20px rgba(37,211,102,0.4);text-decoration:none;animation:waBounce 3s ease infinite;}
+.wa-float:hover{transform:scale(1.1);}
+@keyframes waBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .profile-body{grid-template-columns:1fr;padding:2rem;}
+  .sidebar-nav{position:static;}
+  .sidebar-menu{display:flex;overflow-x:auto;border-radius:10px;}
+  .sidebar-item{white-space:nowrap;border-bottom:none;border-right:1px solid rgba(196,98,45,0.06);}
+  .sidebar-item.active{border-left:none;border-bottom:2px solid var(--clay);}
+  .sidebar-divider{display:none;}
+  .profile-hero{padding:2.5rem 2rem 2rem;}
+  .breadcrumb-bar{padding:0.9rem 2rem;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.btn-nav{display:none;}
+  .nav-hamburger{display:flex;}
+  .profile-hero{padding:2rem 1.5rem 1.8rem;}
+  .profile-hero-inner{flex-direction:column;align-items:flex-start;gap:1.2rem;}
+  .profile-stats{margin-left:0;}
+  .breadcrumb-bar{padding:0.8rem 1.5rem;}
+  .form-row{grid-template-columns:1fr;}
+  footer{padding:2rem 1.5rem 1rem;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="my-orders.html">My Orders</a></li>
+    <li><a href="my-profile.html" class="active">My Profile</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="cart.html" class="nav-cart">🛒<span class="cart-badge" id="cartBadge">0</span></a>
+    <a href="shop.html" class="btn-nav">🛒 Shop Now</a>
+    <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="shop.html" onclick="closeMobile()">Shop</a>
+  <a href="my-orders.html" onclick="closeMobile()">My Orders</a>
+  <a href="my-profile.html" onclick="closeMobile()">My Profile</a>
+</div>
+
+<div class="page">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <a href="index.html">Home</a><span style="opacity:.4">›</span>
+    <span>My Profile</span>
+  </div>
+
+  <!-- PROFILE HERO -->
+  <div class="profile-hero">
+    <div class="profile-hero-inner">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="avatarInitial">?</div>
+        <div class="avatar-verified">✓</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-eyebrow">My Account</div>
+        <div class="profile-name" id="profileName">Loading…</div>
+        <div class="profile-contact">
+          <div class="profile-contact-item"><span>📱</span><span id="profilePhone">—</span></div>
+          <div class="profile-contact-item"><span>✉️</span><span id="profileEmail">—</span></div>
+          <div class="profile-contact-item"><span>📍</span><span id="profileCity">Hyderabad</span></div>
+        </div>
+      </div>
+      <div class="profile-stats" id="profileStats">
+        <div class="profile-stat"><div class="profile-stat-num" id="statOrders">—</div><div class="profile-stat-label">Orders</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="statDelivered">—</div><div class="profile-stat-label">Delivered</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="statSpent" style="font-size:1.2rem;">—</div><div class="profile-stat-label">Total Spent</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE BODY -->
+  <div class="profile-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-nav">
+      <div class="sidebar-menu">
+        <a class="sidebar-item active" data-section="personal" onclick="showSection('personal');return false;" href="#">
+          <span class="icon">👤</span> Personal Info
+        </a>
+        <a class="sidebar-item" data-section="addresses" onclick="showSection('addresses');return false;" href="#">
+          <span class="icon">📍</span> Addresses
+        </a>
+        <a class="sidebar-item" data-section="password" onclick="showSection('password');return false;" href="#">
+          <span class="icon">🔒</span> Password
+        </a>
+        <a class="sidebar-item" data-section="notifications" onclick="showSection('notifications');return false;" href="#">
+          <span class="icon">🔔</span> Notifications
+        </a>
+        <div class="sidebar-divider"></div>
+        <a class="sidebar-item" href="my-orders.html">
+          <span class="icon">📦</span> My Orders
+        </a>
+        <a class="sidebar-item danger" onclick="logout();return false;" href="#">
+          <span class="icon">🚪</span> Logout
+        </a>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="mainContent">
+
+      <!-- ══════════════════════
+           PERSONAL INFO
+      ══════════════════════ -->
+      <div class="profile-section active" id="section-personal">
+        <div class="section-card">
+          <div class="section-card-title">Personal Information</div>
+          <p class="section-card-sub">Your name and contact details. Phone and email are used for order updates only.</p>
+
+          <form id="personalForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input class="form-input" id="pName" type="text" placeholder="Your full name" autocomplete="name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input class="form-input" id="pPhone" type="tel" placeholder="+91 XXXXXXXXXX" disabled>
+                <span class="form-hint">Phone is verified — cannot be changed here</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input class="form-input" id="pEmail" type="email" placeholder="you@email.com" autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date of Birth (optional)</label>
+                <input class="form-input" id="pDob" type="date">
+                <span class="form-hint">We'll send a birthday surprise 🎁</span>
+              </div>
+            </div>
+            <div class="form-row full">
+              <div class="form-group">
+                <label class="form-label">Preferred Cut Style (default for orders)</label>
+                <select class="form-input form-select" id="pCutPref">
+                  <option value="">No preference</option>
+                  <option value="Curry Cut">Curry Cut</option>
+                  <option value="Biryani Cut">Biryani Cut</option>
+                  <option value="Boneless">Boneless</option>
+                  <option value="Keema">Keema</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="savePersonalBtn">Save Changes</button>
+              <span class="save-status" id="personalStatus"></span>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══════════════════════
+           ADDRESSES
+      ══════════════════════ -->
+      <div class="profile-section" id="section-addresses">
+        <div class="section-card">
+          <div class="section-card-title">Saved Addresses</div>
+          <p class="section-card-sub">Your delivery addresses. The default address auto-fills at checkout.</p>
+
+          <div class="address-grid" id="addressGrid">
+            <!-- populated by JS -->
+          </div>
+
+          <button class="btn-add-address" id="addAddressBtn" onclick="toggleAddressForm()">
+            + Add New Address
+          </button>
+
+          <!-- Add Address Form -->
+          <div class="address-form-wrap" id="addressFormWrap">
+            <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:1.2rem;" id="addressFormTitle">New Address</div>
+            <form id="addressForm" novalidate>
+              <input type="hidden" id="editAddressIdx" value="-1">
+              <div class="form-row full">
+                <div class="form-group">
+                  <label class="form-label">Flat / House No. & Building *</label>
+                  <input class="form-input" id="aFlat" type="text" placeholder="e.g. Flat 4B, Lakshmi Residency">
+                </div>
+              </div>
+              <div class="form-row full">
+                <div class="form-group">
+                  <label class="form-label">Street / Area *</label>
+                  <input class="form-input" id="aArea" type="text" placeholder="e.g. Road No.12, Banjara Hills">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Landmark (optional)</label>
+                  <input class="form-input" id="aLandmark" type="text" placeholder="e.g. Near Apollo Hospital">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Pincode *</label>
+                  <input class="form-input" id="aPincode" type="text" placeholder="500034" maxlength="6" inputmode="numeric">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">City</label>
+                  <select class="form-input form-select" id="aCity">
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Secunderabad">Secunderabad</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Address Type</label>
+                  <select class="form-input form-select" id="aType">
+                    <option value="Home">🏠 Home</option>
+                    <option value="Work">🏢 Work</option>
+                    <option value="Other">📍 Other</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.2rem;">
+                <input type="checkbox" id="aDefault" style="width:16px;height:16px;accent-color:var(--clay);cursor:pointer;">
+                <label for="aDefault" style="font-size:0.83rem;color:rgba(246,237,216,0.6);cursor:pointer;">Set as default delivery address</label>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="saveAddressBtn">Save Address</button>
+                <button type="button" class="btn-ghost" onclick="cancelAddressForm()">Cancel</button>
+                <span class="save-status" id="addressStatus"></span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════
+           PASSWORD
+      ══════════════════════ -->
+      <div class="profile-section" id="section-password">
+        <div class="section-card">
+          <div class="section-card-title">Change Password</div>
+          <p class="section-card-sub">Update your account password. Leave blank if you signed up with Phone OTP only.</p>
+
+          <div class="auth-status info visible" id="pwPhoneNote" style="background:rgba(196,98,45,0.08);border:1px solid var(--border);color:var(--clay-l);border-radius:10px;padding:0.8rem 1rem;font-size:0.82rem;margin-bottom:1.5rem;display:none;">
+            📱 You signed in with Phone OTP. To set a password, enter a new one below — no current password needed.
+          </div>
+
+          <form id="passwordForm" novalidate>
+            <div class="form-row full" id="currentPwRow">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <div class="pw-wrap">
+                  <input class="form-input" id="pwCurrent" type="password" placeholder="Your current password">
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwCurrent',this)">👁</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">New Password *</label>
+                <div class="pw-wrap">
+                  <input class="form-input" id="pwNew" type="password" placeholder="Min. 8 characters">
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwNew',this)">👁</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm New Password *</label>
+                <div class="pw-wrap">
+                  <input class="form-input" id="pwConfirm" type="password" placeholder="Re-enter new password">
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwConfirm',this)">👁</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password strength -->
+            <div style="margin-bottom:1.2rem;" id="pwStrengthWrap" style="display:none;">
+              <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;">
+                <div style="flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;">
+                  <div id="pwStrengthBar" style="height:100%;border-radius:4px;transition:width 0.3s,background 0.3s;width:0;"></div>
+                </div>
+                <span id="pwStrengthLabel" style="font-size:0.7rem;color:rgba(246,237,216,0.3);white-space:nowrap;"></span>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="savePwBtn">Update Password</button>
+              <span class="save-status" id="pwStatus"></span>
+            </div>
+          </form>
+        </div>
+
+        <!-- Forgot password shortcut -->
+        <div class="section-card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div>
+              <div style="font-size:0.9rem;font-weight:600;color:var(--cream);margin-bottom:0.2rem;">Forgot your password?</div>
+              <div style="font-size:0.78rem;color:rgba(246,237,216,0.4);">We'll send a reset link to your email address.</div>
+            </div>
+            <button class="btn-ghost" onclick="sendForgotPassword()">Send Reset Email →</button>
+          </div>
+          <span class="save-status" id="forgotStatus" style="margin-top:0.8rem;"></span>
+        </div>
+      </div>
+
+      <!-- ══════════════════════
+           NOTIFICATIONS
+      ══════════════════════ -->
+      <div class="profile-section" id="section-notifications">
+        <div class="section-card">
+          <div class="section-card-title">Notification Preferences</div>
+          <p class="section-card-sub">Choose how you want to hear from us about your orders and offers.</p>
+
+          <div class="notif-list">
+            <div class="notif-item">
+              <div class="notif-left">
+                <div class="notif-icon">💬</div>
+                <div>
+                  <div class="notif-info-title">WhatsApp Order Updates</div>
+                  <div class="notif-info-sub">Confirmed, out for delivery, delivered — on WhatsApp</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="notifWA" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-left">
+                <div class="notif-icon">📱</div>
+                <div>
+                  <div class="notif-info-title">SMS Alerts</div>
+                  <div class="notif-info-sub">Order confirmation and delivery SMS</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="notifSMS" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-left">
+                <div class="notif-icon">✉️</div>
+                <div>
+                  <div class="notif-info-title">Email Receipts</div>
+                  <div class="notif-info-sub">Order invoices and receipts by email</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="notifEmail" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-left">
+                <div class="notif-icon">🎁</div>
+                <div>
+                  <div class="notif-info-title">Offers & Promotions</div>
+                  <div class="notif-info-sub">Seasonal discounts and new product alerts</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="notifPromo"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-left">
+                <div class="notif-icon">🔔</div>
+                <div>
+                  <div class="notif-info-title">Fresh Stock Alerts</div>
+                  <div class="notif-info-sub">When baby goat legs or seasonal items are available</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="notifStock" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="form-actions" style="margin-top:1.5rem;">
+            <button class="btn-primary" onclick="saveNotifications()">Save Preferences</button>
+            <span class="save-status" id="notifStatus"></span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end main content -->
+  </div><!-- end profile body -->
+
+  <!-- DANGER ZONE (always shown below) -->
+  <div style="max-width:1100px;margin:0 auto;padding:0 4rem 5rem;" id="dangerZoneWrap">
+    <div class="danger-zone">
+      <div class="danger-zone-title">⚠️ Danger Zone</div>
+      <p class="danger-zone-sub">These actions are permanent. Logging out ends your current session. Deleting your account removes all your data from our system.</p>
+      <div class="danger-actions">
+        <button class="btn-danger" onclick="logout()">🚪 Logout</button>
+        <button class="btn-danger" onclick="deleteAccount()" style="opacity:0.7;">🗑 Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end page -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <p style="font-size:0.75rem;color:rgba(246,237,216,0.2);">Your data is stored securely with Supabase</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/919999999999" class="wa-float" target="_blank">💬</a>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const DEV_MODE     = SUPABASE_URL === 'YOUR_SUPABASE_URL';
+let sb = null;
+if (!DEV_MODE) { try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){} }
+
+// ─────────────────────────────────────────────
+//  LOAD USER
+// ─────────────────────────────────────────────
+const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+if (!user.loggedIn) window.location.href = 'login.html?redirect=my-profile.html';
+
+let savedAddresses = JSON.parse(localStorage.getItem('angadi_addresses') || '[]');
+
+function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
+
+function initProfile() {
+  const name  = user.name  || '';
+  const phone = user.phone || '';
+  const email = user.email || '';
+
+  // Hero
+  document.getElementById('avatarInitial').textContent = name ? name[0].toUpperCase() : '?';
+  document.getElementById('profileName').textContent   = name || 'My Account';
+  document.getElementById('profilePhone').textContent  = phone || '—';
+  document.getElementById('profileEmail').textContent  = email || '—';
+  document.getElementById('profileCity').textContent   = user.address?.city || 'Hyderabad';
+
+  // Fill form
+  document.getElementById('pName').value  = name;
+  document.getElementById('pPhone').value = phone;
+  document.getElementById('pEmail').value = email;
+  if (user.dob)     document.getElementById('pDob').value = user.dob;
+  if (user.cutPref) document.getElementById('pCutPref').value = user.cutPref;
+
+  // Phone OTP user - show set password note
+  if (!email && phone) document.getElementById('pwPhoneNote').style.display = 'block';
+
+  // Stats from orders
+  const orders    = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+  const delivered = orders.filter(o => o.status === 'delivered').length;
+  const spent     = orders.reduce((s,o) => s + (o.total||0), 0);
+  document.getElementById('statOrders').textContent    = orders.length;
+  document.getElementById('statDelivered').textContent = delivered;
+  document.getElementById('statSpent').textContent     = orders.length ? fmt(spent) : '₹0';
+
+  // Notification preferences from localStorage
+  const notifs = JSON.parse(localStorage.getItem('angadi_notifs') || '{"wa":true,"sms":true,"email":true,"promo":false,"stock":true}');
+  document.getElementById('notifWA').checked    = notifs.wa;
+  document.getElementById('notifSMS').checked   = notifs.sms;
+  document.getElementById('notifEmail').checked = notifs.email;
+  document.getElementById('notifPromo').checked = notifs.promo;
+  document.getElementById('notifStock').checked = notifs.stock;
+
+  // Load addresses
+  if (user.address && savedAddresses.length === 0) {
+    savedAddresses = [{ ...user.address, type:'Home', is_default:true }];
+    localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
+  }
+  renderAddresses();
+}
+
+// ─────────────────────────────────────────────
+//  SECTION NAVIGATION
+// ─────────────────────────────────────────────
+function showSection(id) {
+  document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('section-' + id)?.classList.add('active');
+  document.querySelector(`[data-section="${id}"]`)?.classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+//  PERSONAL INFO SAVE
+// ─────────────────────────────────────────────
+document.getElementById('personalForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name    = document.getElementById('pName').value.trim();
+  const email   = document.getElementById('pEmail').value.trim();
+  const dob     = document.getElementById('pDob').value;
+  const cutPref = document.getElementById('pCutPref').value;
+
+  if (!name) { showStatus('personalStatus','error','Name is required'); return; }
+
+  setLoading('savePersonalBtn', true);
+
+  const updated = { ...user, name, email, dob, cutPref };
+  localStorage.setItem('angadi_user', JSON.stringify(updated));
+
+  if (sb && user.id) {
+    try {
+      await sb.from('profiles').upsert({ id: user.id, name, email });
+      if (email) await sb.auth.updateUser({ email });
+    } catch(err) { console.warn(err); }
+  }
+
+  // Update header instantly
+  document.getElementById('avatarInitial').textContent = name[0].toUpperCase();
+  document.getElementById('profileName').textContent   = name;
+  document.getElementById('profileEmail').textContent  = email || '—';
+  Object.assign(user, { name, email, dob, cutPref });
+
+  setLoading('savePersonalBtn', false, 'Save Changes');
+  showStatus('personalStatus', 'success', '✓ Profile updated');
+  setTimeout(() => clearStatus('personalStatus'), 3000);
+});
+
+// ─────────────────────────────────────────────
+//  ADDRESSES
+// ─────────────────────────────────────────────
+function renderAddresses() {
+  const grid = document.getElementById('addressGrid');
+  if (savedAddresses.length === 0) {
+    grid.innerHTML = `<p style="font-size:0.85rem;color:rgba(246,237,216,0.35);padding:0.5rem 0;">No saved addresses yet. Add one below.</p>`;
+    return;
+  }
+  grid.innerHTML = savedAddresses.map((addr, idx) => `
+    <div class="address-card ${addr.is_default ? 'default' : ''}">
+      ${addr.is_default ? '<div class="address-default-badge">Default</div>' : ''}
+      <div class="address-type">${addr.type === 'Home' ? '🏠' : addr.type === 'Work' ? '🏢' : '📍'} ${addr.type || 'Home'}</div>
+      <div class="address-text">
+        ${addr.flat}<br>
+        ${addr.area}${addr.landmark ? ', ' + addr.landmark : ''}<br>
+        ${addr.city} — ${addr.pincode}
+      </div>
+      <div class="address-actions">
+        <button class="btn-address-action" onclick="editAddress(${idx})">✎ Edit</button>
+        ${!addr.is_default ? `<button class="btn-address-action" onclick="setDefaultAddress(${idx})">⭐ Set Default</button>` : ''}
+        ${savedAddresses.length > 1 ? `<button class="btn-address-action danger" onclick="deleteAddress(${idx})">✕ Remove</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAddressForm() {
+  const wrap = document.getElementById('addressFormWrap');
+  const isOpen = wrap.classList.contains('open');
+  if (isOpen) { cancelAddressForm(); return; }
+  document.getElementById('editAddressIdx').value = '-1';
+  document.getElementById('addressFormTitle').textContent = 'New Address';
+  document.getElementById('addressForm').reset();
+  wrap.classList.add('open');
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editAddress(idx) {
+  const addr = savedAddresses[idx];
+  document.getElementById('editAddressIdx').value = idx;
+  document.getElementById('addressFormTitle').textContent = 'Edit Address';
+  document.getElementById('aFlat').value     = addr.flat || '';
+  document.getElementById('aArea').value     = addr.area || '';
+  document.getElementById('aLandmark').value = addr.landmark || '';
+  document.getElementById('aPincode').value  = addr.pincode || '';
+  document.getElementById('aCity').value     = addr.city || 'Hyderabad';
+  document.getElementById('aType').value     = addr.type || 'Home';
+  document.getElementById('aDefault').checked = !!addr.is_default;
+  document.getElementById('addressFormWrap').classList.add('open');
+  document.getElementById('addressFormWrap').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function cancelAddressForm() {
+  document.getElementById('addressFormWrap').classList.remove('open');
+  document.getElementById('addressForm').reset();
+}
+
+document.getElementById('addressForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const flat    = document.getElementById('aFlat').value.trim();
+  const area    = document.getElementById('aArea').value.trim();
+  const pincode = document.getElementById('aPincode').value.trim();
+  if (!flat || !area || !/^\d{6}$/.test(pincode)) { showStatus('addressStatus','error','Please fill all required fields'); return; }
+
+  const idx     = parseInt(document.getElementById('editAddressIdx').value);
+  const setDef  = document.getElementById('aDefault').checked;
+  const newAddr = {
+    flat, area,
+    landmark: document.getElementById('aLandmark').value.trim(),
+    pincode,
+    city:      document.getElementById('aCity').value,
+    type:      document.getElementById('aType').value,
+    is_default: setDef,
+  };
+
+  if (setDef) savedAddresses.forEach(a => a.is_default = false);
+
+  if (idx === -1) {
+    if (savedAddresses.length === 0) newAddr.is_default = true;
+    savedAddresses.push(newAddr);
+  } else {
+    savedAddresses[idx] = newAddr;
+  }
+  if (!savedAddresses.some(a => a.is_default)) savedAddresses[0].is_default = true;
+
+  setLoading('saveAddressBtn', true);
+
+  localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
+  // Update default in user object
+  const def = savedAddresses.find(a => a.is_default);
+  if (def) { user.address = def; localStorage.setItem('angadi_user', JSON.stringify(user)); }
+
+  if (sb && user.id) {
+    try {
+      await sb.from('addresses').upsert({ user_id: user.id, ...newAddr });
+    } catch(err) {}
+  }
+
+  setLoading('saveAddressBtn', false, 'Save Address');
+  renderAddresses();
+  cancelAddressForm();
+  showStatus('addressStatus','success','✓ Address saved');
+  setTimeout(() => clearStatus('addressStatus'), 3000);
+});
+
+function setDefaultAddress(idx) {
+  savedAddresses.forEach((a,i) => a.is_default = (i === idx));
+  localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
+  user.address = savedAddresses[idx];
+  localStorage.setItem('angadi_user', JSON.stringify(user));
+  renderAddresses();
+  showToast('✓ Default address updated');
+}
+
+function deleteAddress(idx) {
+  if (!confirm('Remove this address?')) return;
+  savedAddresses.splice(idx, 1);
+  if (savedAddresses.length && !savedAddresses.some(a => a.is_default)) savedAddresses[0].is_default = true;
+  localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
+  renderAddresses();
+  showToast('Address removed');
+}
+
+// ─────────────────────────────────────────────
+//  PASSWORD
+// ─────────────────────────────────────────────
+// Strength meter
+document.getElementById('pwNew').addEventListener('input', function() {
+  const v = this.value;
+  document.getElementById('pwStrengthWrap').style.display = v ? '' : 'none';
+  let score = 0;
+  if (v.length >= 8)  score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const colours = ['','#E57373','#FFB74D','#D4A017','#4CAF50'];
+  const labels  = ['','Weak','Fair','Good','Strong'];
+  const bar     = document.getElementById('pwStrengthBar');
+  const lbl     = document.getElementById('pwStrengthLabel');
+  bar.style.width      = (score * 25) + '%';
+  bar.style.background = colours[score];
+  lbl.textContent      = labels[score];
+  lbl.style.color      = colours[score];
+});
+
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newPw  = document.getElementById('pwNew').value;
+  const confPw = document.getElementById('pwConfirm').value;
+  if (newPw.length < 8) { showStatus('pwStatus','error','Password must be at least 8 characters'); return; }
+  if (newPw !== confPw)  { showStatus('pwStatus','error','Passwords do not match'); return; }
+
+  setLoading('savePwBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(700);
+    setLoading('savePwBtn', false, 'Update Password');
+    showStatus('pwStatus','success','✓ Password updated (dev mode)');
+    document.getElementById('passwordForm').reset();
+    setTimeout(() => clearStatus('pwStatus'), 3500);
+    return;
+  }
+
+  try {
+    const { error } = await sb.auth.updateUser({ password: newPw });
+    setLoading('savePwBtn', false, 'Update Password');
+    if (error) { showStatus('pwStatus','error', error.message); return; }
+    showStatus('pwStatus','success','✓ Password updated successfully');
+    document.getElementById('passwordForm').reset();
+    setTimeout(() => clearStatus('pwStatus'), 3500);
+  } catch(err) {
+    setLoading('savePwBtn', false, 'Update Password');
+    showStatus('pwStatus','error','Update failed. Please try again.');
+  }
+});
+
+async function sendForgotPassword() {
+  const email = user.email;
+  if (!email) { showStatus('forgotStatus','error','No email address on your account'); return; }
+  if (DEV_MODE) { showStatus('forgotStatus','success',`✓ Reset link sent to ${email} (dev mode)`); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if (error) { showStatus('forgotStatus','error',error.message); return; }
+  showStatus('forgotStatus','success',`✓ Reset link sent to ${email}`);
+}
+
+// ─────────────────────────────────────────────
+//  NOTIFICATIONS
+// ─────────────────────────────────────────────
+function saveNotifications() {
+  const prefs = {
+    wa:    document.getElementById('notifWA').checked,
+    sms:   document.getElementById('notifSMS').checked,
+    email: document.getElementById('notifEmail').checked,
+    promo: document.getElementById('notifPromo').checked,
+    stock: document.getElementById('notifStock').checked,
+  };
+  localStorage.setItem('angadi_notifs', JSON.stringify(prefs));
+  showStatus('notifStatus','success','✓ Preferences saved');
+  setTimeout(() => clearStatus('notifStatus'), 3000);
+}
+
+// ─────────────────────────────────────────────
+//  LOGOUT / DELETE
+// ─────────────────────────────────────────────
+function logout() {
+  if (!confirm('Log out of your account?')) return;
+  localStorage.removeItem('angadi_user');
+  if (sb) sb.auth.signOut().catch(()=>{});
+  window.location.href = 'login.html';
+}
+
+function deleteAccount() {
+  if (!confirm('This will permanently delete your account and all order history. Are you sure?')) return;
+  if (!confirm('This cannot be undone. Type "DELETE" to confirm.\n\n(In dev mode this just logs you out)')) return;
+  localStorage.removeItem('angadi_user');
+  localStorage.removeItem('angadi_addresses');
+  localStorage.removeItem('angadi_all_orders');
+  localStorage.removeItem('angadi_notifs');
+  if (sb) sb.auth.signOut().catch(()=>{});
+  window.location.href = 'index.html';
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function setLoading(btnId, loading, label='') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span> Saving…' : label;
+}
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `save-status ${type} visible`;
+  el.textContent = msg;
+}
+function clearStatus(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'save-status';
+  el.textContent = '';
+}
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function showToast(msg) {
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;border-radius:100px;font-size:0.85rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('toastStyle')) {
+    const s=document.createElement('style');s.id='toastStyle';
+    s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+// ─────────────────────────────────────────────
+//  NAV
+// ─────────────────────────────────────────────
+function updateCartBadge() {
+  const cart = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+  document.getElementById('cartBadge').textContent = cart.reduce((s,i)=>s+i.qty,0);
+}
+window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+function closeMobile(){ document.getElementById('mobileMenu').classList.remove('open'); }
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+updateCartBadge();
+initProfile();
+</script>
+</body>
+</html>

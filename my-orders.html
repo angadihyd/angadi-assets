@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;--red:#E57373;--blue:#64B5F6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;display:flex;align-items:center;justify-content:space-between;padding:0 4rem;height:70px;background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:height 0.4s;}
+nav.scrolled{height:60px;}
+.nav-logo{display:flex;align-items:center;text-decoration:none;}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{text-decoration:none;font-size:0.88rem;font-weight:500;color:rgba(246,237,216,0.7);letter-spacing:0.08em;text-transform:uppercase;transition:color 0.3s;}
+.nav-links a:hover,.nav-links a.active{color:var(--clay-l);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.nav-cart{position:relative;background:none;border:1px solid var(--border);color:var(--cream);width:42px;height:42px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all 0.3s;text-decoration:none;}
+.nav-cart:hover{border-color:var(--clay);}
+.cart-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--clay);font-size:0.65rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.btn-nav{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.6rem 1.5rem;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-nav:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{display:none;position:fixed;inset:0;z-index:998;background:rgba(8,5,3,0.97);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.08em;color:var(--cream);text-decoration:none;}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--cream);font-size:1.8rem;cursor:pointer;}
+
+/* ── PAGE ── */
+.page{padding-top:70px;min-height:100vh;}
+
+/* ── BREADCRUMB ── */
+.breadcrumb-bar{background:var(--ink-2);border-bottom:1px solid var(--border);padding:0.9rem 4rem;display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(246,237,216,0.4);}
+.breadcrumb-bar a{color:rgba(246,237,216,0.4);text-decoration:none;transition:color 0.3s;}
+.breadcrumb-bar a:hover{color:var(--clay-l);}
+.breadcrumb-bar span{color:var(--clay-l);}
+
+/* ── PAGE HEADER ── */
+.page-header{background:var(--ink-2);padding:3rem 4rem 2.5rem;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.page-header::before{content:'';position:absolute;top:-120px;right:-120px;width:400px;height:400px;background:radial-gradient(circle,rgba(196,98,45,0.07) 0%,transparent 70%);pointer-events:none;}
+.page-header-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;}
+.page-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--clay);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem;}
+.page-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,4vw,3.2rem);line-height:1;color:var(--cream);}
+.page-title span{color:var(--gold);}
+.page-subtitle{font-size:0.85rem;color:rgba(246,237,216,0.4);margin-top:0.4rem;}
+.page-subtitle strong{color:var(--clay-l);}
+
+/* Stats strip */
+.order-stats{display:flex;gap:2rem;flex-wrap:wrap;}
+.order-stat{text-align:center;}
+.order-stat-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;color:var(--gold);}
+.order-stat-label{font-size:0.68rem;font-weight:500;color:rgba(246,237,216,0.35);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+
+/* ── BODY ── */
+.orders-body{max-width:1100px;margin:0 auto;padding:2.5rem 4rem 5rem;}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+.filter-tabs{display:flex;gap:0.5rem;flex-wrap:wrap;}
+.filter-tab{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:100px;padding:0.45rem 1.1rem;font-size:0.8rem;font-weight:500;color:rgba(246,237,216,0.5);cursor:pointer;transition:all 0.25s;display:inline-flex;align-items:center;gap:0.4rem;}
+.filter-tab:hover{color:var(--cream);border-color:rgba(196,98,45,0.35);}
+.filter-tab.active{background:var(--clay);border-color:var(--clay);color:var(--cream);font-weight:600;}
+.filter-tab .count{background:rgba(246,237,216,0.15);border-radius:100px;padding:0.08rem 0.45rem;font-size:0.67rem;font-weight:700;}
+.filter-tab.active .count{background:rgba(246,237,216,0.25);}
+.search-wrap{position:relative;}
+.search-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:0.55rem 1rem 0.55rem 2.4rem;font-size:0.82rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;width:220px;}
+.search-input::placeholder{color:rgba(246,237,216,0.2);}
+.search-input:focus{border-color:var(--clay);}
+.search-icon{position:absolute;left:0.8rem;top:50%;transform:translateY(-50%);font-size:0.85rem;opacity:0.4;pointer-events:none;}
+
+/* ── ORDER CARD ── */
+.order-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.2rem;transition:border-color 0.3s;animation:slideIn 0.35s ease both;}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.order-card:hover{border-color:rgba(196,98,45,0.35);}
+.order-card.hidden{display:none;}
+
+/* Card header */
+.order-card-header{padding:1.3rem 1.6rem;display:flex;align-items:center;gap:1.2rem;cursor:pointer;user-select:none;transition:background 0.2s;}
+.order-card-header:hover{background:rgba(255,255,255,0.02);}
+.order-header-left{flex:1;min-width:0;}
+.order-meta-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem;}
+.order-id{font-family:'Space Mono',monospace;font-size:0.8rem;color:var(--gold);font-weight:700;letter-spacing:0.06em;}
+.order-date{font-size:0.75rem;color:rgba(246,237,216,0.35);}
+.order-name-row{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.order-items-preview{font-size:0.75rem;color:rgba(246,237,216,0.4);margin-top:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:0.35rem;border-radius:100px;padding:0.3rem 0.8rem;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;}
+.status-badge.confirmed    {background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.25);color:var(--blue);}
+.status-badge.confirmed .dot{background:var(--blue);animation:pulse 2s infinite;}
+.status-badge.processing   {background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.25);color:var(--gold);}
+.status-badge.processing .dot{background:var(--gold);animation:pulse 2s infinite;}
+.status-badge.out_for_delivery{background:rgba(196,98,45,0.12);border:1px solid rgba(196,98,45,0.25);color:var(--clay-l);}
+.status-badge.out_for_delivery .dot{background:var(--clay-l);animation:pulse 2s infinite;}
+.status-badge.delivered    {background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.25);color:var(--green);}
+.status-badge.delivered .dot{background:var(--green);}
+.status-badge.cancelled    {background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.2);color:var(--red);}
+.status-badge.cancelled .dot{background:var(--red);}
+.status-badge.cod          {background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);color:rgba(212,160,23,0.8);}
+.status-badge.cod .dot{background:var(--gold);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+
+/* Order total */
+.order-total-col{text-align:right;flex-shrink:0;}
+.order-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;line-height:1;color:var(--gold);}
+.order-total-label{font-size:0.68rem;color:rgba(246,237,216,0.3);margin-top:0.1rem;}
+
+/* Chevron */
+.order-chevron{font-size:0.9rem;color:rgba(246,237,216,0.3);transition:transform 0.3s;flex-shrink:0;margin-left:0.5rem;}
+.order-card.open .order-chevron{transform:rotate(180deg);}
+
+/* Card body (expanded) */
+.order-card-body{display:none;border-top:1px solid var(--border);}
+.order-card.open .order-card-body{display:block;}
+
+.order-items-list{padding:1.2rem 1.6rem;display:flex;flex-direction:column;gap:0;}
+.order-item{display:flex;align-items:center;gap:1rem;padding:0.7rem 0;border-bottom:1px solid rgba(196,98,45,0.07);}
+.order-item:last-child{border-bottom:none;}
+.order-item-img{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--ink-2);}
+.order-item-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.85);}
+.order-item-details{flex:1;min-width:0;}
+.order-item-name{font-size:0.88rem;font-weight:600;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.order-item-meta{font-size:0.72rem;color:rgba(246,237,216,0.35);margin-top:0.15rem;}
+.order-item-qty{font-family:'Space Mono',monospace;font-size:0.72rem;color:rgba(246,237,216,0.3);flex-shrink:0;}
+.order-item-price{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);flex-shrink:0;}
+
+/* Order footer */
+.order-card-footer{padding:1.2rem 1.6rem;border-top:1px solid var(--border);background:rgba(255,255,255,0.01);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.order-footer-info{display:flex;gap:1.5rem;flex-wrap:wrap;}
+.order-info-item{display:flex;flex-direction:column;gap:0.15rem;}
+.order-info-label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.25);}
+.order-info-val{font-size:0.8rem;color:rgba(246,237,216,0.65);}
+.order-footer-actions{display:flex;gap:0.6rem;flex-wrap:wrap;}
+.btn-action{border-radius:8px;padding:0.55rem 1.1rem;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:0.35rem;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:rgba(246,237,216,0.6);}
+.btn-action:hover{color:var(--cream);border-color:rgba(196,98,45,0.35);}
+.btn-action.primary{background:rgba(196,98,45,0.12);border-color:var(--clay);color:var(--clay-l);}
+.btn-action.primary:hover{background:var(--clay);color:var(--cream);}
+.btn-action.wa{background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.2);color:#25D366;}
+.btn-action.wa:hover{background:rgba(37,211,102,0.15);}
+
+/* Price breakdown in footer */
+.price-mini{display:flex;gap:1.5rem;flex-wrap:wrap;}
+.price-mini-row{display:flex;flex-direction:column;gap:0.1rem;}
+.price-mini-label{font-size:0.65rem;color:rgba(246,237,216,0.25);text-transform:uppercase;letter-spacing:0.08em;}
+.price-mini-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold);}
+.price-mini-val.total{color:var(--cream);}
+
+/* ── EMPTY STATE ── */
+.empty-orders{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 2rem;text-align:center;}
+.empty-icon{font-size:4rem;margin-bottom:1.5rem;opacity:0.25;}
+.empty-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--cream);margin-bottom:0.5rem;}
+.empty-sub{font-size:0.88rem;color:rgba(246,237,216,0.4);margin-bottom:2rem;line-height:1.6;max-width:320px;}
+.btn-primary{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.9rem 2rem;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(196,98,45,0.4);}
+
+/* ── LOADING ── */
+.orders-loading{display:flex;flex-direction:column;align-items:center;padding:4rem;gap:1rem;color:rgba(246,237,216,0.35);}
+.spinner-large{width:40px;height:40px;border:3px solid rgba(196,98,45,0.15);border-top-color:var(--clay);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── SKELETON ── */
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.03) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skeleton-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;padding:1.3rem 1.6rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:1rem;}
+.skeleton-line{height:14px;border-radius:6px;}
+
+/* ── FOOTER ── */
+footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4rem 1.5rem;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2rem;}
+.footer-brand p{font-size:0.85rem;color:rgba(246,237,216,0.5);line-height:1.7;max-width:280px;margin-top:0.5rem;}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--clay-l);margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:0.6rem;}
+.footer-col ul li a{font-size:0.85rem;color:rgba(246,237,216,0.5);text-decoration:none;transition:color 0.3s;}
+.footer-col ul li a:hover{color:var(--cream);}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
+.footer-bottom p{font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+
+/* ── WA FLOAT ── */
+.wa-float{position:fixed;bottom:2rem;right:2rem;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 20px rgba(37,211,102,0.4);text-decoration:none;animation:waBounce 3s ease infinite;}
+.wa-float:hover{transform:scale(1.1);}
+@keyframes waBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .orders-body{padding:2rem 2rem 4rem;}
+  .page-header{padding:2.5rem 2rem 2rem;}
+  .breadcrumb-bar{padding:0.9rem 2rem;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.btn-nav{display:none;}
+  .nav-hamburger{display:flex;}
+  .breadcrumb-bar,.page-header{padding:1rem 1.5rem;}
+  .orders-body{padding:1.5rem 1.5rem 3rem;}
+  .order-card-header{padding:1rem 1.2rem;flex-wrap:wrap;}
+  .order-items-list{padding:1rem 1.2rem;}
+  .order-card-footer{padding:1rem 1.2rem;flex-direction:column;align-items:flex-start;}
+  .footer-grid{grid-template-columns:1fr;}
+  footer{padding:2rem 1.5rem 1rem;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+  .filter-bar{flex-direction:column;align-items:flex-start;}
+  .search-input{width:100%;}
+  .search-wrap{width:100%;}
+  .page-header-inner{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="my-orders.html" class="active">My Orders</a></li>
+    <li><a href="my-profile.html">My Profile</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="cart.html" class="nav-cart">🛒<span class="cart-badge" id="cartBadge">0</span></a>
+    <a href="shop.html" class="btn-nav">🛒 Shop Now</a>
+    <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="shop.html" onclick="closeMobile()">Shop</a>
+  <a href="my-orders.html" onclick="closeMobile()">My Orders</a>
+  <a href="my-profile.html" onclick="closeMobile()">My Profile</a>
+  <a href="login.html" onclick="closeMobile()">Login</a>
+</div>
+
+<div class="page">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <a href="index.html">Home</a><span style="opacity:.4">›</span>
+    <span>My Orders</span>
+  </div>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <div class="page-eyebrow">Account</div>
+        <h1 class="page-title">My <span>Orders</span></h1>
+        <p class="page-subtitle" id="pageSubtitle">Loading your orders…</p>
+      </div>
+      <div class="order-stats" id="orderStats">
+        <div class="order-stat"><div class="order-stat-num skeleton" style="width:40px;height:32px;"></div><div class="order-stat-label">Total</div></div>
+        <div class="order-stat"><div class="order-stat-num skeleton" style="width:40px;height:32px;"></div><div class="order-stat-label">Delivered</div></div>
+        <div class="order-stat"><div class="order-stat-num skeleton" style="width:60px;height:32px;"></div><div class="order-stat-label">Spent</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS BODY -->
+  <div class="orders-body">
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-status="all">All <span class="count" id="cnt-all">0</span></button>
+        <button class="filter-tab" data-status="confirmed">Confirmed <span class="count" id="cnt-confirmed">0</span></button>
+        <button class="filter-tab" data-status="processing">Processing <span class="count" id="cnt-processing">0</span></button>
+        <button class="filter-tab" data-status="out_for_delivery">Out for Delivery <span class="count" id="cnt-out_for_delivery">0</span></button>
+        <button class="filter-tab" data-status="delivered">Delivered <span class="count" id="cnt-delivered">0</span></button>
+        <button class="filter-tab" data-status="cancelled">Cancelled <span class="count" id="cnt-cancelled">0</span></button>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search by ID or product…">
+      </div>
+    </div>
+
+    <!-- ORDERS LIST -->
+    <div id="ordersList">
+      <!-- Skeleton loading -->
+      ${[1,2,3].map(() => `
+        <div class="skeleton-card">
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.6rem;">
+            <div class="skeleton skeleton-line" style="width:35%;"></div>
+            <div class="skeleton skeleton-line" style="width:55%;"></div>
+            <div class="skeleton skeleton-line" style="width:45%;"></div>
+          </div>
+          <div class="skeleton skeleton-line" style="width:80px;height:28px;border-radius:100px;"></div>
+        </div>
+      `).join('')}
+    </div>
+
+  </div><!-- end orders-body -->
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" style="display:inline-block;text-decoration:none;">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+      </a>
+      <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="product-detail.html?id=goat-meat">Village Goat Meat</a></li>
+        <li><a href="product-detail.html?id=country-chicken">Country Chicken</a></li>
+        <li><a href="product-detail.html?id=country-eggs">Country Eggs</a></li>
+        <li><a href="product-detail.html?id=river-fish">River Fish</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <ul>
+        <li><a href="my-orders.html">My Orders</a></li>
+        <li><a href="my-profile.html">My Profile</a></li>
+        <li><a href="login.html">Login / Logout</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/919999999999" target="_blank">WhatsApp Us</a></li>
+        <li><a href="#">Delivery Areas</a></li>
+        <li><a href="#">Returns Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+  </div>
+</footer>
+
+<a href="https://wa.me/919999999999?text=Hi%20Angadi!%20I%20need%20help%20with%20my%20order" class="wa-float" target="_blank">💬</a>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const DEV_MODE     = SUPABASE_URL === 'YOUR_SUPABASE_URL';
+
+// ─────────────────────────────────────────────
+//  PRODUCT IMAGE MAP
+// ─────────────────────────────────────────────
+const PRODUCT_META = {
+  'Village Goat Meat': { img:'product/mutton.png' },
+  'Country Chicken':   { img:'product/country chiken.png' },
+  'Fresh River Fish':  { img:'product/fish.png' },
+  'Baby Goat Legs':    { img:'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png' },
+  'Country Eggs':      { img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png' },
+  'Full Goat':         { img:'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png' },
+  'Goat Legs':         { img:'product/legs.png' },
+  'Goat Liver':        { img:'product/liver.png' },
+  'Goat Head':         { img:'product/head.png' },
+};
+function getImg(name){ return (PRODUCT_META[name.split(' · ')[0].trim()] || { img:'product/mutton.png' }).img; }
+function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
+function formatDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN',{ day:'numeric', month:'short', year:'numeric' })
+    + ' · ' + d.toLocaleTimeString('en-IN',{ hour:'2-digit', minute:'2-digit' });
+}
+function statusLabel(s){
+  const map = {
+    confirmed:'Confirmed', confirmed_cod:'Confirmed',
+    processing:'Processing', out_for_delivery:'Out for Delivery',
+    delivered:'Delivered', cancelled:'Cancelled',
+    paid:'Confirmed', paid_dev:'Confirmed',
+  };
+  return map[s] || 'Confirmed';
+}
+function normaliseStatus(s){
+  if (!s) return 'confirmed';
+  if (['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
+  const valid = ['confirmed','processing','out_for_delivery','delivered','cancelled'];
+  return valid.includes(s) ? s : 'confirmed';
+}
+
+// ─────────────────────────────────────────────
+//  LOAD ORDERS
+// ─────────────────────────────────────────────
+let allOrders = [];
+
+async function loadOrders(){
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+
+  // 1. Last order from localStorage (always show this)
+  const lastOrder = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
+
+  if (!DEV_MODE && user.id) {
+    // PRODUCTION: fetch from Supabase
+    try {
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const { data, error } = await sb
+        .from('orders')
+        .select('*')
+        .eq('customer->>phone', user.phone)
+        .order('placed_at', { ascending: false });
+      if (!error && data) { allOrders = data; renderOrders(); return; }
+    } catch(e){ console.warn('Supabase fetch failed', e); }
+  }
+
+  // DEV / fallback: use localStorage orders
+  let stored = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+
+  // Merge last order into stored list (avoid duplicates)
+  if (lastOrder) {
+    if (!lastOrder.orderId) lastOrder.orderId = 'ANG-' + Date.now().toString(36).toUpperCase();
+    const exists = stored.find(o => o.orderId === lastOrder.orderId);
+    if (!exists) stored.unshift(lastOrder);
+  }
+
+  // DEV: always pad with demo orders so the page looks meaningful
+  if (DEV_MODE) {
+    const demoIds = getDemoOrders().map(o => o.orderId);
+    const demos   = getDemoOrders().filter(d => !stored.find(s => s.orderId === d.orderId));
+    stored = [...stored, ...demos];
+  }
+
+  // Save merged list
+  localStorage.setItem('angadi_all_orders', JSON.stringify(stored));
+  allOrders = stored;
+  renderOrders();
+}
+
+// ─────────────────────────────────────────────
+//  DEMO ORDERS (dev mode only)
+// ─────────────────────────────────────────────
+function getDemoOrders(){
+  const now = new Date();
+  const daysAgo = (n) => new Date(now - n*86400000).toISOString();
+  return [
+    {
+      orderId:'ANG-M5K2X-DEMO1',
+      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Morning (7 AM – 12 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
+      items:[{ name:'Village Goat Meat · 1 kg · Curry Cut', price:680, qty:2 },{ name:'Country Chicken · 500g', price:520, qty:1 }],
+      subtotal:1880, delivery:0, discount:0, total:1880,
+      payment:'razorpay', paymentId:'pay_DEMO123',
+      status:'delivered', placedAt: daysAgo(5),
+    },
+    {
+      orderId:'ANG-K9P3Y-DEMO2',
+      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Evening (5 PM – 8 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
+      items:[{ name:'Goat Liver · 500g · Thin Sliced', price:1000, qty:1 },{ name:'Country Eggs', price:12, qty:12 }],
+      subtotal:1144, delivery:0, discount:0, total:1144,
+      payment:'cod', status:'out_for_delivery', placedAt: daysAgo(1),
+    },
+    {
+      orderId:'ANG-T7R1Q-DEMO3',
+      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Morning (7 AM – 12 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
+      items:[{ name:'Village Goat Meat · 2 kg · Biryani Cut', price:680, qty:3 },{ name:'Full Goat', price:8500, qty:1 }],
+      subtotal:10540, delivery:0, discount:500, total:10040,
+      payment:'razorpay', paymentId:'pay_DEMO456',
+      status:'processing', placedAt: daysAgo(0.3),
+    },
+  ];
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+let activeFilter = 'all';
+let searchQuery  = '';
+
+function renderOrders(){
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+
+  // Update header
+  const total     = allOrders.length;
+  const delivered = allOrders.filter(o => normaliseStatus(o.status) === 'delivered').length;
+  const spent     = allOrders.reduce((s,o) => s + (o.total||0), 0);
+  document.getElementById('orderStats').innerHTML = `
+    <div class="order-stat"><div class="order-stat-num">${total}</div><div class="order-stat-label">Orders</div></div>
+    <div class="order-stat"><div class="order-stat-num">${delivered}</div><div class="order-stat-label">Delivered</div></div>
+    <div class="order-stat"><div class="order-stat-num" style="font-size:1.4rem;">${fmt(spent)}</div><div class="order-stat-label">Total Spent</div></div>
+  `;
+  document.getElementById('pageSubtitle').innerHTML =
+    total === 0
+      ? 'No orders yet'
+      : `Showing orders for <strong>${user.name || user.phone || 'your account'}</strong>`;
+
+  // Update filter counts
+  const statusCounts = {};
+  allOrders.forEach(o => {
+    const s = normaliseStatus(o.status);
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+  document.getElementById('cnt-all').textContent = total;
+  ['confirmed','processing','out_for_delivery','delivered','cancelled'].forEach(s => {
+    const el = document.getElementById('cnt-' + s);
+    if (el) el.textContent = statusCounts[s] || 0;
+  });
+
+  // Filter + search
+  const filtered = allOrders.filter(o => {
+    const s = normaliseStatus(o.status);
+    const matchStatus = activeFilter === 'all' || s === activeFilter;
+    const q = searchQuery.toLowerCase();
+    const matchSearch = !q
+      || (o.orderId||'').toLowerCase().includes(q)
+      || (o.items||[]).some(i => i.name.toLowerCase().includes(q));
+    return matchStatus && matchSearch;
+  });
+
+  const list = document.getElementById('ordersList');
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-orders">
+        <div class="empty-icon">${activeFilter === 'all' ? '📦' : '🔍'}</div>
+        <div class="empty-title">${activeFilter === 'all' ? 'No orders yet' : 'No orders found'}</div>
+        <p class="empty-sub">${activeFilter === 'all' ? 'When you place your first order it will appear here.' : 'Try a different filter or search term.'}</p>
+        ${activeFilter === 'all' ? `<a href="shop.html" class="btn-primary">🌾 Start Shopping</a>` : ''}
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = filtered.map((order, idx) => buildOrderCard(order, idx)).join('');
+
+  // Attach toggle listeners
+  list.querySelectorAll('.order-card-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.order-card');
+      card.classList.toggle('open');
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+//  BUILD ORDER CARD HTML
+// ─────────────────────────────────────────────
+function buildOrderCard(order, idx){
+  const status    = normaliseStatus(order.status);
+  const items     = order.items || [];
+  const customer  = order.customer || {};
+  const address   = customer.address || {};
+  const isCOD     = order.payment === 'cod';
+  const itemsPreview = items.map(i => `${i.name.split(' · ')[0]} ×${i.qty}`).join(' · ');
+  const mainName  = items.length > 0 ? items[0].name.split(' · ')[0] : 'Order';
+  const extraCount = items.length > 1 ? ` + ${items.length - 1} more` : '';
+
+  const waText = `Hi Angadi! I need help with my order ${order.orderId}.%0AStatus: ${statusLabel(order.status)}`;
+
+  return `
+    <div class="order-card" id="order-${idx}" style="animation-delay:${idx*0.06}s;">
+      <div class="order-card-header">
+        <div class="order-header-left">
+          <div class="order-meta-row">
+            <span class="order-id">${order.orderId || 'ANG-XXXXXX'}</span>
+            <span class="order-date">🕐 ${formatDate(order.placedAt)}</span>
+          </div>
+          <div class="order-name-row">${mainName}${extraCount}</div>
+          <div class="order-items-preview">${itemsPreview}</div>
+        </div>
+        <div class="status-badge ${status}">
+          <span class="dot"></span>
+          ${statusLabel(order.status)}
+        </div>
+        <div class="order-total-col">
+          <div class="order-total-val">${fmt(order.total || 0)}</div>
+          <div class="order-total-label">${isCOD ? 'Cash on Delivery' : 'Paid Online'}</div>
+        </div>
+        <span class="order-chevron">▼</span>
+      </div>
+
+      <div class="order-card-body">
+        <!-- Items -->
+        <div class="order-items-list">
+          ${items.map(item => `
+            <div class="order-item">
+              <div class="order-item-img">
+                <img src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}">
+              </div>
+              <div class="order-item-details">
+                <div class="order-item-name">${item.name.split(' · ')[0]}</div>
+                <div class="order-item-meta">${item.name.split(' · ').slice(1).join(' · ')}</div>
+              </div>
+              <div class="order-item-qty">×${item.qty}</div>
+              <div class="order-item-price">${fmt(item.price * item.qty)}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Footer -->
+        <div class="order-card-footer">
+          <div class="order-footer-info">
+            <div class="order-info-item">
+              <span class="order-info-label">Deliver to</span>
+              <span class="order-info-val">${customer.name || '—'}, ${address.area || ''}, ${address.pincode || ''}</span>
+            </div>
+            <div class="order-info-item">
+              <span class="order-info-label">Slot</span>
+              <span class="order-info-val">${customer.slot || '—'}</span>
+            </div>
+            <div class="order-info-item">
+              <span class="order-info-label">Payment</span>
+              <span class="order-info-val">${isCOD ? 'Cash on Delivery' : 'Paid · ' + (order.paymentId || '')}</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+            <!-- Price mini -->
+            <div class="price-mini">
+              <div class="price-mini-row"><span class="price-mini-label">Subtotal</span><span class="price-mini-val">${fmt(order.subtotal||0)}</span></div>
+              ${order.discount ? `<div class="price-mini-row"><span class="price-mini-label">Discount</span><span class="price-mini-val" style="color:var(--clay-l);">−${fmt(order.discount)}</span></div>` : ''}
+              <div class="price-mini-row"><span class="price-mini-label">Delivery</span><span class="price-mini-val">${(order.delivery||0)===0?'FREE':fmt(order.delivery)}</span></div>
+              <div class="price-mini-row"><span class="price-mini-label">Total</span><span class="price-mini-val total">${fmt(order.total||0)}</span></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="order-footer-actions">
+              <button class="btn-action primary" onclick="reorder(${idx})">🔄 Reorder</button>
+              <a href="https://wa.me/919999999999?text=${waText}" target="_blank" class="btn-action wa">💬 Help</a>
+              ${status === 'delivered' ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">🧾 Invoice</button>` : ''}
+              ${(status === 'confirmed' || status === 'processing') ? `<button class="btn-action" style="color:var(--red);border-color:rgba(229,115,115,0.2);" onclick="cancelOrder('${order.orderId}',${idx})">✕ Cancel</button>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function reorder(idx) {
+  const order = allOrders[idx];
+  if (!order) return;
+  const cart = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+  (order.items || []).forEach(item => {
+    const existing = cart.find(c => c.name === item.name);
+    if (existing) existing.qty += item.qty;
+    else cart.push({ name: item.name, price: item.price, qty: item.qty });
+  });
+  localStorage.setItem('angadi_cart', JSON.stringify(cart));
+  updateCartBadge();
+  showToast(`✓ ${order.items.length} item${order.items.length>1?'s':''} added to cart`);
+}
+
+function cancelOrder(orderId, idx) {
+  if (!confirm(`Cancel order ${orderId}?`)) return;
+  allOrders[idx].status = 'cancelled';
+  localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
+  renderOrders();
+  showToast(`Order ${orderId} cancelled`);
+}
+
+function downloadInvoice(orderId) {
+  showToast('Invoice download coming soon');
+}
+
+// ─────────────────────────────────────────────
+//  FILTERS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeFilter = tab.dataset.status;
+    renderOrders();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchQuery = this.value;
+  renderOrders();
+});
+
+// ─────────────────────────────────────────────
+//  CART + TOAST + NAV
+// ─────────────────────────────────────────────
+function updateCartBadge() {
+  const cart = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+  document.getElementById('cartBadge').textContent = cart.reduce((s,i)=>s+i.qty,0);
+}
+
+function showToast(msg) {
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;border-radius:100px;font-size:0.85rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('toastStyle')){
+    const s=document.createElement('style');s.id='toastStyle';
+    s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+function closeMobile(){ document.getElementById('mobileMenu').classList.remove('open'); }
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+updateCartBadge();
+loadOrders();
+</script>
+</body>
+</html>

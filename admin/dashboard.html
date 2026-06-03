@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Angadi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;--red:#E57373;--blue:#64B5F6;--purple:#CE93D8;
+  --sidebar:180px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink-2);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── LOGIN OVERLAY ── */
+.admin-login{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:2rem;
+}
+.admin-login.hidden{display:none;}
+.admin-login-box{
+  background:var(--ink-3);border:1px solid var(--border);
+  border-radius:20px;padding:3rem;
+  width:100%;max-width:400px;text-align:center;
+}
+.admin-login-logo{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--cream);letter-spacing:0.1em;margin-bottom:0.3rem;}
+.admin-login-logo span{color:var(--gold);}
+.admin-login-sub{font-size:0.82rem;color:rgba(246,237,216,0.35);margin-bottom:2rem;}
+.admin-login-label{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);display:block;text-align:left;margin-bottom:0.4rem;}
+.admin-login-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;font-size:0.9rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;margin-bottom:1rem;}
+.admin-login-input:focus{border-color:var(--clay);}
+.admin-login-btn{width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.9rem;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.3s;}
+.admin-login-btn:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));}
+.admin-login-err{font-size:0.78rem;color:var(--red);margin-top:0.5rem;display:none;}
+.admin-login-err.visible{display:block;}
+
+/* ── LAYOUT ── */
+.admin-layout{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.admin-sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--ink-2);border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;bottom:0;
+  display:flex;flex-direction:column;z-index:100;
+  overflow-y:auto;
+}
+.sidebar-logo{
+  padding:1.5rem 1.2rem 1.2rem;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--cream);letter-spacing:0.08em;}
+.sidebar-logo-text span{color:var(--gold);}
+.sidebar-logo-sub{font-size:0.6rem;font-family:'Space Mono',monospace;color:rgba(246,237,216,0.25);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+.sidebar-nav{flex:1;padding:1rem 0;}
+.sidebar-link{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.75rem 1.2rem;
+  font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.5);
+  text-decoration:none;transition:all 0.25s;
+  border-left:3px solid transparent;
+}
+.sidebar-link:hover{color:var(--cream);background:rgba(255,255,255,0.02);}
+.sidebar-link.active{color:var(--cream);background:rgba(196,98,45,0.1);border-left-color:var(--clay);}
+.sidebar-link .icon{font-size:1rem;flex-shrink:0;}
+.sidebar-divider{height:1px;background:var(--border);margin:0.5rem 1.2rem;}
+.sidebar-bottom{padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.sidebar-user{font-size:0.75rem;color:rgba(246,237,216,0.3);margin-bottom:0.5rem;}
+.sidebar-user strong{color:rgba(246,237,216,0.55);display:block;}
+.btn-logout{width:100%;background:none;border:1px solid rgba(229,115,115,0.2);color:rgba(229,115,115,0.6);border-radius:8px;padding:0.5rem;font-size:0.75rem;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.4rem;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* ── MAIN AREA ── */
+.admin-main{margin-left:var(--sidebar);flex:1;min-width:0;}
+
+/* ── TOP BAR ── */
+.admin-topbar{
+  background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);}
+.topbar-title span{font-style:italic;color:var(--gold);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.live-badge{display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;font-family:'Space Mono',monospace;color:rgba(246,237,216,0.35);}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:livePulse 2s infinite;}
+@keyframes livePulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,80,0.4);}50%{opacity:0.7;box-shadow:0 0 0 4px rgba(76,175,80,0);}}
+.topbar-date{font-size:0.72rem;color:rgba(246,237,216,0.25);font-family:'Space Mono',monospace;}
+.btn-view-site{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);padding:0.4rem 0.9rem;border-radius:7px;font-size:0.75rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;}
+.btn-view-site:hover{background:rgba(196,98,45,0.2);color:var(--cream);}
+
+/* ── CONTENT ── */
+.admin-content{padding:2rem;}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem;}
+.stat-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;padding:1.4rem 1.5rem;position:relative;overflow:hidden;transition:border-color 0.3s;}
+.stat-card:hover{border-color:rgba(196,98,45,0.4);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--clay));opacity:0.7;}
+.stat-card[data-accent="gold"]::before{background:var(--gold);}
+.stat-card[data-accent="green"]::before{background:var(--green);}
+.stat-card[data-accent="blue"]::before{background:var(--blue);}
+.stat-icon{font-size:1.5rem;margin-bottom:0.8rem;}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);margin-bottom:0.4rem;}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;color:var(--cream);}
+.stat-value.gold{color:var(--gold);}
+.stat-sub{font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.3rem;display:flex;align-items:center;gap:0.3rem;}
+.stat-sub .up{color:var(--green);}
+.stat-sub .down{color:var(--red);}
+
+/* ── SECTION TITLE ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+.section-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);}
+.section-title span{font-style:italic;color:var(--gold);}
+.btn-sm{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);padding:0.4rem 0.9rem;border-radius:7px;font-size:0.75rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;}
+.btn-sm:hover{background:rgba(196,98,45,0.2);color:var(--cream);}
+.btn-sm.primary{background:var(--clay);border-color:var(--clay);color:var(--cream);}
+.btn-sm.primary:hover{background:var(--clay-l);}
+
+/* ── MAIN GRID ── */
+.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;}
+
+/* ── ORDERS TABLE ── */
+.orders-table-wrap{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);}
+th{padding:0.8rem 1rem;text-align:left;font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);white-space:nowrap;}
+td{padding:0.85rem 1rem;font-size:0.82rem;color:rgba(246,237,216,0.7);border-bottom:1px solid rgba(196,98,45,0.06);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+.td-id{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--gold);}
+.td-customer{color:var(--cream);font-weight:500;}
+.td-amount{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--gold);}
+.status-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:100px;padding:0.2rem 0.65rem;font-size:0.68rem;font-weight:700;white-space:nowrap;}
+.status-pill .dot{width:5px;height:5px;border-radius:50%;}
+.status-pill.confirmed{background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.2);color:var(--blue);}
+.status-pill.confirmed .dot{background:var(--blue);animation:livePulse 2s infinite;}
+.status-pill.processing{background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);color:var(--gold);}
+.status-pill.processing .dot{background:var(--gold);animation:livePulse 2s infinite;}
+.status-pill.out_for_delivery{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);}
+.status-pill.out_for_delivery .dot{background:var(--clay-l);animation:livePulse 2s infinite;}
+.status-pill.delivered{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);}
+.status-pill.delivered .dot{background:var(--green);}
+.status-pill.cancelled{background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.15);color:var(--red);}
+.status-pill.cancelled .dot{background:var(--red);}
+.btn-update-status{background:none;border:1px solid var(--border);border-radius:6px;padding:0.25rem 0.6rem;font-size:0.68rem;color:rgba(246,237,216,0.4);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.btn-update-status:hover{border-color:var(--clay);color:var(--clay-l);}
+
+/* ── RIGHT COLUMN ── */
+/* Today's summary */
+.summary-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-bottom:1.2rem;}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:0.55rem 0;border-bottom:1px solid rgba(196,98,45,0.07);font-size:0.82rem;}
+.summary-row:last-child{border-bottom:none;}
+.summary-row-label{color:rgba(246,237,216,0.45);}
+.summary-row-val{font-weight:600;color:var(--cream);}
+.summary-row-val.gold{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold);}
+.summary-row-val.green{color:var(--green);}
+
+/* Quick actions */
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+.quick-btn{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:0.5rem;text-align:center;}
+.quick-btn:hover{border-color:rgba(196,98,45,0.4);background:rgba(196,98,45,0.06);}
+.quick-btn .q-icon{font-size:1.4rem;}
+.quick-btn .q-label{font-size:0.72rem;font-weight:600;color:rgba(246,237,216,0.55);}
+.quick-btn:hover .q-label{color:var(--cream);}
+
+/* Alerts */
+.alert-list{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.2rem;}
+.alert-item{display:flex;align-items:flex-start;gap:0.7rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;}
+.alert-item.warning{border-color:rgba(212,160,23,0.2);background:rgba(212,160,23,0.04);}
+.alert-item.info{border-color:rgba(100,181,246,0.2);background:rgba(100,181,246,0.04);}
+.alert-icon{font-size:0.95rem;flex-shrink:0;margin-top:0.1rem;}
+.alert-text{font-size:0.78rem;color:rgba(246,237,216,0.55);line-height:1.4;}
+.alert-text strong{color:var(--cream);}
+
+/* ── PRODUCT STOCK ── */
+.stock-list{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.stock-item{display:flex;align-items:center;gap:1rem;padding:0.85rem 1.2rem;border-bottom:1px solid rgba(196,98,45,0.06);transition:background 0.2s;}
+.stock-item:last-child{border-bottom:none;}
+.stock-item:hover{background:rgba(255,255,255,0.015);}
+.stock-img{width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--ink-2);}
+.stock-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.8);}
+.stock-info{flex:1;min-width:0;}
+.stock-name{font-size:0.82rem;font-weight:600;color:var(--cream);}
+.stock-price{font-size:0.7rem;color:rgba(246,237,216,0.35);}
+.stock-status{display:flex;align-items:center;gap:0.4rem;}
+.stock-toggle{width:34px;height:20px;position:relative;cursor:pointer;}
+.stock-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.stock-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:20px;transition:background 0.3s;}
+.stock-slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:rgba(246,237,216,0.5);border-radius:50%;transition:transform 0.3s,background 0.3s;}
+.stock-toggle input:checked + .stock-slider{background:var(--green);}
+.stock-toggle input:checked + .stock-slider::before{transform:translateX(14px);background:#fff;}
+
+/* ── REVENUE CHART PLACEHOLDER ── */
+.chart-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-bottom:1.5rem;}
+.chart-bars{display:flex;align-items:flex-end;gap:0.4rem;height:80px;margin-top:1rem;}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3rem;}
+.chart-bar{width:100%;background:rgba(196,98,45,0.2);border-radius:3px 3px 0 0;transition:background 0.3s;cursor:pointer;position:relative;}
+.chart-bar:hover{background:rgba(196,98,45,0.5);}
+.chart-bar.today{background:var(--clay);}
+.chart-bar-label{font-size:0.58rem;color:rgba(246,237,216,0.25);font-family:'Space Mono',monospace;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:960px){.dash-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .admin-sidebar{width:60px;min-width:60px;}
+  .admin-main{margin-left:60px;}
+  .sidebar-logo-text,.sidebar-logo-sub,.sidebar-link span:not(.icon),.sidebar-user,.btn-logout span{display:none;}
+  .sidebar-link{padding:0.9rem;justify-content:center;}
+  .sidebar-bottom{padding:0.8rem;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .admin-content{padding:1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── ADMIN LOGIN OVERLAY ── -->
+<div class="admin-login" id="adminLogin">
+  <div class="admin-login-box">
+    <div class="admin-login-logo">ANGADI <span>ADMIN</span></div>
+    <div class="admin-login-sub">Enter your admin credentials to continue</div>
+    <label class="admin-login-label" for="adminUser">Username</label>
+    <input class="admin-login-input" id="adminUser" type="text" placeholder="admin" autocomplete="username">
+    <label class="admin-login-label" for="adminPass">Password</label>
+    <input class="admin-login-input" id="adminPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="admin-login-btn" onclick="adminLogin()">Sign In →</button>
+    <div class="admin-login-err" id="loginErr">Incorrect credentials. Try again.</div>
+    <p style="font-size:0.68rem;color:rgba(246,237,216,0.2);margin-top:1rem;">(Dev: username <strong style="color:rgba(246,237,216,0.4);">admin</strong> / password <strong style="color:rgba(246,237,216,0.4);">angadi123</strong>)</p>
+  </div>
+</div>
+
+<!-- ── ADMIN LAYOUT ── -->
+<div class="admin-layout" id="adminLayout" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">ANGADI <span>↗</span></div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" href="dashboard.html"><span class="icon">📊</span> <span>Dashboard</span></a>
+      <a class="sidebar-link" href="orders.html"><span class="icon">📦</span> <span>Orders</span></a>
+      <a class="sidebar-link" href="products.html"><span class="icon">🥩</span> <span>Products</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="delivery.html"><span class="icon">🚚</span> <span>Delivery</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon">🛒</span> <span>View Shop</span></a>
+      <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon">🌐</span> <span>View Site</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">Logged in as<strong id="adminName">Admin</strong></div>
+      <button class="btn-logout" onclick="adminLogout()">🚪 <span>Logout</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+
+    <!-- TOPBAR -->
+    <div class="admin-topbar">
+      <div class="topbar-title">Good <span id="greeting">Morning</span>, Admin 👋</div>
+      <div class="topbar-right">
+        <div class="live-badge"><span class="live-dot"></span> Live</div>
+        <div class="topbar-date" id="topbarDate">—</div>
+        <a href="../shop.html" target="_blank" class="btn-view-site">↗ View Shop</a>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- STAT CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Today's Orders</div>
+          <div class="stat-value" id="statTodayOrders">—</div>
+          <div class="stat-sub"><span class="up" id="statTodayOrdersChange">—</span></div>
+        </div>
+        <div class="stat-card" data-accent="gold">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value gold" id="statTodayRevenue">—</div>
+          <div class="stat-sub" id="statRevSub">—</div>
+        </div>
+        <div class="stat-card" data-accent="green">
+          <div class="stat-icon">🚚</div>
+          <div class="stat-label">Pending Delivery</div>
+          <div class="stat-value" id="statPending">—</div>
+          <div class="stat-sub" id="statPendingSub">orders to dispatch</div>
+        </div>
+        <div class="stat-card" data-accent="blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Total Customers</div>
+          <div class="stat-value" id="statCustomers">—</div>
+          <div class="stat-sub">Hyderabad families</div>
+        </div>
+      </div>
+
+      <!-- 7-DAY REVENUE CHART -->
+      <div class="chart-card">
+        <div class="section-head" style="margin-bottom:0;">
+          <div class="section-title">Revenue — <span>Last 7 Days</span></div>
+          <div style="font-family:'Space Mono',monospace;font-size:0.72rem;color:rgba(246,237,216,0.3);">Total: <span id="weekTotal" style="color:var(--gold);">—</span></div>
+        </div>
+        <div class="chart-bars" id="chartBars">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="dash-grid">
+
+        <!-- RECENT ORDERS TABLE -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">Recent <span>Orders</span></div>
+            <a href="orders.html" class="btn-sm">View All →</a>
+          </div>
+          <div class="orders-table-wrap">
+            <div class="table-scroll">
+              <table id="recentOrdersTable">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Amount</th>
+                    <th>Slot</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrdersBody">
+                  <tr><td colspan="7" style="text-align:center;color:rgba(246,237,216,0.25);padding:2rem;">Loading orders…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PRODUCT STOCK -->
+          <div class="section-head" style="margin-top:1.8rem;">
+            <div class="section-title">Product <span>Stock</span></div>
+            <a href="products.html" class="btn-sm">Manage →</a>
+          </div>
+          <div class="stock-list" id="stockList">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+          <!-- TODAY SUMMARY -->
+          <div class="section-head">
+            <div class="section-title">Today's <span>Summary</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-row"><span class="summary-row-label">Orders</span><span class="summary-row-val" id="sumOrders">—</span></div>
+            <div class="summary-row"><span class="summary-row-label">Delivered</span><span class="summary-row-val green" id="sumDelivered">—</span></div>
+            <div class="summary-row"><span class="summary-row-label">Pending</span><span class="summary-row-val" id="sumPending">—</span></div>
+            <div class="summary-row"><span class="summary-row-label">COD Orders</span><span class="summary-row-val" id="sumCOD">—</span></div>
+            <div class="summary-row"><span class="summary-row-label">Online Paid</span><span class="summary-row-val" id="sumOnline">—</span></div>
+            <div class="summary-row"><span class="summary-row-label">Revenue</span><span class="summary-row-val gold" id="sumRevenue">—</span></div>
+          </div>
+
+          <!-- ALERTS -->
+          <div class="section-head">
+            <div class="section-title">⚡ <span>Alerts</span></div>
+          </div>
+          <div class="alert-list" id="alertList">
+            <!-- populated by JS -->
+          </div>
+
+          <!-- QUICK ACTIONS -->
+          <div class="section-head">
+            <div class="section-title">Quick <span>Actions</span></div>
+          </div>
+          <div class="quick-actions">
+            <a href="orders.html" class="quick-btn"><span class="q-icon">📦</span><span class="q-label">All Orders</span></a>
+            <a href="products.html" class="quick-btn"><span class="q-icon">🥩</span><span class="q-label">Products</span></a>
+            <a href="#" class="quick-btn" onclick="exportCSV()"><span class="q-icon">📊</span><span class="q-label">Export CSV</span></a>
+            <a href="https://wa.me/919999999999" target="_blank" class="quick-btn"><span class="q-icon">💬</span><span class="q-label">WhatsApp</span></a>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- end admin-content -->
+  </div><!-- end admin-main -->
+</div><!-- end admin-layout -->
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY  = 'YOUR_SUPABASE_ANON_KEY';
+const ADMIN_USER    = 'admin';
+const ADMIN_PASS    = 'angadi123'; // Change before going live!
+const DEV_MODE      = SUPABASE_URL === 'YOUR_SUPABASE_URL';
+
+// ─────────────────────────────────────────────
+//  ADMIN LOGIN
+// ─────────────────────────────────────────────
+function adminLogin() {
+  const user = document.getElementById('adminUser').value.trim();
+  const pass = document.getElementById('adminPass').value;
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    sessionStorage.setItem('angadi_admin', '1');
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminLayout').style.display = 'flex';
+    initDashboard();
+  } else {
+    document.getElementById('loginErr').classList.add('visible');
+    document.getElementById('adminPass').value = '';
+  }
+}
+document.getElementById('adminPass').addEventListener('keydown', e => { if (e.key === 'Enter') adminLogin(); });
+document.getElementById('adminUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adminPass').focus(); });
+
+function adminLogout() {
+  sessionStorage.removeItem('angadi_admin');
+  document.getElementById('adminLayout').style.display = 'none';
+  document.getElementById('adminLogin').classList.remove('hidden');
+}
+
+// Check if already logged in
+if (sessionStorage.getItem('angadi_admin') === '1') {
+  document.getElementById('adminLogin').classList.add('hidden');
+  document.getElementById('adminLayout').style.display = 'flex';
+  initDashboard();
+}
+
+// ─────────────────────────────────────────────
+//  PRODUCTS DATA
+// ─────────────────────────────────────────────
+const PRODUCTS = [
+  { id:'goat-meat',    name:'Village Goat Meat',  nameTE:'Meka Mamsam',   price:680,  unit:'kg',  img:'../product/mutton.png',          inStock:true  },
+  { id:'country-chicken', name:'Country Chicken', nameTE:'Nati Kodi',     price:520,  unit:'kg',  img:'../product/country chiken.png',  inStock:true  },
+  { id:'river-fish',   name:'Fresh River Fish',   nameTE:'Chepa Mukkalu', price:450,  unit:'kg',  img:'../product/fish.png',            inStock:true  },
+  { id:'goat-legs',    name:'Goat Legs',           nameTE:'Meka Kalu',    price:400,  unit:'4pcs',img:'../product/legs.png',            inStock:true  },
+  { id:'goat-liver',   name:'Goat Liver',          nameTE:'Meka Kalleja', price:1000, unit:'kg',  img:'../product/liver.png',           inStock:true  },
+  { id:'goat-head',    name:'Goat Head',           nameTE:'Meka Tala',    price:520,  unit:'head',img:'../product/head.png',            inStock:false },
+  { id:'baby-goat-legs',name:'Baby Goat Legs',     nameTE:'Pilla Meka Kalu',price:980,unit:'kg',  img:'../product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png',inStock:false},
+  { id:'country-eggs', name:'Country Eggs',        nameTE:'Nati Kodi Gudlu',price:12, unit:'egg', img:'../product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png',inStock:true  },
+  { id:'full-goat',    name:'Full Goat',           nameTE:'Poora Meka',   price:8500, unit:'goat',img:'../product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png',inStock:true  },
+];
+// Load from localStorage overrides
+let products = JSON.parse(localStorage.getItem('angadi_products') || JSON.stringify(PRODUCTS));
+
+// ─────────────────────────────────────────────
+//  DEMO ORDERS (dev)
+// ─────────────────────────────────────────────
+function getDemoOrders() {
+  const now = new Date();
+  const ago = (h) => new Date(now - h*3600000).toISOString();
+  return [
+    { orderId:'ANG-001', customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)'}, items:[{name:'Village Goat Meat · 1kg',price:680,qty:2},{name:'Country Chicken',price:520,qty:1}], total:1880, payment:'razorpay', status:'confirmed',    placedAt:ago(0.5)  },
+    { orderId:'ANG-002', customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)'},    items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],            total:1144, payment:'cod',      status:'processing',   placedAt:ago(1.2)  },
+    { orderId:'ANG-003', customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)'},         items:[{name:'Country Chicken · 1kg',price:520,qty:2}],                                                total:1040, payment:'razorpay', status:'out_for_delivery',placedAt:ago(2) },
+    { orderId:'ANG-004', customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)'}, items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],                                             total:2040, payment:'cod',      status:'delivered',    placedAt:ago(5)    },
+    { orderId:'ANG-005', customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)'},  items:[{name:'Full Goat',price:8500,qty:1}],                                                           total:8500, payment:'razorpay', status:'confirmed',    placedAt:ago(0.1)  },
+  ];
+}
+
+// ─────────────────────────────────────────────
+//  INIT DASHBOARD
+// ─────────────────────────────────────────────
+function initDashboard() {
+  setTopbarInfo();
+  const orders = loadOrders();
+  renderStats(orders);
+  renderChart(orders);
+  renderRecentOrders(orders);
+  renderStockList();
+  renderAlerts(orders);
+}
+
+function loadOrders() {
+  const stored = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+  if (DEV_MODE && stored.length < 5) {
+    const demos = getDemoOrders().filter(d => !stored.find(s => s.orderId === d.orderId));
+    const merged = [...stored, ...demos];
+    localStorage.setItem('angadi_all_orders', JSON.stringify(merged));
+    return merged;
+  }
+  return stored;
+}
+
+function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+function isToday(iso) {
+  const d = new Date(iso); const t = new Date();
+  return d.toDateString() === t.toDateString();
+}
+function normaliseStatus(s) {
+  if (!s) return 'confirmed';
+  if (['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
+  return ['confirmed','processing','out_for_delivery','delivered','cancelled'].includes(s) ? s : 'confirmed';
+}
+function statusLabel(s) {
+  const map = { confirmed:'Confirmed', processing:'Processing', out_for_delivery:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' };
+  return map[normaliseStatus(s)] || 'Confirmed';
+}
+
+function setTopbarInfo() {
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+
+function renderStats(orders) {
+  const today   = orders.filter(o => isToday(o.placedAt));
+  const pending = orders.filter(o => ['confirmed','processing','out_for_delivery'].includes(normaliseStatus(o.status)));
+  const revenue = today.reduce((s,o) => s + (o.total||0), 0);
+  const totalRev= orders.reduce((s,o) => s + (o.total||0), 0);
+  const unique  = [...new Set(orders.map(o => o.customer?.phone))].length;
+
+  document.getElementById('statTodayOrders').textContent        = today.length;
+  document.getElementById('statTodayOrdersChange').textContent  = `${orders.length} total orders`;
+  document.getElementById('statTodayRevenue').textContent       = fmt(revenue);
+  document.getElementById('statRevSub').innerHTML               = `<span style="color:var(--gold);">${fmt(totalRev)}</span> total all time`;
+  document.getElementById('statPending').textContent            = pending.length;
+  document.getElementById('statCustomers').textContent          = unique;
+
+  // Summary
+  const delivered = today.filter(o => normaliseStatus(o.status) === 'delivered').length;
+  const cod       = today.filter(o => o.payment === 'cod').length;
+  document.getElementById('sumOrders').textContent    = today.length;
+  document.getElementById('sumDelivered').textContent = delivered;
+  document.getElementById('sumPending').textContent   = today.length - delivered;
+  document.getElementById('sumCOD').textContent       = cod;
+  document.getElementById('sumOnline').textContent    = today.length - cod;
+  document.getElementById('sumRevenue').textContent   = fmt(revenue);
+}
+
+function renderChart(orders) {
+  const bars = document.getElementById('chartBars');
+  const days = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6-i));
+    return d;
+  });
+  const dayRevs = days.map(day => {
+    const rev = orders.filter(o => new Date(o.placedAt).toDateString() === day.toDateString()).reduce((s,o) => s+(o.total||0), 0);
+    return { day, rev };
+  });
+  const maxRev = Math.max(...dayRevs.map(d => d.rev), 1);
+  const weekTotal = dayRevs.reduce((s,d) => s + d.rev, 0);
+  document.getElementById('weekTotal').textContent = fmt(weekTotal);
+
+  bars.innerHTML = dayRevs.map((d, i) => {
+    const h = Math.max(6, (d.rev / maxRev) * 100);
+    const isToday = d.day.toDateString() === new Date().toDateString();
+    const label = d.day.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3);
+    return `
+      <div class="chart-bar-wrap" title="${label}: ${fmt(d.rev)}">
+        <div class="chart-bar ${isToday?'today':''}" style="height:${h}%;"></div>
+        <div class="chart-bar-label">${label}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRecentOrders(orders) {
+  const recent = [...orders].sort((a,b) => new Date(b.placedAt) - new Date(a.placedAt)).slice(0,8);
+  const tbody = document.getElementById('recentOrdersBody');
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(246,237,216,0.25);padding:2rem;">No orders yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(o => {
+    const status = normaliseStatus(o.status);
+    const itemsStr = (o.items||[]).map(i => i.name.split(' · ')[0]).slice(0,2).join(', ') + ((o.items||[]).length > 2 ? '…' : '');
+    const time = new Date(o.placedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return `
+      <tr>
+        <td class="td-id">${o.orderId}</td>
+        <td class="td-customer">${o.customer?.name || '—'}</td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;">${itemsStr}</td>
+        <td class="td-amount">${fmt(o.total||0)}</td>
+        <td style="font-size:0.72rem;">${o.customer?.slot?.split(' ')[0] || '—'} · ${time}</td>
+        <td><span class="status-pill ${status}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
+        <td>
+          <select onchange="updateOrderStatus('${o.orderId}',this.value)" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.68rem;color:var(--cream);outline:none;cursor:pointer;">
+            <option value="">Update…</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderStockList() {
+  document.getElementById('stockList').innerHTML = products.map((p, idx) => `
+    <div class="stock-item">
+      <div class="stock-img"><img src="${p.img}" alt="${p.name}"></div>
+      <div class="stock-info">
+        <div class="stock-name">${p.name}</div>
+        <div class="stock-price">${fmt(p.price)} / ${p.unit}</div>
+      </div>
+      <div class="stock-status">
+        <label class="stock-toggle">
+          <input type="checkbox" ${p.inStock?'checked':''} onchange="toggleStock(${idx},this.checked)">
+          <span class="stock-slider"></span>
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAlerts(orders) {
+  const pending = orders.filter(o => normaliseStatus(o.status) === 'confirmed').length;
+  const outOfStock = products.filter(p => !p.inStock).length;
+  const alerts = [];
+  if (pending > 0) alerts.push({ type:'warning', icon:'⏳', text:`<strong>${pending} order${pending>1?'s':''}</strong> confirmed and awaiting processing. Review them now.` });
+  if (outOfStock > 0) alerts.push({ type:'warning', icon:'📦', text:`<strong>${outOfStock} product${outOfStock>1?'s':''}</strong> currently marked out of stock. Update in Products.` });
+  alerts.push({ type:'info', icon:'💬', text:`WhatsApp notifications active. Customers will be updated automatically.` });
+  document.getElementById('alertList').innerHTML = alerts.map(a => `
+    <div class="alert-item ${a.type}">
+      <span class="alert-icon">${a.icon}</span>
+      <span class="alert-text">${a.text}</span>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function updateOrderStatus(orderId, newStatus) {
+  if (!newStatus) return;
+  const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+  const idx = orders.findIndex(o => o.orderId === orderId);
+  if (idx !== -1) {
+    orders[idx].status = newStatus;
+    localStorage.setItem('angadi_all_orders', JSON.stringify(orders));
+    showToast(`Order ${orderId} → ${statusLabel(newStatus)}`);
+    setTimeout(() => initDashboard(), 300);
+  }
+}
+
+function toggleStock(idx, val) {
+  products[idx].inStock = val;
+  localStorage.setItem('angadi_products', JSON.stringify(products));
+  showToast(`${products[idx].name} marked ${val ? 'In Stock' : 'Out of Stock'}`);
+}
+
+function exportCSV() {
+  const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+  const rows = [['Order ID','Customer','Phone','Items','Total','Payment','Status','Date']];
+  orders.forEach(o => rows.push([
+    o.orderId, o.customer?.name||'', o.customer?.phone||'',
+    (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' | '),
+    o.total||0, o.payment||'', o.status||'', o.placedAt||''
+  ]));
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `angadi-orders-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✓ CSV exported');
+}
+
+function showToast(msg) {
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.6rem 1.4rem;border-radius:100px;font-size:0.82rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('tStyle')) {
+    const s=document.createElement('style');s.id='tStyle';
+    s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+</script>
+</body>
+</html>
