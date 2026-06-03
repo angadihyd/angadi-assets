@@ -4,7 +4,12 @@
       "Bash(mkdir -p \"/Users/dasariprakash/Desktop/angadi assets/.claude\")",
       "mcp__Claude_Preview__preview_start",
       "Bash(open -a Safari http://localhost:3000)",
-      "Bash(ls \"/Users/dasariprakash/Desktop/angadi desing/\" | head -20)"
+      "Bash(ls \"/Users/dasariprakash/Desktop/angadi desing/\" | head -20)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['url']\\); print\\(f\\\\\"{d['commits']} commits · +{d['additions']} lines\\\\\"\\)\")"
     ]
   }
 }

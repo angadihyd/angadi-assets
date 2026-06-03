@@ -348,7 +348,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <div class="footer-col">
       <h4>Support</h4>
       <ul>
-        <li><a href="https://wa.me/919999999999" target="_blank">WhatsApp Us</a></li>
+        <li><a href="https://wa.me/919949950743" target="_blank">WhatsApp Us</a></li>
         <li><a href="#">Delivery Areas</a></li>
         <li><a href="#">Returns Policy</a></li>
       </ul>
@@ -359,7 +359,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   </div>
 </footer>
 
-<a href="https://wa.me/919999999999?text=Hi%20Angadi!%20I%20need%20help%20with%20my%20order" class="wa-float" target="_blank">💬</a>
+<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20need%20help%20with%20my%20order" class="wa-float" target="_blank">💬</a>
 
 <script>
 // ─────────────────────────────────────────────
@@ -641,7 +641,7 @@ function buildOrderCard(order, idx){
             <!-- Actions -->
             <div class="order-footer-actions">
               <button class="btn-action primary" onclick="reorder(${idx})">🔄 Reorder</button>
-              <a href="https://wa.me/919999999999?text=${waText}" target="_blank" class="btn-action wa">💬 Help</a>
+              <a href="https://wa.me/919949950743?text=${waText}" target="_blank" class="btn-action wa">💬 Help</a>
               ${status === 'delivered' ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">🧾 Invoice</button>` : ''}
               ${(status === 'confirmed' || status === 'processing') ? `<button class="btn-action" style="color:var(--red);border-color:rgba(229,115,115,0.2);" onclick="cancelOrder('${order.orderId}',${idx})">✕ Cancel</button>` : ''}
             </div>
