@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products — Angadi Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;--red:#E57373;--sidebar:180px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--ink-2);}::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+.guard{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+.guard.hidden{display:none;}
+.guard-box{text-align:center;padding:2rem;}
+.guard-box p{color:rgba(246,237,216,0.4);margin-bottom:1.5rem;}
+.guard-box a{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);text-decoration:none;padding:0.8rem 2rem;border-radius:10px;font-weight:600;}
+
+/* Shared layout */
+.admin-layout{display:flex;min-height:100vh;}
+.admin-sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--ink-2);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:1.5rem 1.2rem 1.2rem;border-bottom:1px solid var(--border);}
+.sidebar-logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--cream);letter-spacing:0.08em;}
+.sidebar-logo-text span{color:var(--gold);}
+.sidebar-logo-sub{font-size:0.6rem;font-family:'Space Mono',monospace;color:rgba(246,237,216,0.25);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+.sidebar-nav{flex:1;padding:1rem 0;}
+.sidebar-link{display:flex;align-items:center;gap:0.7rem;padding:0.75rem 1.2rem;font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.5);text-decoration:none;transition:all 0.25s;border-left:3px solid transparent;}
+.sidebar-link:hover{color:var(--cream);background:rgba(255,255,255,0.02);}
+.sidebar-link.active{color:var(--cream);background:rgba(196,98,45,0.1);border-left-color:var(--clay);}
+.sidebar-link .icon{font-size:1rem;flex-shrink:0;}
+.sidebar-divider{height:1px;background:var(--border);margin:0.5rem 1.2rem;}
+.sidebar-bottom{padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.sidebar-user{font-size:0.75rem;color:rgba(246,237,216,0.3);margin-bottom:0.5rem;}
+.sidebar-user strong{color:rgba(246,237,216,0.55);display:block;}
+.btn-logout{width:100%;background:none;border:1px solid rgba(229,115,115,0.2);color:rgba(229,115,115,0.6);border-radius:8px;padding:0.5rem;font-size:0.75rem;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.4rem;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.admin-main{margin-left:var(--sidebar);flex:1;min-width:0;}
+.admin-topbar{background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);}
+.topbar-title span{font-style:italic;color:var(--gold);}
+.admin-content{padding:2rem;}
+.btn-sm{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);padding:0.4rem 0.9rem;border-radius:7px;font-size:0.75rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Sans',sans-serif;}
+.btn-sm:hover{background:rgba(196,98,45,0.2);color:var(--cream);}
+.btn-sm.primary{background:var(--clay);border-color:var(--clay);color:var(--cream);}
+.btn-sm.primary:hover{background:var(--clay-l);}
+
+/* Products grid */
+.products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+.product-admin-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.3s;}
+.product-admin-card:hover{border-color:rgba(196,98,45,0.4);}
+.product-admin-card.out-of-stock{opacity:0.65;}
+.prod-img{position:relative;height:160px;overflow:hidden;}
+.prod-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.85);}
+.prod-stock-badge{position:absolute;top:0.7rem;right:0.7rem;}
+.stock-on{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);color:var(--green);font-size:0.65rem;font-weight:700;padding:0.22rem 0.6rem;border-radius:100px;font-family:'Space Mono',monospace;letter-spacing:0.06em;}
+.stock-off{background:rgba(229,115,115,0.12);border:1px solid rgba(229,115,115,0.25);color:var(--red);font-size:0.65rem;font-weight:700;padding:0.22rem 0.6rem;border-radius:100px;font-family:'Space Mono',monospace;letter-spacing:0.06em;}
+.out-of-stock-overlay{position:absolute;inset:0;background:rgba(8,5,3,0.5);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:var(--red);letter-spacing:0.1em;text-transform:uppercase;}
+.prod-body{padding:1rem 1.1rem 1.1rem;}
+.prod-name-te{font-size:0.65rem;font-weight:500;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.2rem;}
+.prod-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.6rem;}
+.prod-price-row{display:flex;align-items:baseline;gap:0.5rem;margin-bottom:1rem;}
+.prod-price{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;line-height:1;color:var(--gold);}
+.prod-unit{font-size:0.7rem;color:rgba(246,237,216,0.35);}
+/* Inline price edit */
+.price-edit-wrap{display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;}
+.price-input{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:0.45rem 0.7rem;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold);width:110px;outline:none;transition:border-color 0.3s;}
+.price-input:focus{border-color:var(--clay);}
+.btn-save-price{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);color:var(--green);border-radius:7px;padding:0.35rem 0.7rem;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.btn-save-price:hover{background:rgba(76,175,80,0.25);}
+.prod-actions{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+/* Stock toggle */
+.stock-toggle-wrap{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:rgba(246,237,216,0.45);}
+.toggle{position:relative;width:38px;height:21px;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:21px;cursor:pointer;transition:background 0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:rgba(246,237,216,0.5);border-radius:50%;transition:transform 0.3s,background 0.3s;}
+.toggle input:checked + .toggle-slider{background:var(--green);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(17px);background:#fff;}
+
+/* Edit form panel */
+.edit-panel{position:fixed;top:0;right:-520px;bottom:0;width:520px;background:var(--ink-2);border-left:1px solid var(--border);z-index:200;transition:right 0.35s ease;overflow-y:auto;padding:2rem;}
+.edit-panel.open{right:0;}
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:190;display:none;}
+.panel-overlay.open{display:block;}
+.panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:1px solid var(--border);color:var(--cream);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;}
+.panel-close:hover{border-color:var(--clay);}
+
+/* Form elements */
+.form-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;}
+.form-label{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);}
+.form-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:0.7rem 0.9rem;font-size:0.88rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;width:100%;}
+.form-input::placeholder{color:rgba(246,237,216,0.18);}
+.form-input:focus{border-color:var(--clay);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E8956A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.8rem center;cursor:pointer;}
+.form-select option{background:var(--ink-2);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.85rem;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+.btn-primary:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.btn-ghost{width:100%;background:transparent;color:rgba(246,237,216,0.5);border:1px solid var(--border);padding:0.75rem;border-radius:10px;font-size:0.85rem;cursor:pointer;transition:all 0.3s;margin-top:0.6rem;font-family:'DM Sans',sans-serif;}
+.btn-ghost:hover{border-color:var(--clay-l);color:var(--cream);}
+.save-status{font-size:0.8rem;font-weight:500;margin-top:0.6rem;display:none;align-items:center;gap:0.4rem;}
+.save-status.visible{display:flex;}
+.save-status.success{color:var(--green);}
+.save-status.error{color:var(--red);}
+.spinner{width:15px;height:15px;border:2px solid rgba(246,237,216,0.3);border-top-color:var(--cream);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Header bar */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
+.page-title-section{}
+.page-title-main{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream);}
+.page-title-main span{font-style:italic;color:var(--gold);}
+.page-title-sub{font-size:0.78rem;color:rgba(246,237,216,0.35);margin-top:0.2rem;}
+
+@media(max-width:1100px){.products-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:768px){
+  .admin-sidebar{width:60px;min-width:60px;}
+  .admin-main{margin-left:60px;}
+  .sidebar-logo-text,.sidebar-logo-sub,.sidebar-link span:not(.icon),.sidebar-user,.btn-logout span{display:none;}
+  .sidebar-link{padding:0.9rem;justify-content:center;}
+  .products-grid{grid-template-columns:1fr;}
+  .admin-content{padding:1rem;}
+  .edit-panel{width:100%;right:-100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="guard hidden" id="guard">
+  <div class="guard-box"><p>Please log in first.</p><a href="dashboard.html">← Login</a></div>
+</div>
+
+<div class="admin-layout" id="adminLayout">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">ANGADI <span>↗</span></div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="dashboard.html"><span class="icon">📊</span> <span>Dashboard</span></a>
+      <a class="sidebar-link" href="orders.html"><span class="icon">📦</span> <span>Orders</span></a>
+      <a class="sidebar-link active" href="products.html"><span class="icon">🥩</span> <span>Products</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="delivery.html"><span class="icon">🚚</span> <span>Delivery</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon">🛒</span> <span>View Shop</span></a>
+      <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon">🌐</span> <span>View Site</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">Logged in as<strong>Admin</strong></div>
+      <button class="btn-logout" onclick="adminLogout()">🚪 <span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div class="topbar-title">Manage <span>Products</span></div>
+      <div style="display:flex;gap:0.8rem;">
+        <button class="btn-sm primary" onclick="openAddProduct()">+ Add Product</button>
+        <button class="btn-sm" onclick="resetToDefaults()">↺ Reset Prices</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="page-header">
+        <div class="page-title-section">
+          <div class="page-title-main">All <span>Products</span></div>
+          <div class="page-title-sub">Update prices, toggle availability, edit details</div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:center;">
+          <span style="font-size:0.75rem;color:rgba(246,237,216,0.3);">Show:</span>
+          <button class="btn-sm active" id="filterAll" onclick="filterProducts('all')">All</button>
+          <button class="btn-sm" id="filterInStock" onclick="filterProducts('in')">In Stock</button>
+          <button class="btn-sm" id="filterOut" onclick="filterProducts('out')">Out of Stock</button>
+        </div>
+      </div>
+
+      <div class="products-grid" id="productsGrid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT / ADD PANEL -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="edit-panel" id="editPanel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panelContent"><!-- populated by JS --></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+if (sessionStorage.getItem('angadi_admin') !== '1') {
+  document.getElementById('guard').classList.remove('hidden');
+  document.getElementById('adminLayout').style.display = 'none';
+} else { init(); }
+function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
+
+// ─────────────────────────────────────────────
+//  DEFAULT PRODUCTS
+// ─────────────────────────────────────────────
+const DEFAULT_PRODUCTS = [
+  { id:'goat-meat',     name:'Village Goat Meat', nameTE:'Meka Mamsam',    price:680,  unit:'kg',   img:'../product/mutton.png',          category:'goat',    badge:'⭐ Bestseller', inStock:true,  featured:true  },
+  { id:'country-chicken',name:'Country Chicken',  nameTE:'Nati Kodi',      price:520,  unit:'kg',   img:'../product/country chiken.png',  category:'chicken', badge:'🌿 Nati',      inStock:true,  featured:true  },
+  { id:'river-fish',    name:'Fresh River Fish',  nameTE:'Chepa Mukkalu',  price:450,  unit:'kg',   img:'../product/fish.png',            category:'fish',    badge:'🐟 River Fresh',inStock:true,  featured:true  },
+  { id:'goat-legs',     name:'Goat Legs',         nameTE:'Meka Kalu',      price:400,  unit:'4 pcs',img:'../product/legs.png',            category:'goat',    badge:'🦵 Fresh',     inStock:true,  featured:false },
+  { id:'goat-liver',    name:'Goat Liver',        nameTE:'Meka Kalleja',   price:1000, unit:'kg',   img:'../product/liver.png',           category:'goat',    badge:'💎 Premium',   inStock:true,  featured:false },
+  { id:'goat-head',     name:'Goat Head',         nameTE:'Meka Tala',      price:520,  unit:'head', img:'../product/head.png',            category:'goat',    badge:'🐐 Whole',     inStock:false, featured:false },
+  { id:'baby-goat-legs',name:'Baby Goat Legs',    nameTE:'Pilla Meka Kalu',price:980,  unit:'kg',   img:'../product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png',category:'goat',badge:'🏆 Premium',inStock:false,featured:false},
+  { id:'country-eggs',  name:'Country Eggs',      nameTE:'Nati Kodi Gudlu',price:12,   unit:'egg',  img:'../product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png',category:'eggs',badge:'🥚 Farm Fresh',inStock:true,featured:false},
+  { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png',category:'goat',badge:'👑 Whole',inStock:true,featured:false},
+];
+
+let products = JSON.parse(localStorage.getItem('angadi_products') || JSON.stringify(DEFAULT_PRODUCTS));
+let currentFilter = 'all';
+
+function saveProducts(){ localStorage.setItem('angadi_products', JSON.stringify(products)); }
+function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function init(){ renderProducts(); }
+
+function filterProducts(f){
+  currentFilter = f;
+  document.querySelectorAll('#filterAll,#filterInStock,#filterOut').forEach(b=>b.classList.remove('active'));
+  document.getElementById(f==='all'?'filterAll':f==='in'?'filterInStock':'filterOut').classList.add('active');
+  renderProducts();
+}
+
+function renderProducts(){
+  const filtered = products.filter(p => {
+    if (currentFilter === 'in')  return p.inStock;
+    if (currentFilter === 'out') return !p.inStock;
+    return true;
+  });
+  document.getElementById('productsGrid').innerHTML = filtered.map((p, idx) => buildCard(p, products.indexOf(p))).join('');
+}
+
+function buildCard(p, idx){
+  return `
+    <div class="product-admin-card ${p.inStock?'':'out-of-stock'}">
+      <div class="prod-img">
+        <img src="${p.img}" alt="${p.name}">
+        <div class="prod-stock-badge">
+          <span class="${p.inStock?'stock-on':'stock-off'}">${p.inStock?'IN STOCK':'OUT OF STOCK'}</span>
+        </div>
+        ${!p.inStock?'<div class="out-of-stock-overlay">Out of Stock</div>':''}
+      </div>
+      <div class="prod-body">
+        <div class="prod-name-te">${p.nameTE}</div>
+        <div class="prod-name">${p.name}</div>
+
+        <!-- Inline price edit -->
+        <div class="price-edit-wrap">
+          <input class="price-input" id="priceInput-${idx}" type="number" value="${p.price}" min="1" step="1">
+          <span style="font-size:0.72rem;color:rgba(246,237,216,0.3);">/ ${p.unit}</span>
+          <button class="btn-save-price" onclick="savePrice(${idx})">✓ Save</button>
+        </div>
+
+        <div class="prod-actions">
+          <div class="stock-toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" ${p.inStock?'checked':''} onchange="toggleStock(${idx},this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>${p.inStock?'In Stock':'Out of Stock'}</span>
+          </div>
+          <button class="btn-sm" onclick="openEditProduct(${idx})" style="margin-left:auto;">✎ Edit</button>
+          <button class="btn-sm" onclick="toggleFeatured(${idx})" title="Toggle featured on homepage" style="${p.featured?'color:var(--gold);border-color:rgba(212,160,23,0.3);background:rgba(212,160,23,0.08);':''}">
+            ${p.featured?'⭐ Featured':'☆ Feature'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function savePrice(idx){
+  const val = parseFloat(document.getElementById(`priceInput-${idx}`)?.value);
+  if (!val || val <= 0) { showToast('Invalid price'); return; }
+  products[idx].price = val;
+  saveProducts();
+  renderProducts();
+  showToast(`✓ ${products[idx].name} price updated to ${fmt(val)}`);
+}
+
+function toggleStock(idx, val){
+  products[idx].inStock = val;
+  saveProducts();
+  renderProducts();
+  showToast(`${products[idx].name} → ${val?'In Stock':'Out of Stock'}`);
+}
+
+function toggleFeatured(idx){
+  products[idx].featured = !products[idx].featured;
+  saveProducts();
+  renderProducts();
+  showToast(`${products[idx].name} ${products[idx].featured?'added to':'removed from'} homepage`);
+}
+
+function resetToDefaults(){
+  if (!confirm('Reset all prices to default values?')) return;
+  products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  saveProducts();
+  renderProducts();
+  showToast('✓ Prices reset to defaults');
+}
+
+// ─────────────────────────────────────────────
+//  EDIT PANEL
+// ─────────────────────────────────────────────
+function openEditProduct(idx){
+  const p = products[idx];
+  showPanel(`
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--clay-l);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;">Edit Product</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream);">${p.name}</div>
+    </div>
+    <form id="editForm" onsubmit="saveEdit(event,${idx})">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">English Name *</label>
+          <input class="form-input" id="ef-name" type="text" value="${p.name}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telugu Name</label>
+          <input class="form-input" id="ef-namete" type="text" value="${p.nameTE||''}">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Price (₹) *</label>
+          <input class="form-input" id="ef-price" type="number" value="${p.price}" min="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit</label>
+          <select class="form-input form-select" id="ef-unit">
+            <option ${p.unit==='kg'?'selected':''}>kg</option>
+            <option ${p.unit==='egg'?'selected':''}>egg</option>
+            <option ${p.unit==='head'?'selected':''}>head</option>
+            <option ${p.unit==='goat'?'selected':''}>goat</option>
+            <option ${p.unit==='4 pcs'?'selected':''}>4 pcs</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Badge Text</label>
+        <input class="form-input" id="ef-badge" type="text" value="${p.badge||''}" placeholder="e.g. ⭐ Bestseller">
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input form-select" id="ef-cat">
+            <option ${p.category==='goat'?'selected':''} value="goat">Goat</option>
+            <option ${p.category==='chicken'?'selected':''} value="chicken">Chicken</option>
+            <option ${p.category==='fish'?'selected':''} value="fish">Fish</option>
+            <option ${p.category==='eggs'?'selected':''} value="eggs">Eggs</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Status</label>
+          <select class="form-input form-select" id="ef-stock">
+            <option value="1" ${p.inStock?'selected':''}>In Stock ✓</option>
+            <option value="0" ${!p.inStock?'selected':''}>Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image Path (relative to admin/)</label>
+        <input class="form-input" id="ef-img" type="text" value="${p.img}">
+        <span style="font-size:0.7rem;color:rgba(246,237,216,0.25);margin-top:0.2rem;">Current: ${p.img.split('/').pop()}</span>
+      </div>
+      <button type="submit" class="btn-primary" id="editSaveBtn">Save Changes</button>
+      <span class="save-status" id="editStatus"></span>
+    </form>
+    <button class="btn-ghost" onclick="closePanel()">Cancel</button>
+  `);
+}
+
+function openAddProduct(){
+  showPanel(`
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--clay-l);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;">New Product</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream);">Add Product</div>
+    </div>
+    <form id="editForm" onsubmit="saveNewProduct(event)">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">English Name *</label>
+          <input class="form-input" id="ef-name" type="text" placeholder="e.g. Goat Keema" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telugu Name</label>
+          <input class="form-input" id="ef-namete" type="text" placeholder="e.g. Meka Kheema">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Price (₹) *</label>
+          <input class="form-input" id="ef-price" type="number" placeholder="680" min="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit</label>
+          <select class="form-input form-select" id="ef-unit">
+            <option>kg</option><option>egg</option><option>head</option><option>goat</option><option>4 pcs</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Badge Text</label>
+        <input class="form-input" id="ef-badge" type="text" placeholder="e.g. 🆕 New">
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input form-select" id="ef-cat">
+            <option value="goat">Goat</option><option value="chicken">Chicken</option><option value="fish">Fish</option><option value="eggs">Eggs</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">In Stock?</label>
+          <select class="form-input form-select" id="ef-stock">
+            <option value="1">In Stock ✓</option><option value="0">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image Path *</label>
+        <input class="form-input" id="ef-img" type="text" placeholder="../product/filename.png" required>
+      </div>
+      <button type="submit" class="btn-primary">Add Product</button>
+    </form>
+    <button class="btn-ghost" onclick="closePanel()">Cancel</button>
+  `);
+}
+
+function saveEdit(e, idx){
+  e.preventDefault();
+  products[idx] = {
+    ...products[idx],
+    name:     document.getElementById('ef-name').value.trim(),
+    nameTE:   document.getElementById('ef-namete').value.trim(),
+    price:    parseFloat(document.getElementById('ef-price').value),
+    unit:     document.getElementById('ef-unit').value,
+    badge:    document.getElementById('ef-badge').value.trim(),
+    category: document.getElementById('ef-cat').value,
+    inStock:  document.getElementById('ef-stock').value === '1',
+    img:      document.getElementById('ef-img').value.trim(),
+  };
+  saveProducts(); renderProducts(); closePanel();
+  showToast(`✓ ${products[idx].name} updated`);
+}
+
+function saveNewProduct(e){
+  e.preventDefault();
+  const newP = {
+    id:       document.getElementById('ef-name').value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''),
+    name:     document.getElementById('ef-name').value.trim(),
+    nameTE:   document.getElementById('ef-namete').value.trim(),
+    price:    parseFloat(document.getElementById('ef-price').value),
+    unit:     document.getElementById('ef-unit').value,
+    badge:    document.getElementById('ef-badge').value.trim(),
+    category: document.getElementById('ef-cat').value,
+    inStock:  document.getElementById('ef-stock').value === '1',
+    img:      document.getElementById('ef-img').value.trim(),
+    featured: false,
+  };
+  products.push(newP);
+  saveProducts(); renderProducts(); closePanel();
+  showToast(`✓ ${newP.name} added`);
+}
+
+function showPanel(html){
+  document.getElementById('panelContent').innerHTML = html;
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('panelOverlay').classList.add('open');
+}
+function closePanel(){
+  document.getElementById('editPanel').classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('open');
+}
+
+function showToast(msg){
+  document.querySelectorAll('.angadi-toast').forEach(t=>t.remove());
+  const toast=document.createElement('div');toast.className='angadi-toast';
+  toast.style.cssText=`position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.6rem 1.4rem;border-radius:100px;font-size:0.82rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent=msg;
+  if(!document.getElementById('tStyle')){const s=document.createElement('style');s.id='tStyle';s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;document.head.appendChild(s);}
+  document.body.appendChild(toast); setTimeout(()=>toast.remove(),2600);
+}
+</script>
+</body>
+</html>

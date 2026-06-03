@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D; --clay-d:#7A3318; --clay-l:#E8956A;
+  --gold:#D4A017; --cream:#F6EDD8;
+  --ink:#080503; --ink-2:#100804; --ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2); --border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4rem;height:70px;
+  background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{display:flex;align-items:center;text-decoration:none;}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{text-decoration:none;font-size:0.88rem;font-weight:500;color:rgba(246,237,216,0.7);letter-spacing:0.08em;text-transform:uppercase;transition:color 0.3s;}
+.nav-links a:hover{color:var(--clay-l);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.btn-nav{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.6rem 1.5rem;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-nav:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{display:none;position:fixed;inset:0;z-index:998;background:rgba(8,5,3,0.97);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.08em;color:var(--cream);text-decoration:none;}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--cream);font-size:1.8rem;cursor:pointer;}
+
+/* ── PAGE ── */
+.page{padding-top:70px;}
+
+/* ── HERO CONFIRM ── */
+.confirm-hero{
+  background:var(--ink-2);
+  padding:5rem 4rem 4rem;
+  text-align:center;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+}
+.confirm-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(76,175,80,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.confirm-hero::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border),transparent);
+}
+
+/* Animated checkmark */
+.confirm-icon-wrap{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  margin-bottom:2rem;
+}
+.confirm-ring{
+  width:100px;height:100px;border-radius:50%;
+  border:2px solid rgba(76,175,80,0.3);
+  display:flex;align-items:center;justify-content:center;
+  animation:ringPulse 2.5s ease infinite;
+  position:relative;
+}
+.confirm-ring::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:1px solid rgba(76,175,80,0.1);
+  animation:ringPulse 2.5s ease infinite 0.4s;
+}
+@keyframes ringPulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.06);opacity:0.7;}
+}
+.confirm-check{
+  width:80px;height:80px;background:linear-gradient(135deg,#43A047,#2E7D32);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;
+  box-shadow:0 8px 32px rgba(76,175,80,0.35);
+  animation:checkBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes checkBounce{
+  from{transform:scale(0);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+
+/* Confetti dots */
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.confetti-dot{
+  position:absolute;width:6px;height:6px;border-radius:50%;opacity:0;
+  animation:confettiFall 3s ease forwards;
+}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-20px) rotate(0deg);}
+  100%{opacity:0;transform:translateY(120px) rotate(720deg);}
+}
+
+.confirm-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--green);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-bottom:0.8rem;
+  background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);
+  border-radius:100px;padding:0.35rem 1rem;
+}
+.confirm-eyebrow::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}
+
+.confirm-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,6vw,5rem);line-height:0.95;letter-spacing:0.02em;
+  color:var(--cream);margin-bottom:0.8rem;
+}
+.confirm-title span{color:var(--gold);}
+.confirm-sub{
+  font-size:1rem;color:rgba(246,237,216,0.55);
+  line-height:1.6;max-width:480px;margin:0 auto 2rem;
+}
+.confirm-sub strong{color:var(--cream);}
+
+/* Order ID chip */
+.order-id-chip{
+  display:inline-flex;align-items:center;gap:0.8rem;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border-gold);
+  border-radius:12px;padding:0.8rem 1.4rem;margin-bottom:2rem;
+}
+.order-id-label{font-family:'Space Mono',monospace;font-size:0.68rem;color:rgba(246,237,216,0.35);letter-spacing:0.1em;text-transform:uppercase;}
+.order-id-val{font-family:'Space Mono',monospace;font-size:0.9rem;color:var(--gold);font-weight:700;letter-spacing:0.08em;}
+
+/* Hero CTAs */
+.confirm-ctas{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);
+  border:none;padding:0.9rem 2rem;border-radius:10px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(196,98,45,0.45);}
+.btn-ghost{
+  background:transparent;color:var(--cream);border:1px solid rgba(246,237,216,0.2);
+  padding:0.9rem 2rem;border-radius:10px;font-size:0.95rem;font-weight:500;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-ghost:hover{border-color:var(--clay-l);background:rgba(196,98,45,0.06);}
+.btn-whatsapp{
+  background:#25D366;color:#fff;border:none;padding:0.9rem 1.8rem;border-radius:10px;
+  font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-whatsapp:hover{background:#1ebe57;transform:translateY(-2px);}
+
+/* ── PROGRESS STEPS ── */
+.order-steps{display:flex;align-items:center;justify-content:center;margin-top:2.5rem;}
+.order-step{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;font-weight:500;color:rgba(246,237,216,0.35);letter-spacing:0.04em;}
+.order-step.done{color:var(--clay-l);}
+.step-circle{width:28px;height:28px;border-radius:50%;border:1px solid rgba(246,237,216,0.2);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:0.85rem;flex-shrink:0;}
+.order-step.done .step-circle{border-color:var(--clay-l);background:var(--clay);color:var(--cream);}
+.step-line{width:3rem;height:1px;background:var(--border);margin:0 0.4rem;}
+.step-line.done{background:rgba(196,98,45,0.4);}
+
+/* ── BODY ── */
+.confirm-body{max-width:1100px;margin:0 auto;padding:3rem 4rem 5rem;display:grid;grid-template-columns:1fr 360px;gap:2rem;align-items:start;}
+
+/* ── WHAT HAPPENS NEXT ── */
+.next-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem;}
+.card-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--clay);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:1rem;}
+.card-eyebrow::before{content:'';display:block;width:14px;height:1px;background:var(--clay);}
+.card-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);margin-bottom:1.5rem;}
+
+.timeline{display:flex;flex-direction:column;gap:0;}
+.timeline-item{display:flex;gap:1rem;padding-bottom:1.5rem;position:relative;}
+.timeline-item:last-child{padding-bottom:0;}
+.timeline-item:last-child .timeline-line{display:none;}
+.timeline-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+.timeline-dot{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+  border:1px solid var(--border);background:rgba(255,255,255,0.03);
+  transition:all 0.3s;
+}
+.timeline-dot.done{background:rgba(76,175,80,0.12);border-color:rgba(76,175,80,0.3);}
+.timeline-dot.active{background:rgba(196,98,45,0.12);border-color:var(--clay);animation:dotPulse 2s ease infinite;}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(196,98,45,0.3);}50%{box-shadow:0 0 0 6px rgba(196,98,45,0);}}
+.timeline-line{width:1px;flex:1;background:var(--border);margin-top:4px;margin-bottom:4px;min-height:20px;}
+.timeline-line.done{background:rgba(76,175,80,0.25);}
+.timeline-content{padding-top:0.4rem;}
+.timeline-title{font-size:0.9rem;font-weight:600;color:var(--cream);margin-bottom:0.2rem;}
+.timeline-title.done{color:rgba(246,237,216,0.7);}
+.timeline-desc{font-size:0.78rem;color:rgba(246,237,216,0.4);line-height:1.5;}
+.timeline-time{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--clay-l);margin-top:0.3rem;}
+
+/* ── ORDER ITEMS ── */
+.items-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;padding:1.6rem;}
+.items-list{display:flex;flex-direction:column;gap:0;}
+.order-item{display:flex;gap:0.9rem;align-items:center;padding:0.8rem 0;border-bottom:1px solid rgba(196,98,45,0.07);}
+.order-item:last-child{border-bottom:none;}
+.order-item-img{width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--ink-2);}
+.order-item-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.85);}
+.order-item-details{flex:1;min-width:0;}
+.order-item-name{font-size:0.85rem;font-weight:600;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.order-item-meta{font-size:0.7rem;color:rgba(246,237,216,0.35);margin-top:0.15rem;}
+.order-item-qty{font-family:'Space Mono',monospace;font-size:0.7rem;color:rgba(246,237,216,0.35);flex-shrink:0;}
+.order-item-price{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);flex-shrink:0;}
+
+/* Price breakdown */
+.price-row{display:flex;justify-content:space-between;font-size:0.83rem;color:rgba(246,237,216,0.5);margin-bottom:0.6rem;}
+.price-row .val{color:var(--cream);}
+.price-row .val.free{color:var(--green);font-weight:600;}
+.price-row.total{font-size:0.95rem;font-weight:700;color:var(--cream);border-top:1px solid var(--border);padding-top:0.8rem;margin-top:0.3rem;margin-bottom:0;}
+.price-row.total .val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold);}
+
+/* ── DELIVERY DETAILS CARD ── */
+.delivery-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-top:1rem;}
+.delivery-row{display:flex;gap:0.8rem;align-items:flex-start;padding:0.6rem 0;border-bottom:1px solid rgba(196,98,45,0.07);}
+.delivery-row:last-child{border-bottom:none;}
+.delivery-row-icon{font-size:1rem;flex-shrink:0;margin-top:0.1rem;}
+.delivery-row-label{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(246,237,216,0.3);margin-bottom:0.2rem;}
+.delivery-row-val{font-size:0.83rem;color:var(--cream);}
+
+/* ── SHARE SECTION ── */
+.share-card{background:linear-gradient(135deg,rgba(196,98,45,0.08),rgba(212,160,23,0.05));border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-top:1rem;text-align:center;}
+.share-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--cream);margin-bottom:0.4rem;}
+.share-sub{font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:1.2rem;line-height:1.5;}
+.share-btns{display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;}
+.btn-share{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:0.5rem 1rem;font-size:0.78rem;color:rgba(246,237,216,0.55);cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:0.4rem;}
+.btn-share:hover{border-color:rgba(196,98,45,0.4);color:var(--cream);}
+.btn-share.wa{background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.2);color:#25D366;}
+.btn-share.wa:hover{background:rgba(37,211,102,0.15);}
+
+/* ── TICKER ── */
+.ticker{background:var(--clay);padding:0.75rem 0;overflow:hidden;white-space:nowrap;}
+.ticker-inner{display:inline-flex;animation:tickerMove 20s linear infinite;}
+.ticker-item{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:0.18em;color:var(--cream);padding:0 1.8rem;display:inline-flex;align-items:center;gap:1.8rem;}
+.ticker-dot{width:4px;height:4px;background:rgba(246,237,216,0.5);border-radius:50%;}
+@keyframes tickerMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ── FOOTER ── */
+footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4rem 1.5rem;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2rem;}
+.footer-brand p{font-size:0.85rem;color:rgba(246,237,216,0.5);line-height:1.7;max-width:280px;margin-top:0.5rem;}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--clay-l);margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:0.6rem;}
+.footer-col ul li a{font-size:0.85rem;color:rgba(246,237,216,0.5);text-decoration:none;transition:color 0.3s;}
+.footer-col ul li a:hover{color:var(--cream);}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
+.footer-bottom p{font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+.footer-delivery{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-delivery .dot{width:8px;height:8px;background:#4CAF50;border-radius:50%;animation:pulse 2s infinite;}
+
+/* ── WA FLOAT ── */
+.wa-float{position:fixed;bottom:2rem;right:2rem;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 20px rgba(37,211,102,0.4);text-decoration:none;animation:waBounce 3s ease infinite;}
+.wa-float:hover{transform:scale(1.1);}
+@keyframes waBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── FADE ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+.fade-up:nth-child(2){transition-delay:0.1s;}
+.fade-up:nth-child(3){transition-delay:0.2s;}
+.fade-up:nth-child(4){transition-delay:0.3s;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .confirm-body{grid-template-columns:1fr;padding:2rem;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.btn-nav{display:none;}
+  .nav-hamburger{display:flex;}
+  .confirm-hero{padding:3.5rem 1.5rem 3rem;}
+  .confirm-body{padding:1.5rem 1.5rem 3rem;}
+  .footer-grid{grid-template-columns:1fr;}
+  footer{padding:2rem 1.5rem 1rem;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+  .order-steps{overflow-x:auto;padding-bottom:0.5rem;justify-content:flex-start;}
+  .confirm-ctas{flex-direction:column;align-items:stretch;}
+  .confirm-ctas a,.confirm-ctas button{justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="my-orders.html">My Orders</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="shop.html" class="btn-nav">🛒 Shop Again</a>
+    <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="shop.html" onclick="closeMobile()">Shop</a>
+  <a href="my-orders.html" onclick="closeMobile()">My Orders</a>
+  <a href="index.html#contact" onclick="closeMobile()">Contact</a>
+</div>
+
+<div class="page">
+
+  <!-- CONFIRM HERO -->
+  <div class="confirm-hero">
+
+    <!-- Confetti -->
+    <div class="confetti" id="confetti"></div>
+
+    <!-- Check icon -->
+    <div class="confirm-icon-wrap">
+      <div class="confirm-ring">
+        <div class="confirm-check">✓</div>
+      </div>
+    </div>
+
+    <div class="confirm-eyebrow">Order Confirmed</div>
+
+    <h1 class="confirm-title">
+      Your <span>Village Feast</span><br>is on its Way!
+    </h1>
+
+    <p class="confirm-sub" id="confirmSub">
+      Thank you for your order! We're sourcing your fresh meat right now.
+      <strong>You'll receive a WhatsApp confirmation shortly.</strong>
+    </p>
+
+    <!-- Order ID -->
+    <div class="order-id-chip">
+      <div>
+        <div class="order-id-label">Order ID</div>
+        <div class="order-id-val" id="orderIdDisplay">ANG-000000</div>
+      </div>
+      <div style="width:1px;height:30px;background:var(--border);"></div>
+      <div>
+        <div class="order-id-label">Status</div>
+        <div style="font-size:0.82rem;font-weight:600;" id="orderStatusDisplay">—</div>
+      </div>
+      <div style="width:1px;height:30px;background:var(--border);"></div>
+      <div>
+        <div class="order-id-label">Slot</div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--cream);" id="orderSlotDisplay">—</div>
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="confirm-ctas">
+      <a href="my-orders.html" class="btn-ghost">📋 Track Your Order</a>
+      <a href="#" class="btn-whatsapp" id="waConfirmBtn" target="_blank">💬 View on WhatsApp</a>
+      <a href="shop.html" class="btn-primary">🛒 Shop Again →</a>
+    </div>
+
+    <!-- Progress steps -->
+    <div class="order-steps">
+      <div class="order-step done"><div class="step-circle">✓</div><span>Browse</span></div>
+      <div class="step-line done"></div>
+      <div class="order-step done"><div class="step-circle">✓</div><span>Cart</span></div>
+      <div class="step-line done"></div>
+      <div class="order-step done"><div class="step-circle">✓</div><span>Checkout</span></div>
+      <div class="step-line done"></div>
+      <div class="order-step done"><div class="step-circle">✓</div><span>Confirmed</span></div>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span class="ticker-item">ORDER CONFIRMED <span class="ticker-dot"></span></span>
+      <span class="ticker-item">FRESH VILLAGE MEAT <span class="ticker-dot"></span></span>
+      <span class="ticker-item">COLD CHAIN DELIVERY <span class="ticker-dot"></span></span>
+      <span class="ticker-item">THANK YOU FOR CHOOSING ANGADI <span class="ticker-dot"></span></span>
+      <span class="ticker-item">ORDER CONFIRMED <span class="ticker-dot"></span></span>
+      <span class="ticker-item">FRESH VILLAGE MEAT <span class="ticker-dot"></span></span>
+      <span class="ticker-item">COLD CHAIN DELIVERY <span class="ticker-dot"></span></span>
+      <span class="ticker-item">THANK YOU FOR CHOOSING ANGADI <span class="ticker-dot"></span></span>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="confirm-body">
+
+    <!-- LEFT COL -->
+    <div>
+
+      <!-- WHAT HAPPENS NEXT -->
+      <div class="next-card fade-up">
+        <div class="card-eyebrow">Next Steps</div>
+        <div class="card-title">Here's What Happens Now</div>
+        <div class="timeline" id="timeline">
+          <!-- populated by JS based on payment method -->
+        </div>
+      </div>
+
+      <!-- DELIVERY DETAILS -->
+      <div class="delivery-card fade-up">
+        <div class="card-eyebrow" style="margin-bottom:1rem;">Delivery Details</div>
+        <div class="delivery-row">
+          <div class="delivery-row-icon">👤</div>
+          <div><div class="delivery-row-label">Delivering To</div><div class="delivery-row-val" id="ddName">—</div></div>
+        </div>
+        <div class="delivery-row">
+          <div class="delivery-row-icon">📍</div>
+          <div><div class="delivery-row-label">Address</div><div class="delivery-row-val" id="ddAddress">—</div></div>
+        </div>
+        <div class="delivery-row">
+          <div class="delivery-row-icon">🚚</div>
+          <div><div class="delivery-row-label">Delivery Slot</div><div class="delivery-row-val" id="ddSlot">—</div></div>
+        </div>
+        <div class="delivery-row">
+          <div class="delivery-row-icon">💳</div>
+          <div><div class="delivery-row-label">Payment</div><div class="delivery-row-val" id="ddPayment">—</div></div>
+        </div>
+        <div class="delivery-row" id="ddNotesRow" style="display:none;">
+          <div class="delivery-row-icon">📝</div>
+          <div><div class="delivery-row-label">Your Notes</div><div class="delivery-row-val" id="ddNotes">—</div></div>
+        </div>
+      </div>
+
+      <!-- SHARE CARD -->
+      <div class="share-card fade-up">
+        <div class="share-title">Spread the Word 🌾</div>
+        <div class="share-sub">Know someone who loves authentic village meat? Share Angadi with them.</div>
+        <div class="share-btns">
+          <a href="#" class="btn-share wa" id="shareWA">💬 Share on WhatsApp</a>
+          <button class="btn-share" onclick="copyLink()">🔗 Copy Link</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COL: ORDER SUMMARY -->
+    <div>
+      <div class="items-card fade-up">
+        <div class="card-eyebrow" style="margin-bottom:0.8rem;">Your Order</div>
+        <div class="items-list" id="orderItemsList"></div>
+
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);" id="orderPrices"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" style="display:inline-block;text-decoration:none;">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+      </a>
+      <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="product-detail.html?id=goat-meat">Village Goat Meat</a></li>
+        <li><a href="product-detail.html?id=country-chicken">Country Chicken</a></li>
+        <li><a href="product-detail.html?id=country-eggs">Country Eggs</a></li>
+        <li><a href="product-detail.html?id=river-fish">River Fish</a></li>
+        <li><a href="product-detail.html?id=full-goat">Full Goat</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <ul>
+        <li><a href="my-orders.html">My Orders</a></li>
+        <li><a href="my-profile.html">My Profile</a></li>
+        <li><a href="login.html">Login / Signup</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/919949950743" target="_blank">WhatsApp Us</a></li>
+        <li><a href="#">Delivery Areas</a></li>
+        <li><a href="#">Returns Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <div class="footer-delivery">
+      <span class="dot"></span>
+      Delivering across Hyderabad — Banjara Hills · Jubilee Hills · Gachibowli · Kondapur · Madhapur
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20need%20help%20with%20my%20order" class="wa-float" target="_blank">💬</a>
+
+<script>
+// ─────────────────────────────────────────────
+//  PRODUCT IMAGE MAP
+// ─────────────────────────────────────────────
+const PRODUCT_META = {
+  'Village Goat Meat': { img:'product/mutton.png' },
+  'Country Chicken':   { img:'product/country chiken.png' },
+  'Fresh River Fish':  { img:'product/fish.png' },
+  'Baby Goat Legs':    { img:'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png' },
+  'Country Eggs':      { img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png' },
+  'Full Goat':         { img:'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png' },
+  'Goat Legs':         { img:'product/legs.png' },
+  'Goat Liver':        { img:'product/liver.png' },
+  'Goat Head':         { img:'product/head.png' },
+};
+
+function getImg(name){
+  const base = name.split(' · ')[0].trim();
+  return (PRODUCT_META[base] || { img:'product/mutton.png' }).img;
+}
+function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
+
+// ─────────────────────────────────────────────
+//  GENERATE ORDER ID
+// ─────────────────────────────────────────────
+function generateOrderId(){
+  const now = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).substr(2,4).toUpperCase();
+  return `ANG-${now}-${rand}`;
+}
+
+// ─────────────────────────────────────────────
+//  LOAD ORDER
+// ─────────────────────────────────────────────
+const order  = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
+const params = new URLSearchParams(window.location.search);
+const method = params.get('method') || 'online'; // 'online' or 'cod'
+
+if (!order) {
+  // No order in storage — redirect to shop
+  window.location.href = 'shop.html';
+}
+
+// Assign an order ID if not already set
+if (order && !order.orderId) {
+  order.orderId = generateOrderId();
+  localStorage.setItem('angadi_last_order', JSON.stringify(order));
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render(){
+  if (!order) return;
+
+  const isCOD    = method === 'cod';
+  const customer = order.customer || {};
+  const address  = customer.address || {};
+  const items    = order.items || [];
+  const slot     = customer.slot || 'Morning (7 AM – 12 PM)';
+
+  // ── Order ID chip
+  document.getElementById('orderIdDisplay').textContent  = order.orderId;
+  document.getElementById('orderStatusDisplay').innerHTML = isCOD
+    ? '<span style="color:var(--gold);">COD Confirmed</span>'
+    : '<span style="color:var(--green);">Payment Received</span>';
+  document.getElementById('orderSlotDisplay').textContent = slot.split(' ')[0];
+
+  // ── Hero subtitle
+  document.getElementById('confirmSub').innerHTML = isCOD
+    ? `Your order is confirmed! <strong>Keep ${fmt(order.total)} ready</strong> for the delivery partner. You'll get a WhatsApp update when we're on the way.`
+    : `Payment received! <strong>We're preparing your order now.</strong> You'll receive a WhatsApp update when your order is out for delivery.`;
+
+  // ── WhatsApp confirmation link
+  const waMsg = `Hi! My Angadi order ${order.orderId} is confirmed.\n\nItems: ${items.map(i=>i.name.split(' · ')[0]+' ×'+i.qty).join(', ')}\nTotal: ${fmt(order.total)}\nSlot: ${slot}`;
+  document.getElementById('waConfirmBtn').href = `https://wa.me/919949950743?text=${encodeURIComponent(waMsg)}`;
+  document.getElementById('shareWA').href = `https://wa.me/?text=${encodeURIComponent('Check out Angadi — fresh village meat delivered in Hyderabad! https://angadi.in')}`;
+
+  // ── Timeline
+  const timelineSteps = isCOD ? [
+    { icon:'✅', title:'Order Confirmed', desc:'Your COD order has been confirmed. We\'ve noted your delivery slot.', time:'Just now', done:true, active:false },
+    { icon:'🌾', title:'Sourcing Your Meat', desc:'Our team is procuring your items fresh from village partners.', time:'Within 1–2 hours', done:false, active:true },
+    { icon:'🧼', title:'Hygienic Processing', desc:'Items will be cleaned, cut to your preference, and cold-packed.', time:'2–4 hours before delivery', done:false, active:false },
+    { icon:'🚚', title:'Out for Delivery', desc:`Your insulated package is on its way. Delivery slot: ${slot}.`, time:slot, done:false, active:false },
+    { icon:'💵', title:'Cash on Delivery', desc:`Please keep ${fmt(order.total)} ready for the delivery partner.`, time:'At delivery', done:false, active:false },
+  ] : [
+    { icon:'💳', title:'Payment Confirmed', desc:`₹${fmt(order.total)} received. Payment ID: ${order.paymentId || 'N/A'}`, time:'Just now', done:true, active:false },
+    { icon:'✅', title:'Order Confirmed', desc:'Your order is in our system and being prepared.', time:'Just now', done:true, active:false },
+    { icon:'🌾', title:'Sourcing Your Meat', desc:'Our team is procuring your items fresh from village partners.', time:'Within 1–2 hours', done:false, active:true },
+    { icon:'🧼', title:'Hygienic Processing', desc:'Items will be cleaned, cut to your preference, and cold-packed.', time:'2–4 hours before delivery', done:false, active:false },
+    { icon:'🚚', title:'Out for Delivery', desc:`Your insulated package is on its way. Slot: ${slot}.`, time:slot, done:false, active:false },
+  ];
+
+  document.getElementById('timeline').innerHTML = timelineSteps.map((s, idx) => `
+    <div class="timeline-item">
+      <div class="timeline-left">
+        <div class="timeline-dot ${s.done?'done':''} ${s.active?'active':''}">${s.done ? '✓' : s.icon}</div>
+        ${idx < timelineSteps.length - 1 ? `<div class="timeline-line ${s.done?'done':''}"></div>` : ''}
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-title ${s.done?'done':''}">${s.title}</div>
+        <div class="timeline-desc">${s.desc}</div>
+        <div class="timeline-time">${s.time}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // ── Delivery details
+  document.getElementById('ddName').textContent    = customer.name || '—';
+  document.getElementById('ddAddress').textContent = [address.flat, address.area, address.pincode].filter(Boolean).join(', ') || '—';
+  document.getElementById('ddSlot').textContent    = slot;
+  document.getElementById('ddPayment').textContent = isCOD ? `Cash on Delivery · ${fmt(order.total)}` : `Paid Online · ${fmt(order.total)}`;
+  if (customer.notes) {
+    document.getElementById('ddNotes').textContent   = customer.notes;
+    document.getElementById('ddNotesRow').style.display = 'flex';
+  }
+
+  // ── Order items
+  document.getElementById('orderItemsList').innerHTML = items.map(item => `
+    <div class="order-item">
+      <div class="order-item-img"><img src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}"></div>
+      <div class="order-item-details">
+        <div class="order-item-name">${item.name.split(' · ')[0]}</div>
+        <div class="order-item-meta">${item.name.split(' · ').slice(1).join(' · ')}</div>
+      </div>
+      <div class="order-item-qty">×${item.qty}</div>
+      <div class="order-item-price">${fmt(item.price * item.qty)}</div>
+    </div>
+  `).join('');
+
+  const dc = order.delivery || 0;
+  document.getElementById('orderPrices').innerHTML = `
+    <div class="price-row"><span>Subtotal</span><span class="val">${fmt(order.subtotal || 0)}</span></div>
+    ${order.discount ? `<div class="price-row"><span>Discount</span><span class="val" style="color:var(--clay-l);">−${fmt(order.discount)}</span></div>` : ''}
+    <div class="price-row"><span>Delivery</span><span class="val ${dc===0?'free':''}">${dc===0?'FREE':fmt(dc)}</span></div>
+    <div class="price-row total"><span>Total</span><span class="val">${fmt(order.total || 0)}</span></div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  CONFETTI
+// ─────────────────────────────────────────────
+function spawnConfetti(){
+  const colors = ['#C4622D','#D4A017','#F6EDD8','#E8956A','#4CAF50'];
+  const container = document.getElementById('confetti');
+  for (let i = 0; i < 30; i++){
+    const dot = document.createElement('div');
+    dot.className = 'confetti-dot';
+    dot.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*60}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${4+Math.random()*6}px;
+      height:${4+Math.random()*6}px;
+      animation-delay:${Math.random()*1.5}s;
+      animation-duration:${2+Math.random()*2}s;
+    `;
+    container.appendChild(dot);
+  }
+  setTimeout(() => container.innerHTML = '', 5000);
+}
+
+// ─────────────────────────────────────────────
+//  COPY LINK
+// ─────────────────────────────────────────────
+function copyLink(){
+  navigator.clipboard.writeText('https://angadi.in').then(() => {
+    showToast('✓ Link copied to clipboard!');
+  }).catch(() => showToast('Copy: https://angadi.in'));
+}
+
+function showToast(msg){
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;border-radius:100px;font-size:0.85rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('toastStyle')){
+    const s = document.createElement('style'); s.id='toastStyle';
+    s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+// ─────────────────────────────────────────────
+//  NAV
+// ─────────────────────────────────────────────
+window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+function closeMobile(){ document.getElementById('mobileMenu').classList.remove('open'); }
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+render();
+spawnConfetti();
+
+// Fade in
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold:0.08 });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

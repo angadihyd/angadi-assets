@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Management — Angadi Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;--red:#E57373;--blue:#64B5F6;--orange:#FFB74D;
+  --sidebar:180px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--ink-2);}::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── GUARD ── */
+.guard{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+.guard.hidden{display:none;}
+.guard-box{text-align:center;padding:2rem;}
+.guard-box p{color:rgba(246,237,216,0.4);margin-bottom:1.5rem;}
+.guard-box a{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);text-decoration:none;padding:0.8rem 2rem;border-radius:10px;font-weight:600;}
+
+/* ── SHARED SIDEBAR LAYOUT ── */
+.admin-layout{display:flex;min-height:100vh;}
+.admin-sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--ink-2);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:1.5rem 1.2rem 1.2rem;border-bottom:1px solid var(--border);}
+.sidebar-logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--cream);letter-spacing:0.08em;}
+.sidebar-logo-text span{color:var(--gold);}
+.sidebar-logo-sub{font-size:0.6rem;font-family:'Space Mono',monospace;color:rgba(246,237,216,0.25);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+.sidebar-nav{flex:1;padding:1rem 0;}
+.sidebar-link{display:flex;align-items:center;gap:0.7rem;padding:0.75rem 1.2rem;font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.5);text-decoration:none;transition:all 0.25s;border-left:3px solid transparent;}
+.sidebar-link:hover{color:var(--cream);background:rgba(255,255,255,0.02);}
+.sidebar-link.active{color:var(--cream);background:rgba(196,98,45,0.1);border-left-color:var(--clay);}
+.sidebar-link .icon{font-size:1rem;flex-shrink:0;}
+.sidebar-divider{height:1px;background:var(--border);margin:0.5rem 1.2rem;}
+.sidebar-bottom{padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.sidebar-user{font-size:0.75rem;color:rgba(246,237,216,0.3);margin-bottom:0.5rem;}
+.sidebar-user strong{color:rgba(246,237,216,0.55);display:block;}
+.btn-logout{width:100%;background:none;border:1px solid rgba(229,115,115,0.2);color:rgba(229,115,115,0.6);border-radius:8px;padding:0.5rem;font-size:0.75rem;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.4rem;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.admin-main{margin-left:var(--sidebar);flex:1;min-width:0;}
+.admin-topbar{background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);}
+.topbar-title span{font-style:italic;color:var(--gold);}
+.admin-content{padding:2rem;}
+
+/* ── BUTTONS ── */
+.btn-sm{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);padding:0.4rem 0.9rem;border-radius:7px;font-size:0.75rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Sans',sans-serif;}
+.btn-sm:hover{background:rgba(196,98,45,0.2);color:var(--cream);}
+.btn-sm.primary{background:var(--clay);border-color:var(--clay);color:var(--cream);}
+.btn-sm.primary:hover{background:var(--clay-l);}
+.btn-sm.green{background:rgba(76,175,80,0.12);border-color:rgba(76,175,80,0.25);color:var(--green);}
+.btn-sm.green:hover{background:rgba(76,175,80,0.22);}
+.btn-sm.red{background:rgba(229,115,115,0.08);border-color:rgba(229,115,115,0.2);color:var(--red);}
+.btn-sm.red:hover{background:rgba(229,115,115,0.15);}
+.btn-sm.wa{background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.2);color:#25D366;}
+.btn-sm.wa:hover{background:rgba(37,211,102,0.2);}
+.btn-sm.maps{background:rgba(100,181,246,0.1);border-color:rgba(100,181,246,0.2);color:var(--blue);}
+.btn-sm.maps:hover{background:rgba(100,181,246,0.2);}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--ink-3);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.2rem;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--clay));}
+.stat-card[data-accent="green"]::before{background:var(--green);}
+.stat-card[data-accent="gold"]::before{background:var(--gold);}
+.stat-card[data-accent="blue"]::before{background:var(--blue);}
+.stat-card[data-accent="orange"]::before{background:var(--orange);}
+.stat-icon{font-size:1.3rem;margin-bottom:0.5rem;}
+.stat-label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.3);margin-bottom:0.3rem;}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;line-height:1;color:var(--cream);}
+.stat-value.gold{color:var(--gold);}
+
+/* ── MAIN GRID ── */
+.delivery-grid{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start;}
+
+/* ── DELIVERY BOYS COLUMN ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.section-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);}
+.section-title span{font-style:italic;color:var(--gold);}
+
+.dboy-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1rem;transition:border-color 0.3s;}
+.dboy-card:hover{border-color:rgba(196,98,45,0.35);}
+.dboy-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
+.dboy-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--clay-d),var(--clay));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--cream);flex-shrink:0;position:relative;}
+.dboy-status-dot{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink-3);}
+.dboy-status-dot.available{background:var(--green);}
+.dboy-status-dot.busy{background:var(--orange);}
+.dboy-status-dot.offline{background:rgba(246,237,216,0.2);}
+.dboy-info{flex:1;min-width:0;}
+.dboy-name{font-size:0.95rem;font-weight:700;color:var(--cream);margin-bottom:0.15rem;}
+.dboy-phone{font-size:0.75rem;color:rgba(246,237,216,0.4);font-family:'Space Mono',monospace;}
+.dboy-status-badge{font-size:0.65rem;font-weight:700;padding:0.18rem 0.55rem;border-radius:100px;letter-spacing:0.06em;display:inline-flex;align-items:center;gap:0.3rem;}
+.dboy-status-badge.available{background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.25);color:var(--green);}
+.dboy-status-badge.busy{background:rgba(255,183,77,0.12);border:1px solid rgba(255,183,77,0.25);color:var(--orange);}
+.dboy-status-badge.offline{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:rgba(246,237,216,0.3);}
+.dboy-stats{display:flex;gap:1.2rem;margin-bottom:1rem;}
+.dboy-stat{display:flex;flex-direction:column;gap:0.1rem;}
+.dboy-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--gold);line-height:1;}
+.dboy-stat-label{font-size:0.6rem;color:rgba(246,237,216,0.3);text-transform:uppercase;letter-spacing:0.08em;}
+.dboy-active-order{background:rgba(196,98,45,0.06);border:1px solid rgba(196,98,45,0.15);border-radius:9px;padding:0.6rem 0.9rem;margin-bottom:0.8rem;font-size:0.78rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;}
+.dboy-active-label{color:rgba(246,237,216,0.4);}
+.dboy-active-order-id{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--clay-l);font-weight:700;}
+.dboy-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
+
+/* ── UNASSIGNED ORDERS ── */
+.orders-col{}
+.unassigned-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1rem;transition:border-color 0.3s;animation:slideIn 0.3s ease both;}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.unassigned-card:hover{border-color:rgba(196,98,45,0.4);}
+.order-card-header{padding:1.1rem 1.3rem;display:flex;align-items:flex-start;gap:1rem;}
+.order-header-main{flex:1;min-width:0;}
+.order-id-row{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.35rem;flex-wrap:wrap;}
+.oid{font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--gold);font-weight:700;}
+.order-time{font-size:0.7rem;color:rgba(246,237,216,0.3);}
+.order-customer{font-size:0.92rem;font-weight:700;color:var(--cream);margin-bottom:0.15rem;}
+.order-address{font-size:0.75rem;color:rgba(246,237,216,0.45);line-height:1.4;display:flex;align-items:flex-start;gap:0.3rem;}
+.order-slot{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(212,160,23,0.08);border:1px solid var(--border-gold);border-radius:100px;padding:0.22rem 0.7rem;font-size:0.68rem;color:var(--gold);margin-top:0.4rem;font-family:'Space Mono',monospace;}
+.order-amount-col{text-align:right;flex-shrink:0;}
+.order-amount{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold);line-height:1;}
+.order-payment{font-size:0.68rem;color:rgba(246,237,216,0.3);margin-top:0.1rem;}
+
+/* Items preview */
+.order-items-preview{padding:0.6rem 1.3rem;background:rgba(255,255,255,0.015);border-top:1px solid rgba(196,98,45,0.07);border-bottom:1px solid rgba(196,98,45,0.07);display:flex;gap:0.5rem;flex-wrap:wrap;}
+.item-chip{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:100px;padding:0.2rem 0.65rem;font-size:0.7rem;color:rgba(246,237,216,0.55);}
+
+/* Action bar */
+.order-action-bar{padding:0.9rem 1.3rem;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;}
+.assign-select{flex:1;min-width:140px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:0.45rem 0.8rem;font-size:0.8rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;transition:border-color 0.3s;}
+.assign-select:focus,.assign-select:hover{border-color:var(--clay);}
+.assign-select option{background:var(--ink-2);}
+
+/* Status pill */
+.status-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:100px;padding:0.2rem 0.65rem;font-size:0.68rem;font-weight:700;white-space:nowrap;}
+.status-pill .dot{width:5px;height:5px;border-radius:50%;}
+.status-pill.confirmed{background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.2);color:var(--blue);}
+.status-pill.confirmed .dot{background:var(--blue);animation:pulse 2s infinite;}
+.status-pill.processing{background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);color:var(--orange);}
+.status-pill.processing .dot{background:var(--orange);animation:pulse 2s infinite;}
+.status-pill.out_for_delivery{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);}
+.status-pill.out_for_delivery .dot{background:var(--clay-l);animation:pulse 2s infinite;}
+.status-pill.delivered{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);}
+.status-pill.delivered .dot{background:var(--green);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ── ADD DELIVERY BOY PANEL ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:190;display:none;}
+.panel-overlay.open{display:block;}
+.side-panel{position:fixed;top:0;right:-480px;bottom:0;width:480px;background:var(--ink-2);border-left:1px solid var(--border);z-index:200;transition:right 0.35s ease;overflow-y:auto;padding:2rem;}
+.side-panel.open{right:0;}
+.panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:1px solid var(--border);color:var(--cream);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;}
+.panel-close:hover{border-color:var(--clay);}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;}
+.form-label{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);}
+.form-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:0.7rem 0.9rem;font-size:0.88rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;width:100%;}
+.form-input::placeholder{color:rgba(246,237,216,0.18);}
+.form-input:focus{border-color:var(--clay);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E8956A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.8rem center;cursor:pointer;}
+.form-select option{background:var(--ink-2);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.85rem;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+.btn-primary:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));}
+.btn-ghost-full{width:100%;background:transparent;color:rgba(246,237,216,0.5);border:1px solid var(--border);padding:0.75rem;border-radius:10px;font-size:0.85rem;cursor:pointer;transition:all 0.3s;margin-top:0.6rem;font-family:'DM Sans',sans-serif;}
+.btn-ghost-full:hover{border-color:var(--clay-l);color:var(--cream);}
+
+/* ── EMPTY STATE ── */
+.empty-box{text-align:center;padding:3rem 1rem;background:var(--ink-3);border:1px dashed rgba(196,98,45,0.2);border-radius:14px;}
+.empty-icon{font-size:2.5rem;margin-bottom:0.8rem;opacity:0.3;}
+.empty-text{font-size:0.85rem;color:rgba(246,237,216,0.3);}
+
+/* ── ASSIGNED BADGE ── */
+.assigned-to{display:flex;align-items:center;gap:0.5rem;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:8px;padding:0.4rem 0.8rem;font-size:0.75rem;color:var(--green);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.delivery-grid{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:768px){
+  .admin-sidebar{width:60px;min-width:60px;}
+  .admin-main{margin-left:60px;}
+  .sidebar-logo-text,.sidebar-logo-sub,.sidebar-link span:not(.icon),.sidebar-user,.btn-logout span{display:none;}
+  .sidebar-link{padding:0.9rem;justify-content:center;}
+  .admin-content{padding:1rem;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .side-panel{width:100%;right:-100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="guard hidden" id="guard">
+  <div class="guard-box"><p>Please log in first.</p><a href="dashboard.html">← Login</a></div>
+</div>
+
+<div class="admin-layout" id="adminLayout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">ANGADI <span>↗</span></div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="dashboard.html"><span class="icon">📊</span> <span>Dashboard</span></a>
+      <a class="sidebar-link" href="orders.html"><span class="icon">📦</span> <span>Orders</span></a>
+      <a class="sidebar-link" href="products.html"><span class="icon">🥩</span> <span>Products</span></a>
+      <a class="sidebar-link active" href="delivery.html"><span class="icon">🚚</span> <span>Delivery</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon">🛒</span> <span>View Shop</span></a>
+      <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon">🌐</span> <span>View Site</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">Logged in as<strong>Admin</strong></div>
+      <button class="btn-logout" onclick="adminLogout()">🚪 <span>Logout</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div class="topbar-title">Delivery <span>Management</span></div>
+      <div style="display:flex;gap:0.7rem;align-items:center;">
+        <button class="btn-sm primary" onclick="openAddBoy()">+ Add Delivery Boy</button>
+        <button class="btn-sm" onclick="init()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card" data-accent="green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Available Boys</div>
+          <div class="stat-value" id="statAvail">—</div>
+        </div>
+        <div class="stat-card" data-accent="orange">
+          <div class="stat-icon">🏃</div>
+          <div class="stat-label">Out Delivering</div>
+          <div class="stat-value" id="statBusy">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Pending Assign</div>
+          <div class="stat-value" id="statPending">—</div>
+        </div>
+        <div class="stat-card" data-accent="gold">
+          <div class="stat-icon">🚚</div>
+          <div class="stat-label">Out for Delivery</div>
+          <div class="stat-value" id="statOFD">—</div>
+        </div>
+        <div class="stat-card" data-accent="blue">
+          <div class="stat-icon">✓</div>
+          <div class="stat-label">Delivered Today</div>
+          <div class="stat-value" id="statDelivered">—</div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="delivery-grid">
+
+        <!-- LEFT: ORDERS TO DELIVER -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">Orders to <span>Deliver</span></div>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn-sm" id="filterBtn-all"    onclick="setOrderFilter('all')"    style="background:var(--clay);border-color:var(--clay);color:var(--cream);">All</button>
+              <button class="btn-sm" id="filterBtn-unassigned" onclick="setOrderFilter('unassigned')">Unassigned</button>
+              <button class="btn-sm" id="filterBtn-assigned"   onclick="setOrderFilter('assigned')">Assigned</button>
+              <button class="btn-sm" id="filterBtn-ofd"        onclick="setOrderFilter('ofd')">Out for Delivery</button>
+            </div>
+          </div>
+          <div id="ordersCol"><!-- populated by JS --></div>
+        </div>
+
+        <!-- RIGHT: DELIVERY BOYS -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">Delivery <span>Boys</span></div>
+          </div>
+          <div id="dboysCol"><!-- populated by JS --></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDE PANEL (add/edit delivery boy) -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="side-panel" id="sidePanel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panelContent"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  STATE (declared before init)
+// ─────────────────────────────────────────────
+var deliveryBoys = JSON.parse(localStorage.getItem('angadi_dboys') || '[]');
+var allOrders    = [];
+var orderFilter  = 'all';
+
+function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
+
+if (sessionStorage.getItem('angadi_admin') !== '1') {
+  document.getElementById('guard').classList.remove('hidden');
+  document.getElementById('adminLayout').style.display = 'none';
+} else { init(); }
+
+// Seed demo delivery boys if empty
+if (deliveryBoys.length === 0) {
+  deliveryBoys = [
+    { id:'db1', name:'Raju Kumar',    phone:'9876501234', vehicle:'Bike', area:'Banjara Hills / Jubilee Hills', status:'available', deliveredToday:4, totalDelivered:47 },
+    { id:'db2', name:'Suresh Babu',   phone:'9876502345', vehicle:'Bike', area:'Gachibowli / Madhapur',         status:'busy',      deliveredToday:3, totalDelivered:62, activeOrderId:'ANG-003' },
+    { id:'db3', name:'Praveen Yadav', phone:'9876503456', vehicle:'Bike', area:'Kondapur / Kukatpally',         status:'offline',   deliveredToday:0, totalDelivered:31 },
+  ];
+  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
+function formatTime(iso){ const d=new Date(iso); return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function formatDate(iso){ const d=new Date(iso); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function normaliseStatus(s){
+  if(!s) return 'confirmed';
+  if(['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
+  return ['confirmed','processing','out_for_delivery','delivered','cancelled'].includes(s)?s:'confirmed';
+}
+function statusLabel(s){
+  return {confirmed:'Confirmed',processing:'Processing',out_for_delivery:'Out for Delivery',delivered:'Delivered',cancelled:'Cancelled'}[normaliseStatus(s)]||'Confirmed';
+}
+function buildMapsUrl(address){
+  const a = address||{};
+  const q = [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+function buildMapsNavUrl(address){
+  const a = address||{};
+  const q = [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+}
+
+// ─────────────────────────────────────────────
+//  LOAD DATA
+// ─────────────────────────────────────────────
+function loadOrders(){
+  let stored = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+  if(stored.length < 5){
+    const demos = [
+      {orderId:'ANG-001',customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 4B, Lakshmi Residency',area:'Banjara Hills',pincode:'500034',city:'Hyderabad'}},items:[{name:'Village Goat Meat · 1kg',price:680,qty:2}],total:1360,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-1800000).toISOString()},
+      {orderId:'ANG-002',customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)',address:{flat:'Apt 12, Green Park',area:'Jubilee Hills',pincode:'500033',city:'Hyderabad'}},items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],total:1144,payment:'cod',status:'processing',placedAt:new Date(Date.now()-4320000).toISOString()},
+      {orderId:'ANG-003',customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)',address:{flat:'H.No 45, Srinagar Colony',area:'Madhapur',pincode:'500081',city:'Hyderabad'}},items:[{name:'Country Chicken · 1kg',price:520,qty:2}],total:1040,payment:'razorpay',status:'out_for_delivery',placedAt:new Date(Date.now()-7200000).toISOString(),assignedTo:'db2'},
+      {orderId:'ANG-004',customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)',address:{flat:'Villa 7, Amrutha Hills',area:'Kondapur',pincode:'500084',city:'Hyderabad'}},items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],total:2040,payment:'cod',status:'delivered',placedAt:new Date(Date.now()-86400000).toISOString()},
+      {orderId:'ANG-005',customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 2A, Prashanti Nagar',area:'Gachibowli',pincode:'500032',city:'Hyderabad'}},items:[{name:'Full Goat',price:8500,qty:1}],total:8500,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-360000).toISOString()},
+    ];
+    const merged=[...stored,...demos.filter(d=>!stored.find(s=>s.orderId===d.orderId))];
+    localStorage.setItem('angadi_all_orders',JSON.stringify(merged));
+    return merged;
+  }
+  return stored;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function init(){
+  allOrders = loadOrders();
+  renderStats();
+  renderOrders();
+  renderDBoys();
+}
+
+function renderStats(){
+  const avail    = deliveryBoys.filter(b=>b.status==='available').length;
+  const busy     = deliveryBoys.filter(b=>b.status==='busy').length;
+  const pending  = allOrders.filter(o=>['confirmed','processing'].includes(normaliseStatus(o.status))).length;
+  const ofd      = allOrders.filter(o=>normaliseStatus(o.status)==='out_for_delivery').length;
+  const delivered= allOrders.filter(o=>{
+    const d=new Date(o.placedAt); const t=new Date();
+    return normaliseStatus(o.status)==='delivered' && d.toDateString()===t.toDateString();
+  }).length;
+  document.getElementById('statAvail').textContent    = avail;
+  document.getElementById('statBusy').textContent     = busy;
+  document.getElementById('statPending').textContent  = pending;
+  document.getElementById('statOFD').textContent      = ofd;
+  document.getElementById('statDelivered').textContent= delivered;
+}
+
+function setOrderFilter(f){
+  orderFilter = f;
+  ['all','unassigned','assigned','ofd'].forEach(id=>{
+    const btn = document.getElementById('filterBtn-'+id);
+    if(btn){ btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; }
+  });
+  const active = document.getElementById('filterBtn-'+f);
+  if(active){ active.style.background='var(--clay)'; active.style.borderColor='var(--clay)'; active.style.color='var(--cream)'; }
+  renderOrders();
+}
+
+function renderOrders(){
+  const deliverable = allOrders.filter(o=>{
+    const s = normaliseStatus(o.status);
+    return ['confirmed','processing','out_for_delivery'].includes(s);
+  });
+
+  const filtered = deliverable.filter(o=>{
+    const s = normaliseStatus(o.status);
+    if(orderFilter==='unassigned') return !o.assignedTo && s!=='out_for_delivery';
+    if(orderFilter==='assigned')   return !!o.assignedTo && s!=='out_for_delivery';
+    if(orderFilter==='ofd')        return s==='out_for_delivery';
+    return true;
+  }).sort((a,b)=>new Date(a.placedAt)-new Date(b.placedAt));
+
+  const col = document.getElementById('ordersCol');
+  if(!filtered.length){
+    col.innerHTML=`<div class="empty-box"><div class="empty-icon">📦</div><div class="empty-text">No orders in this category</div></div>`;
+    return;
+  }
+
+  col.innerHTML = filtered.map((o,i) => buildOrderCard(o, i)).join('');
+}
+
+function buildOrderCard(o, animIdx){
+  const s    = normaliseStatus(o.status);
+  const a    = o.customer?.address||{};
+  const addr = [a.flat, a.area, a.pincode].filter(Boolean).join(', ');
+  const items= (o.items||[]).map(i=>`${i.name.split(' · ')[0]} ×${i.qty}`);
+  const isCOD= o.payment==='cod';
+  const assignedBoy = o.assignedTo ? deliveryBoys.find(b=>b.id===o.assignedTo) : null;
+  const availBoys   = deliveryBoys.filter(b=>b.status==='available');
+
+  const mapsUrl    = buildMapsUrl(a);
+  const mapsNavUrl = buildMapsNavUrl(a);
+  const waText     = `Hi ${o.customer?.name}! Your Angadi order ${o.orderId} is on its way. Our delivery partner will reach you shortly.`;
+
+  return `
+    <div class="unassigned-card" style="animation-delay:${animIdx*0.05}s;">
+      <div class="order-card-header">
+        <div class="order-header-main">
+          <div class="order-id-row">
+            <span class="oid">${o.orderId}</span>
+            <span class="status-pill ${s}"><span class="dot"></span>${statusLabel(o.status)}</span>
+            <span class="order-time">🕐 ${formatDate(o.placedAt)}</span>
+          </div>
+          <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
+          <div class="order-address">
+            📍 ${addr||'Address not provided'}
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+            <span class="order-slot">🚚 ${o.customer?.slot||'—'}</span>
+            ${isCOD?`<span style="background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);color:var(--gold);border-radius:100px;padding:0.22rem 0.7rem;font-size:0.68rem;font-family:'Space Mono',monospace;">💵 COD ${fmt(o.total)}</span>`:''}
+          </div>
+        </div>
+        <div class="order-amount-col">
+          <div class="order-amount">${fmt(o.total||0)}</div>
+          <div class="order-payment">${isCOD?'Cash on Delivery':'Paid Online'}</div>
+          ${o.customer?.phone?`<div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(246,237,216,0.3);margin-top:0.3rem;">${o.customer.phone}</div>`:''}
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="order-items-preview">
+        ${items.map(item=>`<span class="item-chip">${item}</span>`).join('')}
+      </div>
+
+      <!-- Actions -->
+      <div class="order-action-bar">
+
+        <!-- Maps buttons -->
+        <a href="${mapsUrl}" target="_blank" class="btn-sm maps" title="View customer location on Google Maps">
+          🗺 View Location
+        </a>
+        <a href="${mapsNavUrl}" target="_blank" class="btn-sm maps" title="Get directions to customer">
+          🧭 Navigate
+        </a>
+
+        <!-- WhatsApp customer -->
+        <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent(waText)}" target="_blank" class="btn-sm wa">
+          💬 Customer
+        </a>
+
+        <!-- Assign / status -->
+        ${s !== 'out_for_delivery' ? `
+          ${assignedBoy
+            ? `<div class="assigned-to">✓ ${assignedBoy.name}</div>
+               <button class="btn-sm red" onclick="unassignOrder('${o.orderId}')">✕ Unassign</button>`
+            : availBoys.length
+              ? `<select class="assign-select" onchange="assignOrder('${o.orderId}',this.value)">
+                   <option value="">Assign delivery boy…</option>
+                   ${availBoys.map(b=>`<option value="${b.id}">${b.name} · ${b.area.split('/')[0].trim()}</option>`).join('')}
+                 </select>`
+              : `<span style="font-size:0.75rem;color:rgba(246,237,216,0.3);">No boys available</span>`
+          }
+          <button class="btn-sm green" onclick="markOutForDelivery('${o.orderId}')">🚀 Mark Out for Delivery</button>
+        ` : `
+          ${assignedBoy
+            ? `<div class="assigned-to">🚚 ${assignedBoy.name}</div>
+               <a href="https://wa.me/${assignedBoy.phone}?text=${encodeURIComponent('Delivery update for order '+o.orderId+': '+o.customer?.name+', '+addr)}" target="_blank" class="btn-sm wa">💬 Call Boy</a>`
+            : ''
+          }
+          <button class="btn-sm green" onclick="markDelivered('${o.orderId}')">✅ Mark Delivered</button>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderDBoys(){
+  const col = document.getElementById('dboysCol');
+  if(!deliveryBoys.length){
+    col.innerHTML=`<div class="empty-box"><div class="empty-icon">🚚</div><div class="empty-text">No delivery boys added yet.<br>Click "Add Delivery Boy" to get started.</div></div>`;
+    return;
+  }
+  col.innerHTML = deliveryBoys.map((b,idx) => buildDBoyCard(b,idx)).join('');
+}
+
+function buildDBoyCard(b, idx){
+  const activeOrder = b.activeOrderId ? allOrders.find(o=>o.orderId===b.activeOrderId) : null;
+  const waText = b.activeOrderId
+    ? `Hi ${b.name}! Please check status of order ${b.activeOrderId}.`
+    : `Hi ${b.name}! New delivery assignment from Angadi.`;
+
+  return `
+    <div class="dboy-card">
+      <div class="dboy-header">
+        <div class="dboy-avatar">
+          ${b.name[0].toUpperCase()}
+          <div class="dboy-status-dot ${b.status}"></div>
+        </div>
+        <div class="dboy-info">
+          <div class="dboy-name">${b.name}</div>
+          <div class="dboy-phone">${b.phone}</div>
+          <div style="margin-top:0.3rem;">
+            <span class="dboy-status-badge ${b.status}">
+              ${b.status==='available'?'✓ Available':b.status==='busy'?'🏃 Delivering':'⚫ Offline'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dboy-stats">
+        <div class="dboy-stat"><div class="dboy-stat-val">${b.deliveredToday||0}</div><div class="dboy-stat-label">Today</div></div>
+        <div class="dboy-stat"><div class="dboy-stat-val">${b.totalDelivered||0}</div><div class="dboy-stat-label">Total</div></div>
+        <div class="dboy-stat"><div class="dboy-stat-val" style="font-size:0.8rem;">${b.vehicle||'Bike'}</div><div class="dboy-stat-label">Vehicle</div></div>
+      </div>
+
+      <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-bottom:0.8rem;">📍 ${b.area}</div>
+
+      ${activeOrder ? `
+        <div class="dboy-active-order">
+          <div><div class="dboy-active-label">Active Order</div><div class="dboy-active-order-id">${b.activeOrderId}</div></div>
+          <div style="font-size:0.72rem;color:rgba(246,237,216,0.4);">${activeOrder.customer?.name||''}</div>
+        </div>
+      ` : ''}
+
+      <div class="dboy-actions">
+        <a href="tel:${b.phone}" class="btn-sm">📞 Call</a>
+        <a href="https://wa.me/91${b.phone}?text=${encodeURIComponent(waText)}" target="_blank" class="btn-sm wa">💬 WhatsApp</a>
+        <button class="btn-sm" onclick="cycleStatus(${idx})">${b.status==='available'?'Set Busy':b.status==='busy'?'Set Offline':'Set Available'}</button>
+        <button class="btn-sm" onclick="openEditBoy(${idx})" style="margin-left:auto;">✎</button>
+        <button class="btn-sm red" onclick="deleteBoy(${idx})">🗑</button>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  ORDER ACTIONS
+// ─────────────────────────────────────────────
+function assignOrder(orderId, boyId){
+  if(!boyId) return;
+  const oIdx = allOrders.findIndex(o=>o.orderId===orderId);
+  const bIdx = deliveryBoys.findIndex(b=>b.id===boyId);
+  if(oIdx===-1||bIdx===-1) return;
+
+  allOrders[oIdx].assignedTo = boyId;
+  allOrders[oIdx].status     = 'processing';
+  deliveryBoys[bIdx].status  = 'busy';
+
+  saveAll(); renderStats(); renderOrders(); renderDBoys();
+  showToast(`✓ ${orderId} assigned to ${deliveryBoys[bIdx].name}`);
+  sendWhatsAppUpdate(orderId, 'assigned', boyId);
+}
+
+function unassignOrder(orderId){
+  const oIdx = allOrders.findIndex(o=>o.orderId===orderId);
+  if(oIdx===-1) return;
+  const boyId = allOrders[oIdx].assignedTo;
+  const bIdx  = boyId ? deliveryBoys.findIndex(b=>b.id===boyId) : -1;
+
+  allOrders[oIdx].assignedTo = null;
+  allOrders[oIdx].status     = 'confirmed';
+  if(bIdx!==-1 && !allOrders.some((o,i)=>i!==oIdx&&o.assignedTo===boyId)){
+    deliveryBoys[bIdx].status = 'available';
+  }
+  saveAll(); renderStats(); renderOrders(); renderDBoys();
+  showToast(`Order ${orderId} unassigned`);
+}
+
+function markOutForDelivery(orderId){
+  const oIdx = allOrders.findIndex(o=>o.orderId===orderId);
+  if(oIdx===-1) return;
+  allOrders[oIdx].status = 'out_for_delivery';
+  const boyId = allOrders[oIdx].assignedTo;
+  if(boyId){
+    const bIdx = deliveryBoys.findIndex(b=>b.id===boyId);
+    if(bIdx!==-1){ deliveryBoys[bIdx].activeOrderId = orderId; deliveryBoys[bIdx].status = 'busy'; }
+  }
+  saveAll(); renderStats(); renderOrders(); renderDBoys();
+  showToast(`✓ ${orderId} marked Out for Delivery`);
+  sendWhatsAppUpdate(orderId, 'out_for_delivery', boyId);
+}
+
+function markDelivered(orderId){
+  const oIdx = allOrders.findIndex(o=>o.orderId===orderId);
+  if(oIdx===-1) return;
+  const boyId = allOrders[oIdx].assignedTo;
+  allOrders[oIdx].status     = 'delivered';
+  allOrders[oIdx].assignedTo = null;
+  if(boyId){
+    const bIdx = deliveryBoys.findIndex(b=>b.id===boyId);
+    if(bIdx!==-1){
+      deliveryBoys[bIdx].status          = 'available';
+      deliveryBoys[bIdx].activeOrderId   = null;
+      deliveryBoys[bIdx].deliveredToday  = (deliveryBoys[bIdx].deliveredToday||0) + 1;
+      deliveryBoys[bIdx].totalDelivered  = (deliveryBoys[bIdx].totalDelivered||0) + 1;
+    }
+  }
+  saveAll(); renderStats(); renderOrders(); renderDBoys();
+  showToast(`✅ ${orderId} marked Delivered!`);
+  sendWhatsAppUpdate(orderId, 'delivered', null);
+}
+
+function sendWhatsAppUpdate(orderId, event, boyId){
+  const o = allOrders.find(x=>x.orderId===orderId);
+  if(!o||!o.customer?.phone) return;
+  const msgs = {
+    assigned:         `Hi ${o.customer.name}! Your Angadi order ${orderId} has been assigned to our delivery partner and will be on its way soon. 🥩`,
+    out_for_delivery: `Hi ${o.customer.name}! Your Angadi order ${orderId} is out for delivery! Our delivery partner is heading to you now. Please keep ${o.payment==='cod'?'₹'+o.total+' (cash)':''} ready. 🚚`,
+    delivered:        `Hi ${o.customer.name}! Your Angadi order ${orderId} has been delivered. Thank you for choosing Angadi! Enjoy your fresh village meat. 🙏`,
+  };
+  const msg = msgs[event];
+  if(!msg) return;
+  // Open WhatsApp in new tab — in production this would be automated via WhatsApp Business API
+  window.open(`https://wa.me/${o.customer.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ─────────────────────────────────────────────
+//  DELIVERY BOY ACTIONS
+// ─────────────────────────────────────────────
+function cycleStatus(idx){
+  const cycle = { available:'busy', busy:'offline', offline:'available' };
+  deliveryBoys[idx].status = cycle[deliveryBoys[idx].status] || 'available';
+  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
+  renderStats(); renderDBoys();
+  showToast(`${deliveryBoys[idx].name} → ${deliveryBoys[idx].status}`);
+}
+
+function deleteBoy(idx){
+  if(!confirm(`Remove ${deliveryBoys[idx].name} from delivery team?`)) return;
+  deliveryBoys.splice(idx, 1);
+  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
+  renderStats(); renderDBoys();
+  showToast('Delivery boy removed');
+}
+
+function openAddBoy(){
+  showPanel('New Delivery Boy', buildBoyForm(null, -1));
+}
+function openEditBoy(idx){
+  showPanel('Edit Delivery Boy', buildBoyForm(deliveryBoys[idx], idx));
+}
+
+function buildBoyForm(b, idx){
+  const isEdit = idx !== -1;
+  return `
+    <form onsubmit="saveBoy(event,${idx})">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="bf-name" type="text" placeholder="e.g. Raju Kumar" value="${b?.name||''}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number *</label>
+        <input class="form-input" id="bf-phone" type="tel" placeholder="9876543210" value="${b?.phone||''}" maxlength="10" inputmode="numeric" required>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Vehicle Type</label>
+          <select class="form-input form-select" id="bf-vehicle">
+            <option ${b?.vehicle==='Bike'?'selected':''}>Bike</option>
+            <option ${b?.vehicle==='Scooter'?'selected':''}>Scooter</option>
+            <option ${b?.vehicle==='Auto'?'selected':''}>Auto</option>
+            <option ${b?.vehicle==='Car'?'selected':''}>Car</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Availability</label>
+          <select class="form-input form-select" id="bf-status">
+            <option value="available" ${b?.status==='available'?'selected':''}>Available</option>
+            <option value="busy"      ${b?.status==='busy'?'selected':''}>Busy</option>
+            <option value="offline"   ${b?.status==='offline'?'selected':''}>Offline</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Area</label>
+        <input class="form-input" id="bf-area" type="text" placeholder="e.g. Banjara Hills / Jubilee Hills" value="${b?.area||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Emergency Contact (optional)</label>
+        <input class="form-input" id="bf-emergency" type="tel" placeholder="Family member number" value="${b?.emergencyContact||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vehicle Number (optional)</label>
+        <input class="form-input" id="bf-vehicle-num" type="text" placeholder="e.g. TS 09 AB 1234" value="${b?.vehicleNumber||''}">
+      </div>
+      <button type="submit" class="btn-primary">${isEdit?'Save Changes':'Add Delivery Boy'}</button>
+    </form>
+    <button class="btn-ghost-full" onclick="closePanel()">Cancel</button>
+  `;
+}
+
+function saveBoy(e, idx){
+  e.preventDefault();
+  const boy = {
+    id:               idx === -1 ? 'db' + Date.now() : deliveryBoys[idx].id,
+    name:             document.getElementById('bf-name').value.trim(),
+    phone:            document.getElementById('bf-phone').value.replace(/\D/g,''),
+    vehicle:          document.getElementById('bf-vehicle').value,
+    status:           document.getElementById('bf-status').value,
+    area:             document.getElementById('bf-area').value.trim(),
+    emergencyContact: document.getElementById('bf-emergency').value.trim(),
+    vehicleNumber:    document.getElementById('bf-vehicle-num').value.trim().toUpperCase(),
+    deliveredToday:   idx === -1 ? 0 : (deliveryBoys[idx].deliveredToday||0),
+    totalDelivered:   idx === -1 ? 0 : (deliveryBoys[idx].totalDelivered||0),
+  };
+  if (idx === -1) deliveryBoys.push(boy);
+  else deliveryBoys[idx] = boy;
+  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
+  closePanel(); renderStats(); renderDBoys();
+  showToast(`✓ ${boy.name} ${idx===-1?'added':'updated'}`);
+}
+
+// ─────────────────────────────────────────────
+//  PANEL HELPERS
+// ─────────────────────────────────────────────
+function showPanel(title, content){
+  document.getElementById('panelContent').innerHTML = `
+    <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--clay-l);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;">Delivery Team</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--cream);margin-bottom:1.5rem;">${title}</div>
+    ${content}
+  `;
+  document.getElementById('sidePanel').classList.add('open');
+  document.getElementById('panelOverlay').classList.add('open');
+}
+function closePanel(){
+  document.getElementById('sidePanel').classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('open');
+}
+
+function saveAll(){
+  localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
+  localStorage.setItem('angadi_dboys',      JSON.stringify(deliveryBoys));
+}
+
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+function showToast(msg){
+  document.querySelectorAll('.angadi-toast').forEach(t=>t.remove());
+  const toast=document.createElement('div');toast.className='angadi-toast';
+  toast.style.cssText=`position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.6rem 1.4rem;border-radius:100px;font-size:0.82rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent=msg;
+  if(!document.getElementById('tStyle')){const s=document.createElement('style');s.id='tStyle';s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;document.head.appendChild(s);}
+  document.body.appendChild(toast);setTimeout(()=>toast.remove(),2600);
+}
+</script>
+</body>
+</html>

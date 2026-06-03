@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D; --clay-d:#7A3318; --clay-l:#E8956A;
+  --gold:#D4A017; --cream:#F6EDD8;
+  --ink:#080503; --ink-2:#100804; --ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2); --border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50; --red:#E57373;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── SPLIT LAYOUT ── */
+.login-page{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
+
+/* ── LEFT BRAND PANEL ── */
+.brand-panel{position:relative;overflow:hidden;display:flex;flex-direction:column;padding:3rem;}
+.brand-bg{position:absolute;inset:0;background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center/cover no-repeat;}
+.brand-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,5,3,0.9) 0%,rgba(8,5,3,0.6) 60%,rgba(8,5,3,0.85) 100%);}
+.brand-content{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;}
+.brand-logo{display:flex;align-items:center;text-decoration:none;margin-bottom:auto;}
+.brand-copy{margin-top:auto;padding-bottom:2rem;}
+.brand-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--clay-l);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1rem;}
+.brand-eyebrow::before{content:'';width:18px;height:1px;background:var(--clay-l);}
+.brand-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,4vw,4rem);line-height:0.95;letter-spacing:0.02em;color:var(--cream);margin-bottom:1rem;}
+.brand-title span{color:var(--gold);}
+.brand-sub{font-size:0.9rem;font-weight:300;color:rgba(246,237,216,0.55);line-height:1.7;max-width:380px;margin-bottom:2rem;}
+.brand-sub strong{color:var(--cream);font-weight:500;}
+.brand-pills{display:flex;flex-wrap:wrap;gap:0.6rem;}
+.brand-pill{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:100px;padding:0.35rem 0.9rem;font-size:0.75rem;color:rgba(246,237,216,0.55);display:flex;align-items:center;gap:0.4rem;}
+
+/* ── RIGHT LOGIN PANEL ── */
+.login-panel{background:var(--ink-2);display:flex;align-items:center;justify-content:center;padding:3rem 2rem;position:relative;overflow:hidden;}
+.login-panel::before{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(196,98,45,0.06) 0%,transparent 70%);pointer-events:none;}
+.login-box{width:100%;max-width:420px;position:relative;z-index:1;}
+
+/* Back link */
+.back-link{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:rgba(246,237,216,0.4);text-decoration:none;transition:color 0.3s,gap 0.3s;margin-bottom:2rem;}
+.back-link:hover{color:var(--clay-l);gap:0.7rem;}
+
+/* ── AUTH METHOD TABS ── */
+.method-tabs{display:flex;gap:0;margin-bottom:2rem;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:4px;}
+.method-tab{flex:1;padding:0.7rem;text-align:center;border-radius:9px;cursor:pointer;font-size:0.83rem;font-weight:500;color:rgba(246,237,216,0.4);transition:all 0.25s;display:flex;align-items:center;justify-content:center;gap:0.4rem;border:1px solid transparent;}
+.method-tab:hover{color:rgba(246,237,216,0.7);}
+.method-tab.active{background:rgba(196,98,45,0.15);border-color:var(--clay);color:var(--cream);font-weight:600;}
+
+/* ── PANELS (views) ── */
+.auth-view{display:none;animation:fadeSlide 0.3s ease both;}
+.auth-view.active{display:block;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.view-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--clay);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.7rem;}
+.view-eyebrow::before{content:'';width:14px;height:1px;background:var(--clay);}
+.view-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--cream);line-height:1.15;margin-bottom:0.4rem;}
+.view-title span{font-style:italic;color:var(--gold);}
+.view-sub{font-size:0.83rem;color:rgba(246,237,216,0.45);line-height:1.6;margin-bottom:1.8rem;}
+.view-sub a{color:var(--clay-l);text-decoration:none;font-weight:600;}
+.view-sub a:hover{color:var(--cream);}
+
+/* ── FORM ELEMENTS ── */
+.form-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;}
+.form-label{font-family:'Space Mono',monospace;font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.4);}
+.form-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;font-size:0.9rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s,box-shadow 0.3s;width:100%;}
+.form-input::placeholder{color:rgba(246,237,216,0.18);}
+.form-input:focus{border-color:var(--clay);box-shadow:0 0 0 3px rgba(196,98,45,0.1);}
+.form-input.error{border-color:var(--red);}
+.form-input.success{border-color:var(--green);}
+.field-error{font-size:0.7rem;color:var(--red);display:none;}
+.field-error.visible{display:block;}
+/* Password with toggle */
+.pw-wrap{position:relative;}
+.pw-wrap .form-input{padding-right:3rem;}
+.pw-toggle{position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(246,237,216,0.3);cursor:pointer;font-size:1rem;transition:color 0.2s;padding:0.2rem;}
+.pw-toggle:hover{color:var(--clay-l);}
+/* Phone prefix */
+.phone-wrap{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.3s,box-shadow 0.3s;}
+.phone-wrap:focus-within{border-color:var(--clay);box-shadow:0 0 0 3px rgba(196,98,45,0.1);}
+.phone-wrap.error{border-color:var(--red);}
+.phone-prefix{padding:0 0.9rem;font-family:'Space Mono',monospace;font-size:0.82rem;color:rgba(246,237,216,0.45);border-right:1px solid var(--border);height:48px;display:flex;align-items:center;white-space:nowrap;background:rgba(255,255,255,0.02);}
+.phone-input{flex:1;background:none;border:none;outline:none;padding:0 0.9rem;height:48px;font-size:0.9rem;font-family:'DM Sans',sans-serif;color:var(--cream);}
+.phone-input::placeholder{color:rgba(246,237,216,0.18);}
+
+/* ── OTP BOXES ── */
+.otp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+.otp-phone-tag{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.9rem;font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--cream);}
+.btn-change{background:none;border:none;color:var(--clay-l);font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;}
+.otp-boxes{display:flex;gap:0.5rem;margin-bottom:0.9rem;}
+.otp-box{flex:1;height:58px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.9rem;color:var(--cream);outline:none;transition:border-color 0.3s,background 0.3s;caret-color:var(--clay);}
+.otp-box:focus{border-color:var(--clay);background:rgba(196,98,45,0.06);}
+.otp-box.filled{border-color:rgba(196,98,45,0.45);background:rgba(196,98,45,0.04);}
+.otp-box.err{border-color:var(--red);animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+.resend-row{display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:rgba(246,237,216,0.3);margin-bottom:1.4rem;}
+.btn-resend{background:none;border:none;color:var(--clay-l);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.75rem;}
+.btn-resend:disabled{color:rgba(246,237,216,0.2);cursor:default;}
+.otp-timer{color:var(--clay-l);font-weight:700;font-family:'Space Mono',monospace;}
+
+/* ── STATUS ── */
+.auth-status{border-radius:10px;padding:0.75rem 1rem;font-size:0.82rem;font-weight:500;margin-bottom:1rem;display:none;align-items:center;gap:0.5rem;line-height:1.4;}
+.auth-status.visible{display:flex;}
+.auth-status.success{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:var(--green);}
+.auth-status.error{background:rgba(229,115,115,0.1);border:1px solid rgba(229,115,115,0.25);color:var(--red);}
+.auth-status.info{background:rgba(196,98,45,0.08);border:1px solid var(--border);color:var(--clay-l);}
+
+/* ── BUTTONS ── */
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);border:none;padding:0.95rem;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+.btn-primary:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-2px);box-shadow:0 10px 32px rgba(196,98,45,0.4);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-ghost{width:100%;background:transparent;color:rgba(246,237,216,0.55);border:1px solid var(--border);padding:0.85rem;border-radius:12px;font-size:0.88rem;font-weight:500;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:0.6rem;text-decoration:none;}
+.btn-ghost:hover{border-color:var(--clay-l);color:var(--cream);}
+.btn-whatsapp{width:100%;background:#25D366;color:#fff;border:none;padding:0.85rem;border-radius:12px;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;text-decoration:none;margin-top:0.6rem;}
+.btn-whatsapp:hover{background:#1ebe57;transform:translateY(-1px);}
+.spinner{width:17px;height:17px;border:2px solid rgba(246,237,216,0.3);border-top-color:var(--cream);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:0.8rem;margin:1.2rem 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider span{font-size:0.7rem;color:rgba(246,237,216,0.2);letter-spacing:0.08em;white-space:nowrap;}
+
+/* Forgot password link */
+.forgot-link{text-align:right;margin-top:-0.4rem;margin-bottom:1rem;}
+.forgot-link button{background:none;border:none;color:var(--clay-l);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color 0.3s;}
+.forgot-link button:hover{color:var(--cream);}
+
+/* Terms */
+.terms-note{font-size:0.7rem;color:rgba(246,237,216,0.22);line-height:1.5;margin-top:1.2rem;text-align:center;}
+.terms-note a{color:var(--clay-l);text-decoration:none;}
+
+/* ── SUCCESS VIEW ── */
+.success-icon-wrap{text-align:center;margin-bottom:1.5rem;}
+.success-icon{width:72px;height:72px;background:linear-gradient(135deg,#43A047,#2E7D32);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 8px 28px rgba(76,175,80,0.3);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes popIn{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-name{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--cream);text-align:center;margin-bottom:0.4rem;}
+.success-sub{font-size:0.85rem;color:rgba(246,237,216,0.45);text-align:center;margin-bottom:2rem;line-height:1.5;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .login-page{grid-template-columns:1fr;}
+  .brand-panel{display:none;}
+  .login-panel{padding:2rem 1.5rem;align-items:flex-start;padding-top:3.5rem;}
+  .login-box{max-width:100%;}
+}
+@media(max-width:480px){
+  .otp-boxes{gap:0.35rem;}
+  .otp-box{height:52px;font-size:1.6rem;}
+}
+</style>
+</head>
+<body>
+<div class="login-page">
+
+  <!-- ── LEFT BRAND ── -->
+  <div class="brand-panel">
+    <div class="brand-bg"></div>
+    <div class="brand-content">
+      <a href="index.html" class="brand-logo">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+      </a>
+      <div class="brand-copy">
+        <div class="brand-eyebrow">Welcome to Angadi</div>
+        <h2 class="brand-title">Village Fresh.<br><span>Delivered.</span></h2>
+        <p class="brand-sub">Login to order <strong>free-range goat, country chicken, and farm produce</strong> directly from Telangana villages to your Hyderabad kitchen.</p>
+        <div class="brand-pills">
+          <span class="brand-pill">🌾 Village Sourced</span>
+          <span class="brand-pill">❄️ Cold Chain</span>
+          <span class="brand-pill">🎯 Cut to Order</span>
+          <span class="brand-pill">✅ FSSAI Certified</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT LOGIN ── -->
+  <div class="login-panel">
+    <div class="login-box">
+
+      <a href="index.html" class="back-link">← Back to Home</a>
+
+      <!-- METHOD TABS -->
+      <div class="method-tabs" id="methodTabs">
+        <div class="method-tab active" data-method="email" onclick="switchMethod('email')">✉️ Email</div>
+        <div class="method-tab" data-method="phone" onclick="switchMethod('phone')">📱 Phone OTP</div>
+      </div>
+
+      <!-- ══════════════════════════════
+           EMAIL — SIGN IN
+      ══════════════════════════════ -->
+      <div class="auth-view active" id="view-email-signin">
+        <div class="view-eyebrow">Sign In</div>
+        <h1 class="view-title">Welcome <span>Back</span></h1>
+        <p class="view-sub">
+          New to Angadi? <a href="#" onclick="showView('email-signup');return false;">Create an account →</a>
+        </p>
+
+        <div class="auth-status" id="si-status"></div>
+
+        <form id="signinForm" novalidate>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" id="siEmail" type="email" placeholder="you@email.com" autocomplete="email">
+            <span class="field-error" id="siEmailErr">Enter a valid email address</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="pw-wrap">
+              <input class="form-input" id="siPass" type="password" placeholder="Your password" autocomplete="current-password">
+              <button type="button" class="pw-toggle" onclick="togglePw('siPass',this)">👁</button>
+            </div>
+            <span class="field-error" id="siPassErr">Password is required</span>
+          </div>
+          <div class="forgot-link">
+            <button type="button" onclick="showView('forgot-password')">Forgot password?</button>
+          </div>
+          <button type="submit" class="btn-primary" id="siBtn">Sign In →</button>
+        </form>
+
+        <div class="divider"><span>or order without an account</span></div>
+        <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order" target="_blank" class="btn-whatsapp">💬 Order on WhatsApp</a>
+        <p class="terms-note">By continuing you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- ══════════════════════════════
+           EMAIL — SIGN UP
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-email-signup">
+        <div class="view-eyebrow">Create Account</div>
+        <h1 class="view-title">Join <span>Angadi</span></h1>
+        <p class="view-sub">
+          Already have an account? <a href="#" onclick="showView('email-signin');return false;">Sign in →</a>
+        </p>
+
+        <div class="auth-status" id="su-status"></div>
+
+        <form id="signupForm" novalidate>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="suName" type="text" placeholder="Your full name" autocomplete="name">
+            <span class="field-error" id="suNameErr">Please enter your name</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" id="suEmail" type="email" placeholder="you@email.com" autocomplete="email">
+            <span class="field-error" id="suEmailErr">Enter a valid email</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <div class="phone-wrap" id="suPhoneWrap">
+              <div class="phone-prefix">🇮🇳 +91</div>
+              <input class="phone-input" id="suPhone" type="tel" placeholder="98765 43210 (for delivery updates)" maxlength="10" inputmode="numeric">
+            </div>
+            <span class="field-error" id="suPhoneErr">Enter a valid 10-digit number</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="pw-wrap">
+              <input class="form-input" id="suPass" type="password" placeholder="Min. 8 characters" autocomplete="new-password">
+              <button type="button" class="pw-toggle" onclick="togglePw('suPass',this)">👁</button>
+            </div>
+            <span class="field-error" id="suPassErr">Password must be at least 8 characters</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="pw-wrap">
+              <input class="form-input" id="suPass2" type="password" placeholder="Re-enter password" autocomplete="new-password">
+              <button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)">👁</button>
+            </div>
+            <span class="field-error" id="suPass2Err">Passwords do not match</span>
+          </div>
+          <button type="submit" class="btn-primary" id="suBtn">Create Account →</button>
+        </form>
+
+        <p class="terms-note">By signing up you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- ══════════════════════════════
+           FORGOT PASSWORD
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-forgot-password">
+        <div class="view-eyebrow">Reset Password</div>
+        <h1 class="view-title">Forgot Your <span>Password?</span></h1>
+        <p class="view-sub">Enter your email and we'll send a reset link. <a href="#" onclick="showView('email-signin');return false;">← Back to sign in</a></p>
+
+        <div class="auth-status" id="fp-status"></div>
+
+        <form id="forgotForm" novalidate>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" id="fpEmail" type="email" placeholder="you@email.com">
+            <span class="field-error" id="fpEmailErr">Enter a valid email address</span>
+          </div>
+          <button type="submit" class="btn-primary" id="fpBtn">Send Reset Link →</button>
+        </form>
+        <a href="#" class="btn-ghost" onclick="showView('email-signin');return false;">← Back to Sign In</a>
+      </div>
+
+      <!-- ══════════════════════════════
+           EMAIL — VERIFY (check inbox)
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-email-verify">
+        <div style="text-align:center;margin-bottom:1.5rem;font-size:3rem;">📧</div>
+        <div class="view-eyebrow" style="justify-content:center;">Check Your Inbox</div>
+        <h1 class="view-title" style="text-align:center;">Verify Your <span>Email</span></h1>
+        <p class="view-sub" style="text-align:center;">We sent a confirmation link to <strong id="verifyEmailDisplay">—</strong>. Click it to activate your account, then come back to sign in.</p>
+        <div class="auth-status info visible" style="justify-content:center;margin-bottom:1.5rem;">
+          📨 Check your spam folder if you don't see it within 2 minutes.
+        </div>
+        <a href="#" class="btn-primary" onclick="showView('email-signin');return false;" style="text-decoration:none;">← Back to Sign In</a>
+        <a href="#" class="btn-ghost" onclick="resendVerification();return false;">Resend verification email</a>
+      </div>
+
+      <!-- ══════════════════════════════
+           PHONE — ENTER NUMBER
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-phone-enter">
+        <div class="view-eyebrow">Phone Login</div>
+        <h1 class="view-title">Enter Your <span>Number</span></h1>
+        <p class="view-sub">We'll send a one-time OTP. No password needed.</p>
+
+        <div class="auth-status" id="ph-status"></div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <div class="phone-wrap" id="phoneWrap">
+            <div class="phone-prefix">🇮🇳 +91</div>
+            <input class="phone-input" id="phoneInput" type="tel" placeholder="98765 43210" maxlength="10" inputmode="numeric">
+          </div>
+          <span class="field-error" id="phoneErr">Enter a valid 10-digit number</span>
+        </div>
+        <button class="btn-primary" id="sendOtpBtn" onclick="sendOTP()">Send OTP →</button>
+        <div class="divider"><span>or use email instead</span></div>
+        <button class="btn-ghost" onclick="switchMethod('email')">✉️ Use Email & Password</button>
+      </div>
+
+      <!-- ══════════════════════════════
+           PHONE — OTP ENTRY
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-phone-otp">
+        <div class="view-eyebrow">Verification</div>
+        <h1 class="view-title">Enter the <span>OTP</span></h1>
+        <p class="view-sub">6-digit code sent to <strong id="otpPhoneLabel">—</strong></p>
+
+        <div class="otp-header">
+          <div class="otp-phone-tag" id="otpPhoneTag">—</div>
+          <button class="btn-change" onclick="showView('phone-enter')">✎ Change</button>
+        </div>
+
+        <div class="otp-boxes">
+          <input class="otp-box" type="tel" maxlength="1" id="otp0" inputmode="numeric">
+          <input class="otp-box" type="tel" maxlength="1" id="otp1" inputmode="numeric">
+          <input class="otp-box" type="tel" maxlength="1" id="otp2" inputmode="numeric">
+          <input class="otp-box" type="tel" maxlength="1" id="otp3" inputmode="numeric">
+          <input class="otp-box" type="tel" maxlength="1" id="otp4" inputmode="numeric">
+          <input class="otp-box" type="tel" maxlength="1" id="otp5" inputmode="numeric">
+        </div>
+
+        <div class="resend-row">
+          <span>Didn't receive it?</span>
+          <button class="btn-resend" id="resendBtn" onclick="resendOTP()" disabled>
+            Resend in <span class="otp-timer" id="otpTimer">30s</span>
+          </button>
+        </div>
+
+        <div class="auth-status" id="otp-status"></div>
+        <button class="btn-primary" id="verifyBtn" onclick="verifyOTP()">Verify &amp; Continue →</button>
+      </div>
+
+      <!-- ══════════════════════════════
+           PROFILE (new user only)
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-profile">
+        <div class="view-eyebrow">One Last Thing</div>
+        <h1 class="view-title">Complete Your <span>Profile</span></h1>
+        <p class="view-sub">Your delivery address so checkout is instant every time.</p>
+
+        <div class="auth-status success visible" style="margin-bottom:1.5rem;" id="profilePhoneChip">
+          ✓ Verified: <strong id="verifiedPhone">—</strong>
+        </div>
+
+        <form id="profileForm" novalidate>
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input class="form-input" id="pName" type="text" placeholder="Your full name" autocomplete="name">
+            <span class="field-error" id="pNameErr">Please enter your name</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flat / House No. & Building *</label>
+            <input class="form-input" id="pFlat" type="text" placeholder="e.g. Flat 4B, Lakshmi Residency">
+            <span class="field-error" id="pFlatErr">Required</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Street / Area *</label>
+            <input class="form-input" id="pArea" type="text" placeholder="e.g. Road No.12, Banjara Hills">
+            <span class="field-error" id="pAreaErr">Required</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Pincode *</label>
+              <input class="form-input" id="pPincode" type="text" placeholder="500034" maxlength="6" inputmode="numeric">
+              <span class="field-error" id="pPincodeErr">6-digit pincode</span>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">City</label>
+              <select class="form-input" id="pCity" style="cursor:pointer;">
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Secunderabad">Secunderabad</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="saveProfileBtn">Save &amp; Start Shopping →</button>
+        </form>
+        <p class="terms-note">Update anytime from <a href="my-profile.html">My Profile →</a></p>
+      </div>
+
+      <!-- ══════════════════════════════
+           SUCCESS
+      ══════════════════════════════ -->
+      <div class="auth-view" id="view-success">
+        <div class="success-icon-wrap"><div class="success-icon">✓</div></div>
+        <div class="success-name" id="successName">Welcome!</div>
+        <p class="success-sub" id="successSub">You're logged in. Redirecting…</p>
+        <div class="auth-status info visible" style="justify-content:center;margin-bottom:1.5rem;">
+          <span class="spinner"></span>
+          <span id="redirectMsg">Taking you to the shop…</span>
+        </div>
+        <a href="shop.html" class="btn-primary" style="text-decoration:none;">🛒 Start Shopping</a>
+        <a href="my-orders.html" class="btn-ghost">📋 My Orders</a>
+      </div>
+
+    </div>
+  </div><!-- end login-panel -->
+</div>
+
+<script>
+/*
+  SUPABASE TABLES:
+  ─────────────────
+  profiles  → id (uuid, ref auth.users), phone, name, created_at
+  addresses → id, user_id (ref profiles), flat, area, pincode, city, is_default
+
+  Supabase Auth handles: email/password signup, signin, reset, OTP
+*/
+
+// ─────────────────────────────────────────────
+//  CONFIG — replace before going live
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://jivkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FcPo69PYVbXXlp1eRO_56Q_iXW0dgd0';
+const DEV_MODE     = false; // Supabase connected
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+let sb = null;
+if (!DEV_MODE) {
+  try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
+}
+
+let otpTimer = null;
+let _lastEmail = '';
+
+// ─────────────────────────────────────────────
+//  VIEW SWITCHING
+// ─────────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + id);
+  if (el) el.classList.add('active');
+}
+
+function switchMethod(method) {
+  document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-method="${method}"]`).classList.add('active');
+  showView(method === 'email' ? 'email-signin' : 'phone-enter');
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = `auth-status ${type} visible`;
+  el.textContent = msg;
+}
+function clearStatus(id) {
+  const el = document.getElementById(id);
+  el.className = 'auth-status';
+  el.textContent = '';
+}
+function setLoading(btnId, loading, label = '') {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span> Please wait…' : label;
+}
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+function getRedirect() {
+  const p = new URLSearchParams(window.location.search).get('redirect');
+  if (p) return p;
+  const ref = document.referrer;
+  if (ref.includes('checkout')) return 'checkout.html';
+  if (ref.includes('cart'))     return 'cart.html';
+  return 'shop.html';
+}
+function saveLocalUser(data) {
+  const existing = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  localStorage.setItem('angadi_user', JSON.stringify({ ...existing, ...data, loggedIn: true }));
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────
+//  EMAIL — SIGN IN
+// ─────────────────────────────────────────────
+document.getElementById('signinForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearStatus('si-status');
+  const email = document.getElementById('siEmail').value.trim();
+  const pass  = document.getElementById('siPass').value;
+  let ok = true;
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('siEmail').classList.add('error');
+    document.getElementById('siEmailErr').classList.add('visible');
+    ok = false;
+  } else { document.getElementById('siEmail').classList.remove('error'); document.getElementById('siEmailErr').classList.remove('visible'); }
+
+  if (!pass) {
+    document.getElementById('siPass').classList.add('error');
+    document.getElementById('siPassErr').classList.add('visible');
+    ok = false;
+  } else { document.getElementById('siPass').classList.remove('error'); document.getElementById('siPassErr').classList.remove('visible'); }
+
+  if (!ok) return;
+
+  setLoading('siBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(800);
+    // Dev: any valid-looking email/pass works
+    saveLocalUser({ email, name: email.split('@')[0], id: 'dev-' + email });
+    setLoading('siBtn', false, 'Sign In →');
+    showSuccessView(email.split('@')[0], false);
+    return;
+  }
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  setLoading('siBtn', false, 'Sign In →');
+  if (error) { setStatus('si-status', 'error', error.message); return; }
+  await loadAndSaveProfile(data.user?.id, email);
+  showSuccessView(data.user?.email?.split('@')[0] || 'there', false);
+});
+
+// ─────────────────────────────────────────────
+//  EMAIL — SIGN UP
+// ─────────────────────────────────────────────
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearStatus('su-status');
+  const name   = document.getElementById('suName').value.trim();
+  const email  = document.getElementById('suEmail').value.trim();
+  const phone  = document.getElementById('suPhone').value.replace(/\D/g,'');
+  const pass   = document.getElementById('suPass').value;
+  const pass2  = document.getElementById('suPass2').value;
+  let ok = true;
+
+  const checks = [
+    { id:'suName',  errId:'suNameErr',  test: v => v.length >= 2,   val: name  },
+    { id:'suEmail', errId:'suEmailErr', test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), val: email },
+    { id:'suPhone', errId:'suPhoneErr', test: v => v === '' || /^[6-9]\d{9}$/.test(v),   val: phone, wrap:'suPhoneWrap' },
+    { id:'suPass',  errId:'suPassErr',  test: v => v.length >= 8,   val: pass  },
+    { id:'suPass2', errId:'suPass2Err', test: v => v === pass,      val: pass2 },
+  ];
+  checks.forEach(c => {
+    const el  = document.getElementById(c.wrap || c.id);
+    const err = document.getElementById(c.errId);
+    if (!c.test(c.val)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
+    else { el.classList.remove('error'); err.classList.remove('visible'); }
+  });
+  if (!ok) return;
+
+  setLoading('suBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(900);
+    setLoading('suBtn', false, 'Create Account →');
+    saveLocalUser({ email, name, phone: phone ? '+91'+phone : '', id: 'dev-' + email });
+    _lastEmail = email;
+    // In dev mode, show profile step to collect address
+    document.getElementById('verifiedPhone').textContent = email;
+    document.getElementById('profilePhoneChip').innerHTML = `✓ Account: <strong>${email}</strong>`;
+    showView('profile');
+    return;
+  }
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass,
+    options: { data: { name, phone: phone ? '+91'+phone : '' } }
+  });
+  setLoading('suBtn', false, 'Create Account →');
+  if (error) { setStatus('su-status', 'error', error.message); return; }
+
+  // Save name/phone to profiles table
+  if (data.user?.id) {
+    saveLocalUser({ email, name, phone: phone ? '+91'+phone : '', id: data.user.id });
+    try {
+      await sb.from('profiles').upsert({ id: data.user.id, name, phone: phone ? '+91'+phone : '' });
+    } catch(e) {}
+  }
+
+  // Supabase sends a confirmation email — show verify view
+  _lastEmail = email;
+  document.getElementById('verifyEmailDisplay').textContent = email;
+  showView('email-verify');
+});
+
+// ─────────────────────────────────────────────
+//  FORGOT PASSWORD
+// ─────────────────────────────────────────────
+document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearStatus('fp-status');
+  const email = document.getElementById('fpEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('fpEmail').classList.add('error');
+    document.getElementById('fpEmailErr').classList.add('visible');
+    return;
+  }
+  document.getElementById('fpEmail').classList.remove('error');
+  document.getElementById('fpEmailErr').classList.remove('visible');
+
+  setLoading('fpBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(700);
+    setLoading('fpBtn', false, 'Send Reset Link →');
+    setStatus('fp-status', 'success', `✓ Reset link sent to ${email}. Check your inbox (dev mode: link goes nowhere).`);
+    return;
+  }
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html?view=reset-password'
+  });
+  setLoading('fpBtn', false, 'Send Reset Link →');
+  if (error) { setStatus('fp-status', 'error', error.message); return; }
+  setStatus('fp-status', 'success', `✓ Password reset link sent to ${email}. Check your inbox.`);
+});
+
+async function resendVerification() {
+  if (!_lastEmail) return;
+  if (DEV_MODE) { alert('Dev mode: verification resent to ' + _lastEmail); return; }
+  await sb.auth.resend({ type: 'signup', email: _lastEmail });
+}
+
+// ─────────────────────────────────────────────
+//  PHONE OTP — SEND
+// ─────────────────────────────────────────────
+async function sendOTP() {
+  clearStatus('ph-status');
+  const raw = document.getElementById('phoneInput').value.replace(/\D/g,'');
+  if (!/^[6-9]\d{9}$/.test(raw)) {
+    document.getElementById('phoneWrap').classList.add('error');
+    document.getElementById('phoneErr').classList.add('visible');
+    return;
+  }
+  document.getElementById('phoneWrap').classList.remove('error');
+  document.getElementById('phoneErr').classList.remove('visible');
+
+  const phone = '+91' + raw;
+  setLoading('sendOtpBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(700);
+    setLoading('sendOtpBtn', false, 'Send OTP →');
+    setStatus('ph-status', 'info', `📱 Dev mode — use 1 2 3 4 5 6`);
+  } else {
+    const { error } = await sb.auth.signInWithOtp({ phone });
+    setLoading('sendOtpBtn', false, 'Send OTP →');
+    if (error) { setStatus('ph-status', 'error', error.message); return; }
+  }
+
+  document.getElementById('otpPhoneLabel').textContent = phone;
+  document.getElementById('otpPhoneTag').textContent   = phone;
+  clearOTPBoxes();
+  showView('phone-otp');
+  startOTPTimer();
+  setTimeout(() => document.getElementById('otp0').focus(), 100);
+}
+
+// ─────────────────────────────────────────────
+//  PHONE OTP — VERIFY
+// ─────────────────────────────────────────────
+async function verifyOTP() {
+  clearStatus('otp-status');
+  const code  = Array.from({length:6}, (_,i) => document.getElementById(`otp${i}`).value).join('');
+  const phone = document.getElementById('otpPhoneTag').textContent;
+
+  if (code.length < 6) { shakeBoxes(); setStatus('otp-status','error','Enter all 6 digits.'); return; }
+
+  setLoading('verifyBtn', true);
+
+  if (DEV_MODE) {
+    await sleep(700);
+    setLoading('verifyBtn', false, 'Verify &amp; Continue →');
+    if (code !== '123456') { shakeBoxes(); setStatus('otp-status','error','Wrong OTP. (Dev: use 123456)'); return; }
+    const existing = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+    const isNew = !existing.name;
+    saveLocalUser({ phone, id: 'dev-' + phone });
+    if (isNew) { showProfileView(phone); } else { showSuccessView('there', false); }
+    return;
+  }
+
+  const { data, error } = await sb.auth.verifyOtp({ phone, token: code, type: 'sms' });
+  setLoading('verifyBtn', false, 'Verify &amp; Continue →');
+  if (error) { shakeBoxes(); setStatus('otp-status','error',error.message); return; }
+
+  saveLocalUser({ phone, id: data.user?.id });
+  const isNew = await checkNewUser(data.user?.id);
+  if (isNew) { showProfileView(phone); }
+  else { await loadAndSaveProfile(data.user?.id, phone); showSuccessView('there', false); }
+}
+
+async function resendOTP() {
+  document.getElementById('resendBtn').disabled = true;
+  clearOTPBoxes();
+  await sendOTPToPhone(document.getElementById('otpPhoneTag').textContent);
+  startOTPTimer();
+}
+async function sendOTPToPhone(phone) {
+  if (DEV_MODE) { setStatus('otp-status','info','Resent (dev). Use 123456'); return; }
+  await sb.auth.signInWithOtp({ phone });
+}
+
+// ─────────────────────────────────────────────
+//  PROFILE FORM (new user after OTP)
+// ─────────────────────────────────────────────
+function showProfileView(identifier) {
+  document.getElementById('verifiedPhone').textContent = identifier;
+  document.getElementById('profilePhoneChip').innerHTML = `✓ Verified: <strong>${identifier}</strong>`;
+  showView('profile');
+}
+
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name    = document.getElementById('pName').value.trim();
+  const flat    = document.getElementById('pFlat').value.trim();
+  const area    = document.getElementById('pArea').value.trim();
+  const pincode = document.getElementById('pPincode').value.trim();
+  const city    = document.getElementById('pCity').value;
+  let ok = true;
+
+  [
+    { id:'pName',    errId:'pNameErr',    test: v => v.length >= 2,       val: name    },
+    { id:'pFlat',    errId:'pFlatErr',    test: v => v.length >= 3,       val: flat    },
+    { id:'pArea',    errId:'pAreaErr',    test: v => v.length >= 3,       val: area    },
+    { id:'pPincode', errId:'pPincodeErr', test: v => /^\d{6}$/.test(v),  val: pincode },
+  ].forEach(f => {
+    const el = document.getElementById(f.id); const err = document.getElementById(f.errId);
+    if (!f.test(f.val)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
+    else { el.classList.remove('error'); err.classList.remove('visible'); }
+  });
+  if (!ok) return;
+
+  setLoading('saveProfileBtn', true);
+
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  saveLocalUser({ name, address: { flat, area, pincode, city, is_default: true } });
+
+  if (sb && user.id) {
+    try {
+      await sb.from('profiles').upsert({ id: user.id, name, phone: user.phone || '' });
+      await sb.from('addresses').upsert({ user_id: user.id, flat, area, pincode, city, is_default: true });
+    } catch(err) { console.warn('Supabase save error', err); }
+  }
+
+  setLoading('saveProfileBtn', false, 'Save &amp; Start Shopping →');
+  showSuccessView(name, true);
+});
+
+// ─────────────────────────────────────────────
+//  SUCCESS
+// ─────────────────────────────────────────────
+function showSuccessView(name, isNew) {
+  document.getElementById('successName').textContent = isNew ? `Welcome, ${name}! 🎉` : `Welcome back, ${name}!`;
+  document.getElementById('successSub').innerHTML = isNew
+    ? `Your account is set up. Your address is saved — <strong>checkout will be instant next time.</strong>`
+    : `You're logged in. <strong>Your saved address will auto-fill at checkout.</strong>`;
+  const redirect = getRedirect();
+  document.getElementById('redirectMsg').textContent =
+    `Taking you to ${redirect.includes('checkout') ? 'checkout' : redirect.includes('cart') ? 'your cart' : 'the shop'}…`;
+  showView('success');
+  setTimeout(() => { window.location.href = redirect; }, 2000);
+}
+
+// ─────────────────────────────────────────────
+//  SUPABASE HELPERS
+// ─────────────────────────────────────────────
+async function checkNewUser(userId) {
+  if (!sb || !userId) return true;
+  try {
+    const { data } = await sb.from('profiles').select('id').eq('id', userId).single();
+    return !data;
+  } catch(e) { return true; }
+}
+async function loadAndSaveProfile(userId, fallback) {
+  if (!sb || !userId) return;
+  try {
+    const { data: p } = await sb.from('profiles').select('*').eq('id', userId).single();
+    const { data: a } = await sb.from('addresses').select('*').eq('user_id', userId).eq('is_default', true).single();
+    saveLocalUser({ name: p?.name || fallback, phone: p?.phone || '', address: a || null });
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+//  OTP TIMER + BOX HELPERS
+// ─────────────────────────────────────────────
+function startOTPTimer() {
+  let t = 30;
+  const timerEl = document.getElementById('otpTimer');
+  const resendBtn = document.getElementById('resendBtn');
+  resendBtn.disabled = true;
+  resendBtn.innerHTML = `Resend in <span class="otp-timer" id="otpTimer">${t}s</span>`;
+  if (otpTimer) clearInterval(otpTimer);
+  otpTimer = setInterval(() => {
+    t--;
+    const el = document.getElementById('otpTimer');
+    if (el) el.textContent = t + 's';
+    if (t <= 0) { clearInterval(otpTimer); resendBtn.disabled = false; resendBtn.textContent = 'Resend OTP'; }
+  }, 1000);
+}
+function shakeBoxes() {
+  document.querySelectorAll('.otp-box').forEach(b => { b.classList.add('err'); setTimeout(()=>b.classList.remove('err'),400); });
+}
+function clearOTPBoxes() {
+  for (let i=0;i<6;i++) { const b=document.getElementById('otp'+i); b.value=''; b.classList.remove('filled','err'); }
+}
+
+// OTP auto-advance
+document.querySelectorAll('.otp-box').forEach((box, idx) => {
+  box.addEventListener('input', () => {
+    box.value = box.value.replace(/\D/,'');
+    box.classList.toggle('filled', box.value.length > 0);
+    if (box.value && idx < 5) document.getElementById('otp'+(idx+1)).focus();
+    if (idx === 5 && box.value) setTimeout(verifyOTP, 200);
+  });
+  box.addEventListener('keydown', e => { if (e.key==='Backspace' && !box.value && idx>0) document.getElementById('otp'+(idx-1)).focus(); });
+  box.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+    text.split('').slice(0,6).forEach((ch,i) => { const b=document.getElementById('otp'+i); if(b){b.value=ch;b.classList.add('filled');} });
+    document.getElementById('otp'+Math.min(text.length-1,5))?.focus();
+    if (text.length >= 6) setTimeout(verifyOTP, 200);
+  });
+});
+
+// Phone input — digits only
+document.getElementById('phoneInput').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'');
+  document.getElementById('phoneWrap').classList.remove('error');
+  document.getElementById('phoneErr').classList.remove('visible');
+});
+document.getElementById('phoneInput').addEventListener('keydown', e => { if(e.key==='Enter') sendOTP(); });
+
+// ─────────────────────────────────────────────
+//  ALREADY LOGGED IN?
+// ─────────────────────────────────────────────
+(function init() {
+  const user = JSON.parse(localStorage.getItem('angadi_user') || 'null');
+  if (user && user.loggedIn) {
+    showView('success');
+    document.getElementById('successName').textContent = `Welcome back, ${user.name || 'there'}!`;
+    document.getElementById('successSub').innerHTML = `You're already logged in as <strong>${user.phone || user.email || ''}</strong>.`;
+    const redirect = getRedirect();
+    document.getElementById('redirectMsg').textContent = 'Redirecting…';
+    setTimeout(() => { window.location.href = redirect; }, 1500);
+  }
+})();
+</script>
+</body>
+</html>

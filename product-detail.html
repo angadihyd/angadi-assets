@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D;
+  --clay-d:#7A3318;
+  --clay-l:#E8956A;
+  --gold:#D4A017;
+  --gold-l:#F5C842;
+  --cream:#F6EDD8;
+  --ink:#080503;
+  --ink-2:#100804;
+  --ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);
+  --border-gold:rgba(212,160,23,0.25);
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--cream);
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4rem;height:70px;
+  background:rgba(8,5,3,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:height 0.4s;
+}
+nav.scrolled{height:60px;}
+.nav-logo{display:flex;align-items:center;text-decoration:none;}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{
+  text-decoration:none;font-size:0.88rem;font-weight:500;
+  color:rgba(246,237,216,0.7);letter-spacing:0.08em;text-transform:uppercase;
+  transition:color 0.3s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--clay-l);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.nav-cart{
+  position:relative;background:none;border:1px solid var(--border);
+  color:var(--cream);width:42px;height:42px;border-radius:10px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:all 0.3s;
+}
+.nav-cart:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
+.cart-badge{
+  position:absolute;top:-4px;right:-4px;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--clay);font-size:0.65rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-order{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);border:none;padding:0.6rem 1.5rem;
+  border-radius:8px;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;
+}
+.btn-order:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.nav-hamburger{
+  display:none;flex-direction:column;gap:5px;cursor:pointer;
+  background:none;border:none;padding:4px;
+}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{
+  display:none;position:fixed;inset:0;z-index:998;
+  background:rgba(8,5,3,0.97);backdrop-filter:blur(20px);
+  flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;
+}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.08em;color:var(--cream);text-decoration:none;}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--cream);font-size:1.8rem;cursor:pointer;}
+
+/* ── PAGE WRAPPER ── */
+.page{padding-top:70px;}
+
+/* ── BREADCRUMB ── */
+.breadcrumb-bar{
+  background:var(--ink-2);
+  border-bottom:1px solid var(--border);
+  padding:0.9rem 4rem;
+  display:flex;align-items:center;gap:0.5rem;
+  font-size:0.78rem;color:rgba(246,237,216,0.4);
+  letter-spacing:0.04em;
+}
+.breadcrumb-bar a{color:rgba(246,237,216,0.4);text-decoration:none;transition:color 0.3s;}
+.breadcrumb-bar a:hover{color:var(--clay-l);}
+.breadcrumb-bar span{color:var(--clay-l);}
+.bc-sep{opacity:0.4;}
+
+/* ── PRODUCT HERO ── */
+.product-hero{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  min-height:calc(100vh - 110px);
+  max-width:1400px;margin:0 auto;
+  padding:0 4rem;
+  gap:4rem;
+  align-items:start;
+  padding-top:3rem;
+  padding-bottom:3rem;
+}
+
+/* LEFT — MEDIA */
+.product-media{
+  position:sticky;
+  top:90px;
+  display:flex;flex-direction:column;gap:1rem;
+}
+.product-media-main{
+  position:relative;
+  border-radius:20px;overflow:hidden;
+  aspect-ratio:1/1;
+  background:var(--ink-3);
+  border:1px solid var(--border);
+}
+.product-media-main video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+}
+.product-media-main img.main-photo{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(0.92) saturate(1.1);
+}
+/* PIP on detail page */
+.pip-detail{
+  position:absolute;bottom:16px;right:16px;
+  width:28%;aspect-ratio:1;
+  object-fit:cover;border-radius:12px;
+  border:2.5px solid rgba(246,237,216,0.4);
+  box-shadow:0 6px 24px rgba(0,0,0,0.7),0 0 0 1px rgba(212,160,23,0.2);
+  z-index:10;
+  transition:transform 0.3s;
+}
+.product-media-main:hover .pip-detail{transform:scale(1.05);}
+/* Media badges */
+.media-badge{
+  position:absolute;top:1rem;left:1rem;
+  background:rgba(8,5,3,0.78);backdrop-filter:blur(8px);
+  border:1px solid var(--border-gold);border-radius:100px;
+  padding:0.3rem 0.8rem;
+  font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--gold);
+  letter-spacing:0.1em;text-transform:uppercase;z-index:5;
+}
+.media-fresh{
+  position:absolute;top:1rem;right:1rem;
+  width:48px;height:48px;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:0.55rem;font-weight:700;color:var(--cream);
+  text-align:center;line-height:1.2;text-transform:uppercase;letter-spacing:0.04em;
+  z-index:5;
+}
+/* Thumbnail strip */
+.product-thumbs{
+  display:flex;gap:0.75rem;
+}
+.product-thumb{
+  width:72px;height:72px;border-radius:10px;overflow:hidden;
+  border:2px solid var(--border);cursor:pointer;transition:all 0.3s;
+  flex-shrink:0;background:var(--ink-3);
+}
+.product-thumb img{width:100%;height:100%;object-fit:cover;filter:brightness(0.8);}
+.product-thumb:hover,.product-thumb.active{border-color:var(--clay);box-shadow:0 0 0 2px rgba(196,98,45,0.3);}
+.product-thumb.active img{filter:brightness(1);}
+
+/* RIGHT — PRODUCT INFO */
+.product-info{
+  padding:0.5rem 0;
+}
+.product-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;
+  font-size:0.7rem;color:var(--clay);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-bottom:0.8rem;
+}
+.product-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.product-name-te{
+  font-size:0.8rem;font-weight:500;color:var(--clay-l);
+  letter-spacing:0.1em;text-transform:uppercase;
+  margin-bottom:0.3rem;
+}
+.product-name-main{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,3.5vw,2.8rem);font-weight:700;
+  color:var(--cream);line-height:1.1;
+  margin-bottom:1rem;
+}
+/* Rating */
+.product-rating{
+  display:flex;align-items:center;gap:0.6rem;
+  margin-bottom:1.5rem;
+}
+.stars{display:flex;gap:2px;}
+.stars span{color:var(--gold);font-size:0.9rem;}
+.rating-text{font-size:0.8rem;color:rgba(246,237,216,0.4);}
+.rating-text a{color:var(--clay-l);text-decoration:none;}
+
+/* Price */
+.product-pricing{
+  display:flex;align-items:baseline;gap:0.8rem;
+  margin-bottom:0.4rem;
+}
+.price-main{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:3rem;line-height:1;color:var(--gold);
+}
+.price-unit{
+  font-size:0.85rem;color:rgba(246,237,216,0.4);
+}
+.price-note{
+  font-size:0.78rem;color:rgba(246,237,216,0.4);
+  margin-bottom:1.8rem;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.price-note::before{content:'✓';color:#4CAF50;font-weight:700;}
+
+/* Divider */
+.info-divider{height:1px;background:var(--border);margin:1.5rem 0;}
+
+/* Weight / Pack selector */
+.option-label{
+  font-family:'Space Mono',monospace;
+  font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(246,237,216,0.5);
+  margin-bottom:0.7rem;
+}
+.option-label span{color:var(--clay-l);font-weight:700;}
+.weight-options{
+  display:flex;gap:0.6rem;flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+.weight-btn{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:8px;padding:0.55rem 1.1rem;
+  font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.6);
+  cursor:pointer;transition:all 0.25s;
+}
+.weight-btn:hover{border-color:rgba(196,98,45,0.4);color:var(--cream);}
+.weight-btn.active{background:rgba(196,98,45,0.15);border-color:var(--clay);color:var(--cream);font-weight:600;}
+
+/* Cut type */
+.cut-options{
+  display:flex;gap:0.6rem;flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+.cut-btn{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:8px;padding:0.5rem 1rem;
+  font-size:0.8rem;color:rgba(246,237,216,0.55);
+  cursor:pointer;transition:all 0.25s;
+}
+.cut-btn:hover{border-color:rgba(196,98,45,0.4);color:var(--cream);}
+.cut-btn.active{background:rgba(196,98,45,0.15);border-color:var(--clay);color:var(--cream);font-weight:600;}
+
+/* Quantity */
+.qty-row{
+  display:flex;align-items:center;gap:1.5rem;
+  margin-bottom:1.5rem;
+  flex-wrap:wrap;
+}
+.qty-control{
+  display:flex;align-items:center;gap:0;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.qty-btn{
+  width:40px;height:44px;background:none;border:none;
+  color:var(--clay-l);font-size:1.2rem;cursor:pointer;
+  transition:background 0.2s;display:flex;align-items:center;justify-content:center;
+}
+.qty-btn:hover{background:rgba(196,98,45,0.12);}
+.qty-val{
+  width:44px;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:1.3rem;
+  color:var(--cream);border:none;background:none;
+  pointer-events:none;
+}
+.qty-total{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;color:rgba(246,237,216,0.5);
+}
+.qty-total strong{color:var(--gold);}
+
+/* CTA Buttons */
+.cta-row{
+  display:flex;gap:0.8rem;
+  margin-bottom:1.5rem;
+  flex-wrap:wrap;
+}
+.btn-primary{
+  flex:1;min-width:160px;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);border:none;padding:1rem 1.5rem;
+  border-radius:12px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;
+  display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  letter-spacing:0.02em;
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg,var(--clay-l),var(--clay));
+  transform:translateY(-2px);
+  box-shadow:0 12px 36px rgba(196,98,45,0.45);
+}
+.btn-primary:active{transform:translateY(0);}
+.btn-ghost{
+  background:transparent;color:var(--cream);
+  border:1px solid rgba(246,237,216,0.2);
+  padding:1rem 1.2rem;border-radius:12px;
+  font-size:1.2rem;cursor:pointer;transition:all 0.3s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.btn-ghost:hover{border-color:var(--clay-l);background:rgba(196,98,45,0.08);}
+.btn-whatsapp{
+  flex:1;min-width:160px;
+  background:#25D366;color:#fff;border:none;
+  padding:1rem 1.5rem;border-radius:12px;
+  font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;
+  display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  text-decoration:none;
+}
+.btn-whatsapp:hover{background:#1ebe57;transform:translateY(-2px);box-shadow:0 8px 28px rgba(37,211,102,0.3);}
+
+/* Trust bar */
+.trust-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:0.8rem;
+  margin-bottom:1.8rem;
+}
+.trust-item{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-radius:10px;padding:0.8rem;
+  text-align:center;
+}
+.trust-icon{font-size:1.2rem;margin-bottom:0.3rem;}
+.trust-text{font-size:0.68rem;color:rgba(246,237,216,0.45);line-height:1.4;}
+
+/* Delivery info */
+.delivery-info{
+  background:rgba(212,160,23,0.06);
+  border:1px solid var(--border-gold);
+  border-radius:12px;padding:1rem 1.2rem;
+  display:flex;align-items:center;gap:1rem;
+  margin-bottom:1.5rem;
+}
+.delivery-info-icon{font-size:1.5rem;flex-shrink:0;}
+.delivery-info p{font-size:0.82rem;color:rgba(246,237,216,0.65);line-height:1.5;}
+.delivery-info p strong{color:var(--cream);}
+
+/* ── TABS SECTION ── */
+.tabs-section{
+  background:var(--ink-2);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.tabs-inner{
+  max-width:1400px;margin:0 auto;
+  padding:0 4rem;
+}
+.tabs-nav{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--border);
+}
+.tab-btn{
+  background:none;border:none;
+  padding:1.2rem 2rem;
+  font-size:0.85rem;font-weight:500;
+  color:rgba(246,237,216,0.45);
+  letter-spacing:0.06em;cursor:pointer;
+  position:relative;transition:color 0.3s;
+}
+.tab-btn::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;
+  height:2px;background:var(--clay);
+  transform:scaleX(0);transition:transform 0.3s;
+}
+.tab-btn:hover{color:var(--cream);}
+.tab-btn.active{color:var(--cream);}
+.tab-btn.active::after{transform:scaleX(1);}
+.tab-content{display:none;padding:2.5rem 0;}
+.tab-content.active{display:block;}
+.tab-body{
+  font-size:0.92rem;color:rgba(246,237,216,0.65);
+  line-height:1.9;max-width:700px;
+}
+.tab-body strong{color:var(--cream);}
+.tab-body p{margin-bottom:1rem;}
+.tab-body ul{padding-left:1.2rem;margin-bottom:1rem;}
+.tab-body li{margin-bottom:0.4rem;}
+/* Sourcing steps */
+.sourcing-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.2rem;margin-top:1.5rem;
+}
+.sourcing-step{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-radius:12px;padding:1.2rem;
+}
+.sourcing-step-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.8rem;color:var(--clay);line-height:1;
+  margin-bottom:0.4rem;
+}
+.sourcing-step-title{
+  font-family:'Playfair Display',serif;
+  font-size:0.9rem;font-weight:700;color:var(--cream);
+  margin-bottom:0.3rem;
+}
+.sourcing-step-desc{font-size:0.78rem;color:rgba(246,237,216,0.5);line-height:1.5;}
+/* Nutrition table */
+.nutrition-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1rem;margin-top:1.5rem;
+}
+.nutrition-card{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);border-radius:12px;
+  padding:1.2rem;text-align:center;
+}
+.nutrition-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.8rem;color:var(--gold);line-height:1;
+  margin-bottom:0.3rem;
+}
+.nutrition-label{font-size:0.7rem;color:rgba(246,237,216,0.4);text-transform:uppercase;letter-spacing:0.08em;}
+.nutrition-note{
+  margin-top:1rem;
+  font-size:0.75rem;color:rgba(246,237,216,0.35);
+  font-style:italic;
+}
+
+/* ── RELATED PRODUCTS ── */
+.related-section{
+  max-width:1400px;margin:0 auto;
+  padding:4rem 4rem;
+}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--clay);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1rem;
+}
+.section-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;
+  color:var(--cream);margin-bottom:2rem;
+}
+.section-title em{font-style:italic;color:var(--gold);}
+.related-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;
+}
+.related-card{
+  background:var(--ink-3);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;text-decoration:none;
+  transition:all 0.35s;display:flex;flex-direction:column;
+}
+.related-card:hover{
+  border-color:rgba(196,98,45,0.5);
+  transform:translateY(-5px);
+  box-shadow:0 16px 48px rgba(0,0,0,0.4);
+}
+.related-img{height:180px;overflow:hidden;position:relative;}
+.related-img img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform 0.5s;filter:brightness(0.88) saturate(1.1);
+}
+.related-card:hover .related-img img{transform:scale(1.06);}
+.related-img video{
+  width:100%;height:100%;object-fit:cover;position:absolute;inset:0;
+}
+.related-body{padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;flex:1;}
+.related-name-te{font-size:0.65rem;font-weight:500;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.2rem;}
+.related-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.8rem;}
+.related-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
+.related-price{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);}
+.related-price-unit{font-size:0.65rem;color:rgba(246,237,216,0.35);display:block;margin-top:0.1rem;}
+.btn-add-small{
+  background:rgba(196,98,45,0.12);border:1px solid var(--border);
+  color:var(--clay-l);width:34px;height:34px;border-radius:8px;
+  font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+}
+.btn-add-small:hover{background:var(--clay);border-color:var(--clay);color:var(--cream);transform:scale(1.1);}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--ink-2);border-top:1px solid var(--border);
+  padding:4rem 4rem 2rem;
+}
+.footer-grid{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:3rem;margin-bottom:3rem;
+}
+.footer-brand p{font-size:0.85rem;color:rgba(246,237,216,0.5);line-height:1.7;max-width:280px;margin-top:0.5rem;}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--clay-l);margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:0.6rem;}
+.footer-col ul li a{font-size:0.85rem;color:rgba(246,237,216,0.5);text-decoration:none;transition:color 0.3s;}
+.footer-col ul li a:hover{color:var(--cream);}
+.footer-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:2rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem;
+}
+.footer-bottom p{font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+.footer-delivery{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-delivery .dot{width:8px;height:8px;background:#4CAF50;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}
+
+/* ── WHATSAPP FLOAT ── */
+.wa-float{
+  position:fixed;bottom:2rem;right:2rem;z-index:999;
+  width:56px;height:56px;background:#25D366;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  box-shadow:0 4px 20px rgba(37,211,102,0.4);text-decoration:none;
+  transition:all 0.3s;animation:waBounce 3s ease infinite;
+}
+.wa-float:hover{transform:scale(1.1);}
+@keyframes waBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── FADE ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+
+/* ── NOT FOUND ── */
+.not-found{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;text-align:center;gap:1rem;
+}
+.not-found h2{font-family:'Playfair Display',serif;font-size:2rem;color:var(--cream);}
+.not-found p{color:rgba(246,237,216,0.5);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .product-hero{grid-template-columns:1fr;padding:2rem 2rem 3rem;gap:2rem;}
+  .product-media{position:static;}
+  .trust-bar{grid-template-columns:repeat(2,1fr);}
+  .sourcing-steps{grid-template-columns:repeat(2,1fr);}
+  .nutrition-grid{grid-template-columns:repeat(2,1fr);}
+  .related-grid{grid-template-columns:repeat(2,1fr);}
+  .tabs-inner,.related-section{padding:2rem;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.nav-right .btn-order{display:none;}
+  .nav-hamburger{display:flex;}
+  .breadcrumb-bar{padding:0.8rem 1.5rem;}
+  .product-hero{padding:1.5rem 1.5rem 3rem;}
+  .trust-bar{grid-template-columns:repeat(4,1fr);}
+  .cta-row{flex-direction:column;}
+  .btn-primary,.btn-whatsapp{flex:none;width:100%;}
+  .sourcing-steps{grid-template-columns:1fr;}
+  .nutrition-grid{grid-template-columns:repeat(2,1fr);}
+  .related-grid{grid-template-columns:1fr;}
+  .related-section{padding:2.5rem 1.5rem;}
+  .tabs-inner{padding:0 1.5rem;}
+  .footer-grid{grid-template-columns:1fr;}
+  footer{padding:3rem 1.5rem 2rem;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+}
+@media(max-width:480px){
+  .trust-bar{grid-template-columns:repeat(2,1fr);}
+  .weight-options,.cut-options{gap:0.4rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="shop.html" class="active">Shop</a></li>
+    <li><a href="index.html#story">Our Story</a></li>
+    <li><a href="index.html#how">How It Works</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-cart" id="cartBtn">
+      🛒<span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <a href="cart.html" class="btn-order">Cart →</a>
+    <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="shop.html" onclick="closeMobile()">Shop</a>
+  <a href="index.html#story" onclick="closeMobile()">Our Story</a>
+  <a href="index.html#how" onclick="closeMobile()">How It Works</a>
+  <a href="index.html#contact" onclick="closeMobile()">Contact</a>
+</div>
+
+<div class="page" id="pageRoot">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar" id="breadcrumb">
+    <a href="index.html">Home</a>
+    <span class="bc-sep">›</span>
+    <a href="shop.html">Shop</a>
+    <span class="bc-sep">›</span>
+    <span id="bcProduct">Loading…</span>
+  </div>
+
+  <!-- PRODUCT HERO — populated by JS -->
+  <div class="product-hero" id="productHero"></div>
+
+  <!-- TABS -->
+  <div class="tabs-section" id="tabsSection">
+    <div class="tabs-inner">
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="description">Description</button>
+        <button class="tab-btn" data-tab="sourcing">Sourcing</button>
+        <button class="tab-btn" data-tab="nutrition">Nutrition</button>
+        <button class="tab-btn" data-tab="howtocook">How to Cook</button>
+      </div>
+      <div class="tab-content active" id="tab-description"></div>
+      <div class="tab-content" id="tab-sourcing"></div>
+      <div class="tab-content" id="tab-nutrition"></div>
+      <div class="tab-content" id="tab-howtocook"></div>
+    </div>
+  </div>
+
+  <!-- RELATED PRODUCTS -->
+  <div class="related-section" id="relatedSection">
+    <div class="section-eyebrow">You May Also Like</div>
+    <h2 class="section-title">More from <em>Our Village</em></h2>
+    <div class="related-grid" id="relatedGrid"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" style="display:inline-block;text-decoration:none;">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+      </a>
+      <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="product-detail.html?id=goat-meat">Village Goat Meat</a></li>
+        <li><a href="product-detail.html?id=country-chicken">Country Chicken</a></li>
+        <li><a href="product-detail.html?id=country-eggs">Country Eggs</a></li>
+        <li><a href="product-detail.html?id=river-fish">River Fish</a></li>
+        <li><a href="product-detail.html?id=full-goat">Full Goat</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="index.html#story">Our Story</a></li>
+        <li><a href="index.html#how">How It Works</a></li>
+        <li><a href="#">Sourcing Ethics</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/919949950743" target="_blank">WhatsApp Us</a></li>
+        <li><a href="#">Delivery Areas</a></li>
+        <li><a href="#">Order Tracking</a></li>
+        <li><a href="#">Returns Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <div class="footer-delivery">
+      <span class="dot"></span>
+      Delivering across Hyderabad — Banjara Hills · Jubilee Hills · Gachibowli · Kondapur · Madhapur
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20fresh%20meat" class="wa-float" target="_blank">💬</a>
+
+<script>
+// ─────────────────────────────────────────────
+//  PRODUCT DATA
+// ─────────────────────────────────────────────
+const PRODUCTS = {
+  'goat-meat': {
+    id: 'goat-meat',
+    nameTE: 'Meka Mamsam',
+    name: 'Village Goat Meat',
+    category: 'goat',
+    badge: '⭐ Bestseller',
+    freshLabel: 'FRESH\nTODAY',
+    price: 680,
+    unit: 'kg',
+    video: 'product/gaot farmer animated video.mp4',
+    mainImg: 'product/mutton.png',
+    thumbs: [
+      { src: 'product/mutton.png', label: 'Curry Cut' },
+    ],
+    weights: ['250g', '500g', '1 kg', '2 kg', '5 kg'],
+    cuts: ['Curry Cut', 'Biryani Cut', 'Boneless', 'Keema', 'Mixed'],
+    shortDesc: 'Farm-raised Telangana goat, hand-cut to order. Rich flavour, tender texture. No hormones, no antibiotics.',
+    deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
+    description: `
+      <p>Our Village Goat Meat comes from native-breed Telangana goats raised on open pastures in partner villages. These animals graze freely on natural grass and forage — never confined, never injected with growth hormones or antibiotics.</p>
+      <p>The meat is <strong>rich, aromatic, and deeply flavourful</strong> in a way that intensively farmed goat simply cannot match. The muscle is firmer, the fat well-distributed, and the colour a healthy deep red — all markers of a genuinely healthy, active animal.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Mutton biryani — the classic Hyderabadi preparation</li>
+        <li>Slow-cooked curry (rogan josh, korma, kheema)</li>
+        <li>Pepper fry and dry roasts</li>
+        <li>Keema for stuffed parathas or rolls</li>
+      </ul>
+      <p>Available as curry cut, biryani cut (larger pieces), boneless, or keema — selected at the time of order and cut fresh before dispatch.</p>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Village Selection', desc: 'We visit partner farms in Nalgonda, Mahbubnagar & Khammam. Animals are checked for health, weight, and rearing history.' },
+        { num: '02', title: 'Ethical Procurement', desc: 'Procured directly from the farmer. No middlemen auction yards. The farmer receives a fair, above-market price.' },
+        { num: '03', title: 'Hygienic Processing', desc: 'Processed at our FSSAI-certified facility in Hyderabad. Stainless steel surfaces, gloved handlers, sanitised daily.' },
+        { num: '04', title: 'Cold Pack & Dispatch', desc: 'Packed chilled within 90 minutes of processing. Insulated bags maintain <4°C from unit to your door.' },
+        { num: '05', title: 'Cut to Order', desc: 'Your preferred cut — curry, biryani, boneless, keema — is prepared fresh at the time of order.' },
+        { num: '06', title: 'Delivered Fresh', desc: 'Delivered same-day within 4–6 hours of order confirmation. No frozen meat, ever.' },
+      ]
+    },
+    nutrition: [
+      { val: '143', label: 'Calories', sub: 'per 100g' },
+      { val: '27g', label: 'Protein', sub: 'per 100g' },
+      { val: '3g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Values are approximate and may vary. Goat meat is naturally lower in fat and cholesterol than beef, lamb, or pork.',
+    cooking: `
+      <p><strong>Mutton Biryani (Hyderabadi Style)</strong></p>
+      <ul>
+        <li>Marinate 1 kg biryani-cut goat with curd, biryani masala, ginger-garlic paste, red chilli, and mint for 2 hours</li>
+        <li>Parboil basmati rice to 70% done with whole spices</li>
+        <li>Layer marinated meat and rice in a heavy-bottomed pot</li>
+        <li>Seal with dough and slow-cook (dum) on low flame for 45 minutes</li>
+        <li>Rest 10 minutes before opening. Serve with raita and shorba.</li>
+      </ul>
+      <p><strong>Quick Tip:</strong> For the best tenderness, do not rush the marination. Overnight in the refrigerator gives the most flavourful result.</p>
+    `
+  },
+
+  'country-chicken': {
+    id: 'country-chicken',
+    nameTE: 'Nati Kodi',
+    name: 'Country Chicken',
+    category: 'chicken',
+    badge: '🌿 Nati',
+    freshLabel: 'FRESH\nTODAY',
+    price: 520,
+    unit: 'kg',
+    video: 'product/country chiken animated video.mp4',
+    mainImg: 'product/country chiken.png',
+    thumbs: [
+      { src: 'product/country chiken.png', label: 'Full Chicken' },
+      { src: 'product/county chiken.png', label: 'Curry Cut' },
+    ],
+    weights: ['500g', '1 kg', '1.5 kg', '2 kg'],
+    cuts: ['Curry Cut', 'Biryani Cut', 'Whole', 'Boneless Breast', 'Leg Pieces'],
+    shortDesc: 'Free-range country chicken raised on open ground. Firm, deeply flavourful. The taste of grandmother\'s kitchen.',
+    deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
+    description: `
+      <p>Nati Kodi — country chicken — is in a different category to the pale, soft broiler chickens sold in supermarkets. Raised free-range in open village compounds, these birds eat naturally, move freely, and grow slowly over 6–8 months instead of the 45 days of commercial breeds.</p>
+      <p>The result is <strong>firmer, darker meat with a rich, deep flavour</strong> that holds up beautifully in slow cooking. The broth made from nati kodi bones is a golden elixir — rich in collagen and deeply aromatic.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Nati kodi pulusu (country chicken curry)</li>
+        <li>Kodi biryani — especially the Andhra-style with raw marination</li>
+        <li>Chicken 65 (the firmer texture holds the coating perfectly)</li>
+        <li>Slow-cooked gravy curries and pepper masala</li>
+        <li>Bone broth and soup</li>
+      </ul>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Village Farms', desc: 'Sourced from free-range poultry farms in Nalgonda & Yadadri. Birds are raised over 6+ months with no growth promoters.' },
+        { num: '02', title: 'Breed Verification', desc: 'Only native breeds (Aseel, Kadaknath cross, local desi). No commercial broiler breeds.' },
+        { num: '03', title: 'Clean Processing', desc: 'Processed at our FSSAI-certified unit. Fully cleaned, defeathered and dressed to your cut preference.' },
+        { num: '04', title: 'Chilled Dispatch', desc: 'Packed chilled immediately after processing and delivered same day.' },
+      ]
+    },
+    nutrition: [
+      { val: '165', label: 'Calories', sub: 'per 100g' },
+      { val: '31g', label: 'Protein', sub: 'per 100g' },
+      { val: '3.6g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Country chicken has higher protein and lower fat than commercial broiler. Values are approximate.',
+    cooking: `
+      <p><strong>Nati Kodi Pulusu (Country Chicken Curry)</strong></p>
+      <ul>
+        <li>Heat oil, add whole spices — bay leaf, cloves, cardamom, cinnamon</li>
+        <li>Fry onions until deep golden. Add ginger-garlic paste, cook 3 minutes</li>
+        <li>Add tomatoes, cook until oil separates. Add red chilli, coriander, turmeric powder</li>
+        <li>Add curry-cut country chicken. Fry on high heat 5 minutes to seal</li>
+        <li>Add water, tamarind extract, and salt. Pressure cook 4–5 whistles</li>
+        <li>Simmer open 10 minutes to thicken. Finish with fresh coriander.</li>
+      </ul>
+      <p><strong>Tip:</strong> Country chicken takes longer to cook than broiler. Don't rush the pressure cooker — 4-5 whistles gives tender, fall-off-the-bone texture.</p>
+    `
+  },
+
+  'river-fish': {
+    id: 'river-fish',
+    nameTE: 'Chepa Mukkalu',
+    name: 'Fresh River Fish',
+    category: 'fish',
+    badge: '🐟 River Fresh',
+    freshLabel: null,
+    price: 450,
+    unit: 'kg',
+    video: 'product/fisher man animated video.mp4',
+    mainImg: 'product/fish.png',
+    thumbs: [
+      { src: 'product/fish.png', label: 'Curry Cut' },
+      { src: 'product/fish 2.png', label: 'Whole Fish' },
+      { src: 'product/fisherman.png', label: 'From the River' },
+    ],
+    weights: ['500g', '1 kg', '2 kg'],
+    cuts: ['Curry Cut', 'Whole', 'Fillet', 'Steaks'],
+    shortDesc: 'Freshwater fish from Telangana rivers. Cleaned, cut to order, packed same day. No ammonia, no frozen stock.',
+    deliveryNote: 'Order before 10 AM · Same-day fresh delivery',
+    description: `
+      <p>Our freshwater fish are sourced directly from local fishermen working the rivers and tanks of Telangana — Godavari, Krishna, and their tributaries. These are <strong>wild-caught or tank-farmed in open freshwater</strong> with no artificial feeds or chemicals.</p>
+      <p>The fish is cleaned, gutted, and cut at our processing unit the morning of your delivery. There is zero frozen inventory — what you receive was swimming 12–18 hours ago.</p>
+      <p><strong>Available species</strong> (based on daily catch — we'll confirm species at order):</p>
+      <ul>
+        <li>Rohu (Rohit) — the classic Telugu household fish</li>
+        <li>Catla — large, meaty, ideal for fry and curry</li>
+        <li>Tilapia — mild flavour, excellent for fry</li>
+        <li>Rawas (Indian Salmon) when available</li>
+      </ul>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'River Sourcing', desc: 'Fishermen deliver catch directly to our unit early morning from Godavari and Krishna river systems.' },
+        { num: '02', title: 'Freshness Check', desc: 'Gill colour, eye clarity, and smell tested before acceptance. Only live or just-harvested fish accepted.' },
+        { num: '03', title: 'Clean Processing', desc: 'Scaled, gutted, washed in clean water and cut to your preference — curry, fillet, steak, or whole.' },
+        { num: '04', title: 'Cold Packed', desc: 'Packed in sealed pouches over ice and dispatched within 2 hours of processing.' },
+      ]
+    },
+    nutrition: [
+      { val: '128', label: 'Calories', sub: 'per 100g' },
+      { val: '26g', label: 'Protein', sub: 'per 100g' },
+      { val: '2.5g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Freshwater fish is an excellent source of lean protein and omega-3 fatty acids. Values are approximate and vary by species.',
+    cooking: `
+      <p><strong>Telangana Fish Curry (Chepa Pulusu)</strong></p>
+      <ul>
+        <li>Marinate fish pieces with turmeric, red chilli, and salt for 20 minutes</li>
+        <li>Shallow fry until golden and set aside</li>
+        <li>In same oil, fry onions golden. Add tomatoes, green chillies, curry leaves</li>
+        <li>Add tamarind extract, coriander powder, red chilli powder, salt</li>
+        <li>Simmer 10 minutes. Gently add fried fish pieces</li>
+        <li>Cook 5 minutes on low. Finish with fresh coriander. Serve with rice.</li>
+      </ul>
+      <p><strong>Tip:</strong> Frying the fish first before adding to curry keeps the pieces intact and adds a deeper flavour to the gravy.</p>
+    `
+  },
+
+  'baby-goat-legs': {
+    id: 'baby-goat-legs',
+    nameTE: 'Pilla Meka Kalu',
+    name: 'Baby Goat Legs',
+    category: 'goat',
+    badge: '🏆 Premium',
+    freshLabel: 'LIMITED',
+    price: 980,
+    unit: 'kg',
+    video: null,
+    mainImg: 'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png',
+    thumbs: [
+      { src: 'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png', label: 'Leg Pieces' },
+      { src: 'product/legs.png', label: 'Full Legs' },
+    ],
+    weights: ['500g', '1 kg', '2 kg'],
+    cuts: ['Full Legs', 'Split', 'Curry Cut'],
+    shortDesc: 'Tender baby goat legs — rare, seasonal, extraordinary. Perfect for slow-roast, biryani or shawarma.',
+    deliveryNote: 'Pre-order required · 24-hour advance notice · Limited stock',
+    description: `
+      <p>Baby goat legs are among the most sought-after cuts in Telangana — tender, delicate, and intensely flavourful in a way that full-grown goat cannot replicate. Available only seasonally and in limited quantities.</p>
+      <p>These are <strong>legs from young village-raised goats</strong>, hand-selected for size and quality. The meat is pale pink, finely grained, and melts when slow-cooked. The bones yield a collagen-rich broth that is exceptional.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Slow-roasted raan (whole leg roast)</li>
+        <li>Shawarma and kebab wraps</li>
+        <li>Biryani — legs give an unmatched flavour to the rice</li>
+        <li>Paya (leg broth) — a Hyderabadi morning speciality</li>
+      </ul>
+      <p>⚠️ <strong>Pre-order required</strong> — available 2–3 days per week depending on supply. Order now and we'll confirm your slot within 2 hours.</p>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Seasonal Selection', desc: 'Baby goat is available only at certain times of year. We source from partner farms in Nalgonda that notify us in advance.' },
+        { num: '02', title: 'Premium Grade', desc: 'Only young animals under 6 months. Weight-checked and visually verified for quality before acceptance.' },
+        { num: '03', title: 'Skilled Butchery', desc: 'Legs are separated and dressed by experienced butchers. Cleaned and portioned to your requirement.' },
+        { num: '04', title: 'Priority Dispatch', desc: 'Packed and dispatched on the same day as processing. Pre-orders are given priority morning delivery slots.' },
+      ]
+    },
+    nutrition: [
+      { val: '109', label: 'Calories', sub: 'per 100g' },
+      { val: '20g', label: 'Protein', sub: 'per 100g' },
+      { val: '2.3g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Baby goat is exceptionally lean with very low fat content. Rich in B12, zinc, and iron. Values are approximate.',
+    cooking: `
+      <p><strong>Slow-Roasted Baby Goat Raan</strong></p>
+      <ul>
+        <li>Score the legs deeply. Marinate overnight in yoghurt, raw papaya paste, garam masala, ginger-garlic, red chilli, saffron milk</li>
+        <li>Bring to room temperature 1 hour before cooking</li>
+        <li>Sear in a hot pan with ghee to form a crust on all sides</li>
+        <li>Transfer to oven at 160°C. Roast 2.5 hours covered with foil</li>
+        <li>Remove foil last 30 minutes to caramelise. Rest 15 minutes before serving.</li>
+      </ul>
+    `
+  },
+
+  'country-eggs': {
+    id: 'country-eggs',
+    nameTE: 'Nati Kodi Gudlu',
+    name: 'Country Eggs',
+    category: 'eggs',
+    badge: '🥚 Farm Fresh',
+    freshLabel: null,
+    price: 12,
+    unit: 'egg',
+    video: null,
+    mainImg: 'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png',
+    thumbs: [
+      { src: 'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', label: 'Tray of 12' },
+    ],
+    weights: ['6 eggs', '12 eggs', '30 eggs'],
+    cuts: [],
+    shortDesc: 'Deep golden yolk, rich flavour. Free-range hens, Telangana farms. The difference is visible from the first crack.',
+    deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
+    description: `
+      <p>Country eggs from free-range hens are visibly and tastefully different from commercial eggs. <strong>Crack one open and see the difference</strong> — a deep orange-gold yolk, firm white, and a rich, buttery flavour that you can't get from battery-farmed birds.</p>
+      <p>Our hens roam freely in open village farms in Nalgonda, eating insects, grain, and greens. No cages, no artificial lighting cycles, no feed additives.</p>
+      <p><strong>Why country eggs are better:</strong></p>
+      <ul>
+        <li>3× more Vitamin D than commercial eggs</li>
+        <li>Higher in Omega-3 fatty acids</li>
+        <li>Deeper yolk colour = more lutein and zeaxanthin (eye health)</li>
+        <li>Richer taste that makes all the difference in cooking</li>
+      </ul>
+      <p>Available in packs of 6, 12, or 30. Packed carefully to prevent breakage.</p>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Free-Range Hens', desc: 'Sourced from village farms where hens have full outdoor access, eat naturally, and lay without stress.' },
+        { num: '02', title: 'Collection & Grading', desc: 'Eggs collected daily. Graded for size, weight, and shell integrity. Cracked or abnormal eggs never dispatched.' },
+        { num: '03', title: 'Careful Packing', desc: 'Packed in egg trays with protective wrapping. Delivered same-day to preserve maximum freshness.' },
+      ]
+    },
+    nutrition: [
+      { val: '155', label: 'Calories', sub: 'per 100g' },
+      { val: '13g', label: 'Protein', sub: 'per 100g' },
+      { val: '11g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '1.1g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Nutritional values per 100g of whole egg (approx. 2 medium eggs). Country eggs are richer in vitamins A, D, E and omega-3.',
+    cooking: `
+      <p><strong>Perfect Fried Egg (show off that yolk)</strong></p>
+      <ul>
+        <li>Heat a small pan on medium-low. Add ½ tsp ghee or butter</li>
+        <li>Crack egg gently — the firm white will hold its shape</li>
+        <li>Cook until white is just set but yolk still runny — 2 minutes</li>
+        <li>Season with black pepper and sea salt. Serve immediately on toast.</li>
+      </ul>
+      <p><strong>Egg Bhurji:</strong> Scramble 3 country eggs with onion, green chilli, tomato, turmeric and coriander. The rich yolk makes this bhurji a completely different dish from what you've had before.</p>
+    `
+  },
+
+  'goat-legs': {
+    id: 'goat-legs',
+    nameTE: 'Meka Kalu',
+    name: 'Goat Legs',
+    category: 'goat',
+    badge: '🦵 Village Fresh',
+    freshLabel: 'FRESH\nTODAY',
+    price: 400,
+    unit: '4 pieces',
+    video: null,
+    mainImg: 'product/legs.png',
+    thumbs: [
+      { src: 'product/legs.png', label: 'Goat Legs' },
+    ],
+    weights: ['4 pieces', '8 pieces', '12 pieces'],
+    cuts: ['Full Legs', 'Split into 2', 'Curry Cut'],
+    shortDesc: 'Tender village goat legs — ₹400 for 4 pieces. Rich in collagen, perfect for paya, slow curry, or biryani.',
+    deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
+    description: `
+      <p>Goat legs are prized for their <strong>rich collagen content and deep, gelatinous broth</strong>. Slow-cooked, the cartilage and marrow dissolve into the gravy, creating an extraordinary body and flavour that no other cut can replicate.</p>
+      <p>Our legs come from free-range Telangana village goats — naturally active animals whose leg muscles are well-developed and full of flavour.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Paya curry — the famous Hyderabadi morning dish</li>
+        <li>Slow-cooked leg masala (pressure cook or dum)</li>
+        <li>Biryani — legs on the bone give unmatched flavour to the rice</li>
+        <li>Bone broth — collagen-rich, deeply nourishing</li>
+      </ul>
+      <p>Priced at <strong>₹400 for 4 pieces</strong>. Available as full legs, split, or curry cut.</p>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Village Sourced', desc: 'From the same free-range Telangana goats as our goat meat — active, healthy animals with well-developed legs.' },
+        { num: '02', title: 'Skilled Dressing', desc: 'Legs are separated, cleaned, and singed. No hair, no odour. Cut to your preference.' },
+        { num: '03', title: 'Fresh Packed', desc: 'Packed chilled and dispatched same day.' },
+      ]
+    },
+    nutrition: [
+      { val: '160', label: 'Calories', sub: 'per 100g' },
+      { val: '17g', label: 'Protein', sub: 'per 100g' },
+      { val: '9g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Goat trotters/legs are high in collagen and gelatin. Values are approximate.',
+    cooking: `
+      <p><strong>Hyderabadi Paya Curry</strong></p>
+      <ul>
+        <li>Clean and singe the legs well. Soak in salted water 30 minutes, rinse.</li>
+        <li>Pressure cook legs with turmeric, ginger-garlic, and salt — 8 whistles on high.</li>
+        <li>In a separate pan, fry onions deep brown. Add whole spices, ginger-garlic, tomatoes.</li>
+        <li>Add red chilli, coriander, garam masala. Cook until oil separates.</li>
+        <li>Add the pressure-cooked legs with all the broth. Simmer 20 minutes.</li>
+        <li>Finish with fresh mint and coriander. Serve with naan or phulka.</li>
+      </ul>
+      <p><strong>Tip:</strong> The longer you cook, the richer and more gelatinous the gravy becomes. Don't rush it.</p>
+    `
+  },
+
+  'goat-liver': {
+    id: 'goat-liver',
+    nameTE: 'Meka Kalleja',
+    name: 'Goat Liver',
+    category: 'goat',
+    badge: '💎 Premium Offal',
+    freshLabel: 'FRESH\nTODAY',
+    price: 1000,
+    unit: 'kg',
+    video: null,
+    mainImg: 'product/liver.png',
+    thumbs: [
+      { src: 'product/liver.png', label: 'Goat Liver' },
+    ],
+    weights: ['250g', '500g', '1 kg'],
+    cuts: ['Thin Sliced', 'Cubed (Fry)', 'Curry Cut'],
+    shortDesc: 'Farm-fresh goat liver — deeply nutritious, rich in iron and B12. Village goat, processed same day.',
+    deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
+    description: `
+      <p>Goat liver is one of the most <strong>nutrient-dense foods available</strong> — extraordinarily high in iron, Vitamin B12, Vitamin A, and zinc. Village goat liver from free-range animals has a cleaner, milder flavour than commercially farmed liver.</p>
+      <p>Our liver is sourced fresh daily — processed and dispatched the same morning. It is never frozen or stored overnight.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Kaleji fry — the classic Hyderabadi street-food style</li>
+        <li>Masala kaleji curry — with onions, chilli, and coriander</li>
+        <li>Liver pepper fry — dry, spicy, quick to make</li>
+        <li>Liver kebabs — minced with onion, green chilli, and spices</li>
+      </ul>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Same-Day Fresh', desc: 'Liver is removed, cleaned, and dispatched the same morning. Never stored overnight or frozen.' },
+        { num: '02', title: 'Careful Cleaning', desc: 'Membrane removed, bile duct checked and discarded. Washed in clean water multiple times.' },
+        { num: '03', title: 'Cut to Order', desc: 'Sliced thin for fry, cubed for curry, or left whole per your request.' },
+      ]
+    },
+    nutrition: [
+      { val: '143', label: 'Calories', sub: 'per 100g' },
+      { val: '20g', label: 'Protein', sub: 'per 100g' },
+      { val: '4g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '3.8g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Goat liver is exceptionally rich in iron (6.5mg/100g), Vitamin B12, and Vitamin A. One of the most nutrient-dense foods available.',
+    cooking: `
+      <p><strong>Kaleji Fry (Hyderabadi Style)</strong></p>
+      <ul>
+        <li>Slice liver thin. Marinate 15 minutes with turmeric, red chilli, ginger-garlic, and salt.</li>
+        <li>Heat oil in a heavy pan until very hot. Add curry leaves and green chillies.</li>
+        <li>Add liver slices in a single layer. Do NOT stir immediately — let it sear 2 minutes.</li>
+        <li>Flip once. Add onion rings, pepper powder, garam masala.</li>
+        <li>Cook on high flame 3–4 minutes. Finish with lemon juice and coriander.</li>
+      </ul>
+      <p><strong>Critical tip:</strong> Do not overcook liver — it turns rubbery. High heat, short time. Pink inside is perfectly safe and much more flavourful.</p>
+    `
+  },
+
+  'goat-head': {
+    id: 'goat-head',
+    nameTE: 'Meka Tala',
+    name: 'Goat Head',
+    category: 'goat',
+    badge: '🐐 Whole',
+    freshLabel: 'ORDER\nAHEAD',
+    price: 520,
+    unit: 'head',
+    video: null,
+    mainImg: 'product/head.png',
+    thumbs: [
+      { src: 'product/head.png', label: 'Goat Head' },
+    ],
+    weights: ['1 Head', '2 Heads', '4 Heads'],
+    cuts: ['Whole (Split)', 'Curry Cut Pieces', 'Brain Separate'],
+    shortDesc: 'Whole village goat head — ₹520 each. Rich in flavour, prized for the brain, cheek meat, and tongue.',
+    deliveryNote: '24-hour advance notice preferred · Confirm by WhatsApp',
+    description: `
+      <p>The goat head is a prized ingredient in Hyderabadi and Telugu cooking — the basis for <strong>Paya soup, Nalli nihari, and the celebrated Maghaz (brain) fry</strong>. Every part yields something extraordinary: the cheek meat is tender and gelatinous, the tongue is firm and deeply flavourful, and the brain is a delicacy.</p>
+      <p>Our goat heads are from the same village-raised free-range animals as our other products — fully cleaned, singed, and dressed before dispatch.</p>
+      <p><strong>Best for:</strong></p>
+      <ul>
+        <li>Nalli / Tala curry — slow-cooked head pieces in rich masala</li>
+        <li>Maghaz (brain) fry — a Hyderabadi delicacy</li>
+        <li>Tongue masala</li>
+        <li>Rich bone broth and paya-style soup</li>
+        <li>Large gatherings and Sunday feasts</li>
+      </ul>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Village Sourced', desc: 'From the same goats as our meat and organ products. Free-range, Telangana villages.' },
+        { num: '02', title: 'Thorough Cleaning', desc: 'Singed to remove all hair. Ears, nostrils cleaned. Split or left whole per your order.' },
+        { num: '03', title: 'Same-Day Delivery', desc: 'Processed and dispatched fresh. Advance booking ensures availability.' },
+      ]
+    },
+    nutrition: [
+      { val: '154', label: 'Calories', sub: 'per 100g' },
+      { val: '17g', label: 'Protein', sub: 'per 100g' },
+      { val: '9g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Goat head meat including brain is rich in healthy fats, B vitamins, and minerals. Values are approximate.',
+    cooking: `
+      <p><strong>Tala Masala (Goat Head Curry)</strong></p>
+      <ul>
+        <li>Split the head in half. Clean thoroughly, remove eyes if preferred.</li>
+        <li>Pressure cook with turmeric, salt, ginger-garlic — 6 whistles.</li>
+        <li>Fry onions golden. Add spices, tomatoes, green chillies.</li>
+        <li>Add cooked head pieces with broth. Simmer 15 minutes on low.</li>
+        <li>Finish with coriander and lemon. The cheek meat will fall off the bone.</li>
+      </ul>
+      <p><strong>Maghaz (Brain) Fry:</strong> Gently boil brain 5 minutes. Crumble into a pan with butter, onion, green chilli, turmeric, and pepper. Fry on medium 4–5 minutes. Serve on bread or with paratha.</p>
+    `
+  },
+
+  'full-goat': {
+    id: 'full-goat',
+    nameTE: 'Poora Meka',
+    name: 'Full Goat',
+    category: 'goat',
+    badge: '👑 Whole',
+    freshLabel: 'ORDER\nAHEAD',
+    price: 8500,
+    unit: 'goat',
+    video: null,
+    mainImg: 'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png',
+    thumbs: [
+      { src: 'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png', label: 'Full Goat' },
+      { src: 'product/mutton.png', label: 'Cuts' },
+    ],
+    weights: ['Full Goat (~8–10 kg)', 'Half Goat (~4–5 kg)'],
+    cuts: ['Curry Cut (all)', 'Mixed Cut', 'Biryani Cut', 'Custom Split'],
+    shortDesc: 'Whole village goat, cleaned and cut to your preference. For events, feasts & large families. Pre-order required.',
+    deliveryNote: '24-hour advance booking required · Custom cut included',
+    description: `
+      <p>The Poora Meka is for the family feast, the wedding, the function, the celebration. A whole village-raised goat — <strong>8 to 10 kg of meat</strong> — sourced, processed, and cut entirely to your specification.</p>
+      <p>You choose how it's divided: all curry cut, a mix of curry and biryani pieces, separate ribs, liver, brain, and trotters — or any combination. Everything is included and labelled separately for easy use.</p>
+      <p><strong>Ideal for:</strong></p>
+      <ul>
+        <li>Weddings and engagement ceremonies</li>
+        <li>Eid celebrations and Bakrid</li>
+        <li>Large family gatherings and poojas</li>
+        <li>Restaurant and catering orders</li>
+      </ul>
+      <p>⚠️ <strong>24-hour advance booking required.</strong> Call or WhatsApp us to confirm availability and your preferred cut. We'll confirm your slot within 2 hours of booking.</p>
+    `,
+    sourcing: {
+      steps: [
+        { num: '01', title: 'Dedicated Sourcing', desc: 'Your order triggers a direct call to our farm partners. The goat is selected specifically for your order — not from stock.' },
+        { num: '02', title: 'Weight Verification', desc: 'Live weight verified at procurement. Approximate dressed weight communicated before dispatch.' },
+        { num: '03', title: 'Custom Butchery', desc: 'Your cut preference noted at order. Our head butcher ensures each portion is correct and labelled.' },
+        { num: '04', title: 'Bulk Cold Pack', desc: 'Packed in multiple sealed vacuum or heavy-duty bags. Portions labelled. Delivered in a single cold delivery.' },
+      ]
+    },
+    nutrition: [
+      { val: '143', label: 'Calories', sub: 'per 100g' },
+      { val: '27g', label: 'Protein', sub: 'per 100g' },
+      { val: '3g', label: 'Total Fat', sub: 'per 100g' },
+      { val: '0g', label: 'Carbs', sub: 'per 100g' },
+    ],
+    nutritionNote: 'Nutritional values for lean goat meat per 100g. A full goat yields approximately 8–10 kg of dressed meat.',
+    cooking: `
+      <p><strong>Grand Mutton Biryani for 20 people</strong></p>
+      <ul>
+        <li>Use 5 kg biryani-cut goat. Marinate overnight in 2 kg curd, 200g biryani masala, 100g ginger-garlic, chilli, mint, saffron</li>
+        <li>Parboil 4 kg basmati 70% done. Caramelise 2 kg onions (birista)</li>
+        <li>Layer in a large deg: meat → rice → birista → saffron milk → ghee</li>
+        <li>Seal and dum cook on wood fire or oven 200°C for 1 hour</li>
+        <li>Rest sealed 30 minutes. Open and serve with raita, mirchi ka salan, and shorba.</li>
+      </ul>
+    `
+  }
+};
+
+// ─────────────────────────────────────────────
+//  RELATED PRODUCTS CONFIG (3 per product)
+// ─────────────────────────────────────────────
+const RELATED_MAP = {
+  'goat-meat':       ['baby-goat-legs', 'goat-legs', 'goat-liver'],
+  'country-chicken': ['goat-meat', 'river-fish', 'country-eggs'],
+  'river-fish':      ['goat-meat', 'country-chicken', 'country-eggs'],
+  'baby-goat-legs':  ['goat-meat', 'goat-legs', 'full-goat'],
+  'country-eggs':    ['goat-meat', 'country-chicken', 'river-fish'],
+  'full-goat':       ['goat-meat', 'baby-goat-legs', 'goat-legs'],
+  'goat-legs':       ['goat-meat', 'goat-liver', 'goat-head'],
+  'goat-liver':      ['goat-meat', 'goat-legs', 'goat-head'],
+  'goat-head':       ['goat-meat', 'goat-liver', 'goat-legs'],
+};
+
+// ─────────────────────────────────────────────
+//  CART
+// ─────────────────────────────────────────────
+let cart = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+const cartBadge = document.getElementById('cartBadge');
+function updateCartBadge() {
+  const total = cart.reduce((s,i) => s + i.qty, 0);
+  cartBadge.textContent = total;
+}
+updateCartBadge();
+
+function addToCart(name, price, qty=1) {
+  qty = parseInt(qty) || 1;
+  const existing = cart.find(i => i.name === name);
+  if (existing) existing.qty += qty;
+  else cart.push({ name, price, qty });
+  localStorage.setItem('angadi_cart', JSON.stringify(cart));
+  updateCartBadge();
+  cartBadge.style.transform = 'scale(1.5)';
+  setTimeout(() => cartBadge.style.transform = 'scale(1)', 300);
+  showToast(`✓ ${name} × ${qty} added to cart`);
+}
+
+function showToast(msg) {
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
+    background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;border-radius:100px;
+    font-size:0.85rem;font-weight:600;z-index:9999;white-space:nowrap;
+    animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('toastStyle')) {
+    const s = document.createElement('style');
+    s.id = 'toastStyle';
+    s.textContent = `@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER PRODUCT
+// ─────────────────────────────────────────────
+function renderProduct(p) {
+  // Page title
+  document.title = `${p.name} — Angadi Village Meat`;
+
+  // Breadcrumb
+  document.getElementById('bcProduct').textContent = p.name;
+
+  // ── HERO HTML
+  const hasVideo = !!p.video;
+  const thumbsHTML = p.thumbs.map((t,i) => `
+    <div class="product-thumb ${i===0?'active':''}" data-src="${t.src}" data-label="${t.label}">
+      <img src="${t.src}" alt="${t.label}">
+    </div>
+  `).join('');
+
+  const weightsHTML = p.weights.map((w,i) => `
+    <button class="weight-btn ${i===0?'active':''}" data-weight="${w}">${w}</button>
+  `).join('');
+
+  const cutsHTML = p.cuts.length ? `
+    <div class="option-label" id="cutLabel">Cut: <span>${p.cuts[0]}</span></div>
+    <div class="cut-options">
+      ${p.cuts.map((c,i) => `<button class="cut-btn ${i===0?'active':''}" data-cut="${c}">${c}</button>`).join('')}
+    </div>
+  ` : '';
+
+  const freshBadge = p.freshLabel
+    ? `<div class="media-fresh">${p.freshLabel.replace('\n','<br>')}</div>`
+    : '';
+
+  document.getElementById('productHero').innerHTML = `
+    <!-- LEFT MEDIA -->
+    <div class="product-media">
+      <div class="product-media-main" id="mediaMain">
+        ${hasVideo ? `
+          <video autoplay muted loop playsinline id="mainVideo">
+            <source src="${p.video}" type="video/mp4">
+          </video>
+          <img src="${p.mainImg}" alt="${p.name}" class="pip-detail" id="pipImg">
+        ` : `
+          <img src="${p.mainImg}" alt="${p.name}" class="main-photo" id="mainPhoto">
+        `}
+        <div class="media-badge">${p.badge}</div>
+        ${freshBadge}
+      </div>
+      ${p.thumbs.length > 1 ? `<div class="product-thumbs" id="thumbsRow">${thumbsHTML}</div>` : ''}
+    </div>
+
+    <!-- RIGHT INFO -->
+    <div class="product-info">
+      <div class="product-eyebrow">${p.category.charAt(0).toUpperCase()+p.category.slice(1)}</div>
+      <div class="product-name-te">${p.nameTE}</div>
+      <h1 class="product-name-main">${p.name}</h1>
+      <div class="product-rating">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <span class="rating-text">4.9 · <a href="#">128 reviews</a></span>
+      </div>
+
+      <div class="product-pricing">
+        <span class="price-main" id="displayPrice">₹${p.price.toLocaleString('en-IN')}</span>
+        <span class="price-unit">per ${p.unit}</span>
+      </div>
+      <p class="price-note">Free delivery on orders above ₹999</p>
+
+      <div class="info-divider"></div>
+
+      <div class="option-label" id="weightLabel">Weight: <span>${p.weights[0]}</span></div>
+      <div class="weight-options">${weightsHTML}</div>
+
+      ${cutsHTML}
+
+      <div class="option-label">Quantity</div>
+      <div class="qty-row">
+        <div class="qty-control">
+          <button class="qty-btn" id="qtyMinus">−</button>
+          <span class="qty-val" id="qtyVal">1</span>
+          <button class="qty-btn" id="qtyPlus">+</button>
+        </div>
+        <span class="qty-total">Total: <strong id="qtyTotal">₹${p.price.toLocaleString('en-IN')}</strong></span>
+      </div>
+
+      <div class="cta-row">
+        <button class="btn-primary" id="addCartBtn">🛒 Add to Cart</button>
+        <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20${encodeURIComponent(p.name)}"
+           target="_blank" class="btn-whatsapp">💬 Order on WhatsApp</a>
+        <button class="btn-ghost" id="wishlistBtn" title="Save for later">♡</button>
+      </div>
+
+      <div class="delivery-info">
+        <div class="delivery-info-icon">🚚</div>
+        <p><strong>${p.deliveryNote}</strong><br>Insulated cold packaging · Hyderabad-wide delivery</p>
+      </div>
+
+      <div class="trust-bar">
+        <div class="trust-item"><div class="trust-icon">🌾</div><div class="trust-text">Village<br>Sourced</div></div>
+        <div class="trust-item"><div class="trust-icon">🧼</div><div class="trust-text">FSSAI<br>Certified</div></div>
+        <div class="trust-item"><div class="trust-icon">❄️</div><div class="trust-text">Cold<br>Chain</div></div>
+        <div class="trust-item"><div class="trust-icon">🎯</div><div class="trust-text">Cut to<br>Order</div></div>
+      </div>
+    </div>
+  `;
+
+  // ── TABS
+  document.getElementById('tab-description').innerHTML = `<div class="tab-body">${p.description}</div>`;
+  document.getElementById('tab-sourcing').innerHTML = `
+    <div class="tab-body">
+      <p>Every Angadi product follows the same rigorous sourcing and processing chain — from farm to your door.</p>
+      <div class="sourcing-steps">
+        ${p.sourcing.steps.map(s => `
+          <div class="sourcing-step">
+            <div class="sourcing-step-num">${s.num}</div>
+            <div class="sourcing-step-title">${s.title}</div>
+            <p class="sourcing-step-desc">${s.desc}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('tab-nutrition').innerHTML = `
+    <div class="tab-body">
+      <p>Nutritional information for <strong>${p.name}</strong> (approximate values, may vary):</p>
+      <div class="nutrition-grid">
+        ${p.nutrition.map(n => `
+          <div class="nutrition-card">
+            <div class="nutrition-val">${n.val}</div>
+            <div class="nutrition-label">${n.label}</div>
+            <div class="nutrition-label" style="opacity:0.5;margin-top:0.2rem;">${n.sub}</div>
+          </div>
+        `).join('')}
+      </div>
+      <p class="nutrition-note">${p.nutritionNote}</p>
+    </div>
+  `;
+  document.getElementById('tab-howtocook').innerHTML = `<div class="tab-body">${p.cooking}</div>`;
+
+  // ── RELATED
+  const relatedIds = RELATED_MAP[p.id] || [];
+  document.getElementById('relatedGrid').innerHTML = relatedIds.map(rid => {
+    const rp = PRODUCTS[rid];
+    if (!rp) return '';
+    const mediaHTML = rp.video
+      ? `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"><source src="${rp.video}" type="video/mp4"></video>`
+      : `<img src="${rp.mainImg}" alt="${rp.name}">`;
+    return `
+      <a href="product-detail.html?id=${rp.id}" class="related-card fade-up">
+        <div class="related-img" style="position:relative;">${mediaHTML}</div>
+        <div class="related-body">
+          <div class="related-name-te">${rp.nameTE}</div>
+          <div class="related-name">${rp.name}</div>
+          <div class="related-footer">
+            <div>
+              <div class="related-price">₹${rp.price.toLocaleString('en-IN')}</div>
+              <span class="related-price-unit">per ${rp.unit}</span>
+            </div>
+            <button class="btn-add-small" onclick="event.preventDefault();addToCart('${rp.name}',${rp.price})">+</button>
+          </div>
+        </div>
+      </a>
+    `;
+  }).join('');
+
+  // ── INTERACTIONS
+  bindInteractions(p);
+
+  // ── FADE IN
+  setTimeout(() => {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+  }, 100);
+}
+
+function bindInteractions(p) {
+  let qty = 1;
+
+  // QTY
+  const qtyVal = document.getElementById('qtyVal');
+  const qtyTotal = document.getElementById('qtyTotal');
+  const updateTotal = () => {
+    qtyTotal.innerHTML = `₹${(p.price * qty).toLocaleString('en-IN')}`;
+  };
+  document.getElementById('qtyMinus')?.addEventListener('click', () => {
+    if (qty > 1) { qty--; qtyVal.textContent = qty; updateTotal(); }
+  });
+  document.getElementById('qtyPlus')?.addEventListener('click', () => {
+    qty++; qtyVal.textContent = qty; updateTotal();
+  });
+
+  // WEIGHT BUTTONS
+  document.querySelectorAll('.weight-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.weight-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = document.getElementById('weightLabel');
+      if (label) label.innerHTML = `Weight: <span>${btn.dataset.weight}</span>`;
+    });
+  });
+
+  // CUT BUTTONS
+  document.querySelectorAll('.cut-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cut-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = document.getElementById('cutLabel');
+      if (label) label.innerHTML = `Cut: <span>${btn.dataset.cut}</span>`;
+    });
+  });
+
+  // ADD TO CART
+  document.getElementById('addCartBtn')?.addEventListener('click', () => {
+    const weight = document.querySelector('.weight-btn.active')?.dataset.weight || '';
+    const cut = document.querySelector('.cut-btn.active')?.dataset.cut || '';
+    const label = [p.name, weight, cut].filter(Boolean).join(' · ');
+    addToCart(label, p.price, qty);
+    const btn = document.getElementById('addCartBtn');
+    btn.textContent = '✓ Added!';
+    btn.style.background = 'linear-gradient(135deg,#4CAF50,#388E3C)';
+    setTimeout(() => {
+      btn.innerHTML = '🛒 Add to Cart';
+      btn.style.background = '';
+    }, 1800);
+  });
+
+  // WISHLIST
+  document.getElementById('wishlistBtn')?.addEventListener('click', function() {
+    this.textContent = this.textContent === '♡' ? '♥' : '♡';
+    this.style.color = this.textContent === '♥' ? '#E8956A' : '';
+  });
+
+  // THUMBS — only for static image cards
+  document.querySelectorAll('.product-thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      document.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      // If there's a static main photo, swap it
+      const mainPhoto = document.getElementById('mainPhoto');
+      if (mainPhoto) {
+        mainPhoto.src = thumb.dataset.src;
+        mainPhoto.style.opacity = '0';
+        setTimeout(() => mainPhoto.style.opacity = '1', 50);
+        mainPhoto.style.transition = 'opacity 0.3s';
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const productId = params.get('id') || 'goat-meat';
+const product = PRODUCTS[productId];
+
+if (product) {
+  renderProduct(product);
+} else {
+  document.getElementById('productHero').innerHTML = `
+    <div class="not-found" style="grid-column:1/-1;">
+      <h2>Product Not Found</h2>
+      <p>We couldn't find that product.</p>
+      <a href="shop.html" class="btn-primary" style="margin-top:1rem;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;padding:0.9rem 2rem;border-radius:10px;font-weight:600;">← Back to Shop</a>
+    </div>
+  `;
+  document.getElementById('tabsSection').style.display = 'none';
+  document.getElementById('relatedSection').style.display = 'none';
+}
+
+// NAV SCROLL
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+
+// MOBILE MENU
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+// TABS
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

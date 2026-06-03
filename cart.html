@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cart — Angadi Village Meat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D;
+  --clay-d:#7A3318;
+  --clay-l:#E8956A;
+  --gold:#D4A017;
+  --cream:#F6EDD8;
+  --ink:#080503;
+  --ink-2:#100804;
+  --ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);
+  --border-gold:rgba(212,160,23,0.25);
+  --green:#4CAF50;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4rem;height:70px;
+  background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);transition:height 0.4s;
+}
+nav.scrolled{height:60px;}
+.nav-logo{display:flex;align-items:center;text-decoration:none;}
+.nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+.nav-links a{
+  text-decoration:none;font-size:0.88rem;font-weight:500;
+  color:rgba(246,237,216,0.7);letter-spacing:0.08em;text-transform:uppercase;transition:color 0.3s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--clay-l);}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.nav-cart{
+  position:relative;background:none;border:1px solid var(--border);
+  color:var(--cream);width:42px;height:42px;border-radius:10px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all 0.3s;
+}
+.nav-cart:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
+.cart-badge{
+  position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;
+  background:var(--clay);font-size:0.65rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-nav{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);
+  border:none;padding:0.6rem 1.5rem;border-radius:8px;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;
+}
+.btn-nav:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{
+  display:none;position:fixed;inset:0;z-index:998;
+  background:rgba(8,5,3,0.97);backdrop-filter:blur(20px);
+  flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;
+}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.08em;color:var(--cream);text-decoration:none;}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{position:absolute;top:1.5rem;right:2rem;background:none;border:none;color:var(--cream);font-size:1.8rem;cursor:pointer;}
+
+/* ── PAGE ── */
+.page{padding-top:70px;min-height:100vh;}
+
+/* ── BREADCRUMB ── */
+.breadcrumb-bar{
+  background:var(--ink-2);border-bottom:1px solid var(--border);
+  padding:0.9rem 4rem;display:flex;align-items:center;gap:0.5rem;
+  font-size:0.78rem;color:rgba(246,237,216,0.4);
+}
+.breadcrumb-bar a{color:rgba(246,237,216,0.4);text-decoration:none;transition:color 0.3s;}
+.breadcrumb-bar a:hover{color:var(--clay-l);}
+.breadcrumb-bar span{color:var(--clay-l);}
+
+/* ── CART HEADER ── */
+.cart-header{
+  background:var(--ink-2);
+  padding:3rem 4rem 2.5rem;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.cart-header::before{
+  content:'';position:absolute;top:-100px;right:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(196,98,45,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cart-header-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1;}
+.cart-header-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.cart-title-group{}
+.cart-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--clay);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem;
+}
+.cart-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.cart-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,5vw,3.5rem);line-height:1;letter-spacing:0.03em;color:var(--cream);
+}
+.cart-title span{color:var(--gold);}
+.cart-subtitle{
+  font-size:0.88rem;color:rgba(246,237,216,0.45);margin-top:0.4rem;
+}
+.cart-subtitle strong{color:var(--clay-l);}
+.btn-clear-cart{
+  background:none;border:1px solid rgba(246,237,216,0.15);
+  color:rgba(246,237,216,0.4);padding:0.5rem 1.1rem;
+  border-radius:8px;font-size:0.78rem;cursor:pointer;transition:all 0.3s;
+  display:inline-flex;align-items:center;gap:0.4rem;
+}
+.btn-clear-cart:hover{border-color:rgba(196,98,45,0.5);color:var(--clay-l);}
+
+/* ── PROGRESS STEPS ── */
+.order-steps{
+  display:flex;align-items:center;gap:0;
+  margin-top:2rem;
+}
+.order-step{
+  display:flex;align-items:center;gap:0.5rem;
+  font-size:0.78rem;font-weight:500;color:rgba(246,237,216,0.35);
+  letter-spacing:0.04em;
+}
+.order-step.active{color:var(--cream);}
+.order-step.done{color:var(--clay-l);}
+.step-circle{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(246,237,216,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:0.85rem;
+  transition:all 0.3s;flex-shrink:0;
+}
+.order-step.active .step-circle{border-color:var(--clay);background:rgba(196,98,45,0.15);color:var(--clay-l);}
+.order-step.done .step-circle{border-color:var(--clay-l);background:var(--clay);color:var(--cream);}
+.step-line{width:3rem;height:1px;background:rgba(246,237,216,0.12);margin:0 0.4rem;}
+
+/* ── BODY LAYOUT ── */
+.cart-body{
+  max-width:1200px;margin:0 auto;
+  padding:2.5rem 4rem 5rem;
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:2rem;
+  align-items:start;
+}
+
+/* ── LEFT: CART ITEMS ── */
+.cart-items-col{}
+.cart-section-label{
+  font-family:'Space Mono',monospace;font-size:0.68rem;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(246,237,216,0.35);
+  margin-bottom:1.2rem;
+  display:flex;align-items:center;gap:0.8rem;
+}
+.cart-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.cart-item{
+  background:var(--ink-3);border:1px solid var(--border);
+  border-radius:14px;padding:1.2rem 1.4rem;
+  display:flex;gap:1.2rem;align-items:flex-start;
+  margin-bottom:1rem;
+  transition:border-color 0.3s,transform 0.3s;
+  animation:slideIn 0.35s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.cart-item:hover{border-color:rgba(196,98,45,0.35);}
+.cart-item.removing{
+  animation:slideOut 0.3s ease forwards;
+}
+@keyframes slideOut{to{opacity:0;transform:translateX(-20px);max-height:0;padding:0;margin:0;border-width:0;}}
+
+.cart-item-img{
+  width:80px;height:80px;border-radius:10px;overflow:hidden;
+  flex-shrink:0;background:var(--ink-2);border:1px solid var(--border);
+}
+.cart-item-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.88) saturate(1.1);}
+
+.cart-item-details{flex:1;min-width:0;}
+.cart-item-name-te{font-size:0.65rem;font-weight:500;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.15rem;}
+.cart-item-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cart-item-meta{font-size:0.75rem;color:rgba(246,237,216,0.4);margin-bottom:0.8rem;}
+.cart-item-controls{display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;}
+.qty-control{
+  display:flex;align-items:center;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;overflow:hidden;
+}
+.qty-btn{
+  width:32px;height:32px;background:none;border:none;
+  color:var(--clay-l);font-size:1rem;cursor:pointer;transition:background 0.2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.qty-btn:hover{background:rgba(196,98,45,0.12);}
+.qty-val{
+  width:36px;text-align:center;font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;color:var(--cream);
+}
+.btn-remove{
+  background:none;border:none;color:rgba(246,237,216,0.3);
+  font-size:0.78rem;cursor:pointer;transition:color 0.3s;
+  display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.6rem;
+  border-radius:6px;
+}
+.btn-remove:hover{color:var(--clay-l);background:rgba(196,98,45,0.08);}
+
+.cart-item-price-col{
+  text-align:right;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;
+}
+.cart-item-price{
+  font-family:'Bebas Neue',sans-serif;font-size:1.4rem;
+  color:var(--gold);line-height:1;
+}
+.cart-item-unit-price{font-size:0.7rem;color:rgba(246,237,216,0.35);}
+
+/* ── FREE DELIVERY NUDGE ── */
+.delivery-nudge{
+  background:rgba(212,160,23,0.06);border:1px solid var(--border-gold);
+  border-radius:12px;padding:1rem 1.2rem;
+  display:flex;align-items:center;gap:0.8rem;
+  margin-bottom:1.5rem;
+}
+.nudge-icon{font-size:1.3rem;flex-shrink:0;}
+.nudge-text{font-size:0.82rem;color:rgba(246,237,216,0.65);line-height:1.4;}
+.nudge-text strong{color:var(--gold);}
+.nudge-bar-wrap{margin-top:0.4rem;background:rgba(255,255,255,0.06);border-radius:100px;height:5px;overflow:hidden;}
+.nudge-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--clay-l));border-radius:100px;transition:width 0.5s ease;}
+
+/* ── CONTINUE SHOPPING ── */
+.continue-link{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  font-size:0.83rem;font-weight:500;color:rgba(246,237,216,0.4);
+  text-decoration:none;transition:color 0.3s,gap 0.3s;
+  margin-top:0.5rem;
+}
+.continue-link:hover{color:var(--clay-l);gap:0.7rem;}
+
+/* ── RIGHT: ORDER SUMMARY ── */
+.summary-col{position:sticky;top:90px;}
+.summary-card{
+  background:var(--ink-3);border:1px solid var(--border);
+  border-radius:16px;padding:1.6rem;
+  margin-bottom:1rem;
+}
+.summary-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.1rem;font-weight:700;color:var(--cream);
+  margin-bottom:1.4rem;padding-bottom:1rem;
+  border-bottom:1px solid var(--border);
+}
+
+/* Promo */
+.promo-row{
+  display:flex;gap:0.5rem;margin-bottom:1.2rem;
+}
+.promo-input{
+  flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:8px;padding:0.65rem 1rem;font-size:0.82rem;
+  color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.3s;
+}
+.promo-input::placeholder{color:rgba(246,237,216,0.25);}
+.promo-input:focus{border-color:var(--clay);}
+.btn-promo{
+  background:rgba(196,98,45,0.15);border:1px solid var(--border);
+  color:var(--clay-l);padding:0 1.1rem;border-radius:8px;
+  font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.3s;white-space:nowrap;
+}
+.btn-promo:hover{background:var(--clay);border-color:var(--clay);color:var(--cream);}
+.promo-msg{font-size:0.75rem;margin-bottom:1rem;display:none;}
+.promo-msg.success{color:var(--green);display:block;}
+.promo-msg.error{color:#E57373;display:block;}
+
+/* Price breakdown */
+.price-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.85rem;color:rgba(246,237,216,0.55);
+  margin-bottom:0.8rem;
+}
+.price-row.total{
+  font-size:1rem;font-weight:600;color:var(--cream);
+  border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;margin-bottom:0;
+}
+.price-row.total .val{
+  font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--gold);
+}
+.price-row .val{color:var(--cream);}
+.price-row .val.free{color:var(--green);font-weight:600;}
+.price-row .val.discount{color:var(--clay-l);}
+.price-row .savings{
+  background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.25);
+  border-radius:100px;padding:0.15rem 0.6rem;
+  font-size:0.68rem;font-weight:600;color:var(--green);
+  margin-left:0.4rem;
+}
+
+/* CTA */
+.btn-checkout{
+  width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);border:none;padding:1.1rem;border-radius:12px;
+  font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.3s;
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  letter-spacing:0.03em;margin-top:1.2rem;text-decoration:none;
+}
+.btn-checkout:hover{
+  background:linear-gradient(135deg,var(--clay-l),var(--clay));
+  transform:translateY(-2px);box-shadow:0 12px 36px rgba(196,98,45,0.45);
+}
+.btn-checkout:active{transform:translateY(0);}
+.btn-whatsapp-checkout{
+  width:100%;background:#25D366;color:#fff;border:none;padding:0.9rem;
+  border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  margin-top:0.6rem;text-decoration:none;
+}
+.btn-whatsapp-checkout:hover{background:#1ebe57;transform:translateY(-1px);}
+
+/* Trust mini */
+.trust-mini{
+  display:flex;gap:0.6rem;margin-top:1rem;
+  justify-content:center;flex-wrap:wrap;
+}
+.trust-mini-item{
+  display:flex;align-items:center;gap:0.3rem;
+  font-size:0.7rem;color:rgba(246,237,216,0.35);
+}
+
+/* Delivery selector */
+.delivery-card{
+  background:var(--ink-3);border:1px solid var(--border);
+  border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1rem;
+}
+.delivery-card-title{
+  font-family:'Space Mono',monospace;font-size:0.68rem;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(246,237,216,0.35);margin-bottom:1rem;
+}
+.delivery-option{
+  display:flex;align-items:center;gap:0.8rem;
+  padding:0.75rem 0.9rem;border-radius:10px;
+  cursor:pointer;transition:background 0.2s;
+  border:1px solid transparent;margin-bottom:0.5rem;
+}
+.delivery-option:last-child{margin-bottom:0;}
+.delivery-option:hover{background:rgba(255,255,255,0.02);}
+.delivery-option.selected{
+  background:rgba(196,98,45,0.08);border-color:rgba(196,98,45,0.3);
+}
+.delivery-radio{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+}
+.delivery-option.selected .delivery-radio{border-color:var(--clay);}
+.delivery-radio::after{
+  content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--clay);transform:scale(0);transition:transform 0.2s;
+}
+.delivery-option.selected .delivery-radio::after{transform:scale(1);}
+.delivery-option-info{flex:1;}
+.delivery-option-name{font-size:0.85rem;font-weight:600;color:var(--cream);}
+.delivery-option-desc{font-size:0.72rem;color:rgba(246,237,216,0.4);margin-top:0.1rem;}
+.delivery-option-price{
+  font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);
+}
+.delivery-option-price.free{color:var(--green);font-size:0.82rem;font-weight:700;}
+
+/* ── EMPTY CART ── */
+.empty-cart{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:50vh;text-align:center;padding:4rem 2rem;
+  grid-column:1/-1;
+}
+.empty-cart-icon{font-size:4rem;margin-bottom:1.5rem;opacity:0.3;}
+.empty-cart h2{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--cream);margin-bottom:0.6rem;}
+.empty-cart p{font-size:0.9rem;color:rgba(246,237,216,0.45);margin-bottom:2rem;max-width:320px;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);
+  border:none;padding:0.9rem 2.2rem;border-radius:10px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(196,98,45,0.45);}
+
+/* ── UPSELL SECTION ── */
+.upsell-section{
+  max-width:1200px;margin:0 auto;
+  padding:0 4rem 5rem;
+}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--clay);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.8rem;
+}
+.section-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.4rem,2.5vw,2rem);font-weight:700;color:var(--cream);margin-bottom:1.8rem;
+}
+.section-title em{font-style:italic;color:var(--gold);}
+.upsell-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+.upsell-card{
+  background:var(--ink-3);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;text-decoration:none;transition:all 0.3s;
+  display:flex;flex-direction:column;
+}
+.upsell-card:hover{border-color:rgba(196,98,45,0.4);transform:translateY(-4px);}
+.upsell-img{height:130px;overflow:hidden;position:relative;}
+.upsell-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;filter:brightness(0.88);}
+.upsell-card:hover .upsell-img img{transform:scale(1.06);}
+.upsell-img video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.upsell-body{padding:0.9rem 1rem 1rem;display:flex;flex-direction:column;flex:1;}
+.upsell-name-te{font-size:0.6rem;font-weight:500;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.15rem;}
+.upsell-name{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;color:var(--cream);margin-bottom:0.7rem;}
+.upsell-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
+.upsell-price{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);}
+.upsell-unit{font-size:0.6rem;color:rgba(246,237,216,0.3);display:block;}
+.btn-upsell-add{
+  background:rgba(196,98,45,0.12);border:1px solid var(--border);
+  color:var(--clay-l);width:30px;height:30px;border-radius:7px;
+  font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;
+}
+.btn-upsell-add:hover{background:var(--clay);border-color:var(--clay);color:var(--cream);}
+
+/* ── FOOTER ── */
+footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4rem 2rem;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-brand p{font-size:0.85rem;color:rgba(246,237,216,0.5);line-height:1.7;max-width:280px;margin-top:0.5rem;}
+.footer-col h4{font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--clay-l);margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:0.6rem;}
+.footer-col ul li a{font-size:0.85rem;color:rgba(246,237,216,0.5);text-decoration:none;transition:color 0.3s;}
+.footer-col ul li a:hover{color:var(--cream);}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:2rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem;}
+.footer-bottom p{font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+.footer-delivery{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(246,237,216,0.3);}
+.footer-delivery .dot{width:8px;height:8px;background:#4CAF50;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}
+
+/* ── WA FLOAT ── */
+.wa-float{
+  position:fixed;bottom:2rem;right:2rem;z-index:999;
+  width:56px;height:56px;background:#25D366;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  box-shadow:0 4px 20px rgba(37,211,102,0.4);text-decoration:none;
+  animation:waBounce 3s ease infinite;
+}
+.wa-float:hover{transform:scale(1.1);}
+@keyframes waBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .cart-body{grid-template-columns:1fr;padding:2rem 2rem 4rem;}
+  .summary-col{position:static;}
+  .upsell-grid{grid-template-columns:repeat(2,1fr);}
+  .upsell-section{padding:0 2rem 4rem;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.nav-right .btn-nav{display:none;}
+  .nav-hamburger{display:flex;}
+  .breadcrumb-bar{padding:0.8rem 1.5rem;}
+  .cart-header{padding:2rem 1.5rem 1.8rem;}
+  .cart-body{padding:1.5rem 1.5rem 3rem;gap:1.2rem;}
+  .upsell-grid{grid-template-columns:repeat(2,1fr);}
+  .upsell-section{padding:0 1.5rem 3rem;}
+  .footer-grid{grid-template-columns:1fr;}
+  footer{padding:3rem 1.5rem 2rem;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+  .cart-item{flex-wrap:wrap;}
+  .cart-item-price-col{flex-direction:row;align-items:center;gap:1rem;width:100%;}
+  .order-steps{overflow-x:auto;padding-bottom:0.5rem;}
+}
+@media(max-width:480px){
+  .upsell-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="index.html#story">Our Story</a></li>
+    <li><a href="index.html#how">How It Works</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-cart" onclick="window.location.href='cart.html'">
+      🛒<span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <a href="checkout.html" class="btn-nav">Checkout →</a>
+    <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="shop.html" onclick="closeMobile()">Shop</a>
+  <a href="index.html#story" onclick="closeMobile()">Our Story</a>
+  <a href="index.html#how" onclick="closeMobile()">How It Works</a>
+  <a href="index.html#contact" onclick="closeMobile()">Contact</a>
+</div>
+
+<div class="page">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <a href="index.html">Home</a>
+    <span style="opacity:.4">›</span>
+    <a href="shop.html">Shop</a>
+    <span style="opacity:.4">›</span>
+    <span>Cart</span>
+  </div>
+
+  <!-- CART HEADER -->
+  <div class="cart-header">
+    <div class="cart-header-inner">
+      <div class="cart-header-top">
+        <div class="cart-title-group">
+          <div class="cart-eyebrow">Your Order</div>
+          <h1 class="cart-title">Your <span>Cart</span></h1>
+          <p class="cart-subtitle" id="cartSubtitle">Loading…</p>
+        </div>
+        <button class="btn-clear-cart" id="clearCartBtn">🗑 Clear Cart</button>
+      </div>
+      <!-- ORDER PROGRESS -->
+      <div class="order-steps">
+        <div class="order-step done">
+          <div class="step-circle">✓</div>
+          <span>Browse</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="order-step active">
+          <div class="step-circle">2</div>
+          <span>Cart</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="order-step">
+          <div class="step-circle">3</div>
+          <span>Checkout</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="order-step">
+          <div class="step-circle">4</div>
+          <span>Confirm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CART BODY -->
+  <div class="cart-body" id="cartBody">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- UPSELL -->
+  <div class="upsell-section" id="upsellSection">
+    <div class="section-eyebrow">Don't Forget</div>
+    <h2 class="section-title">Add to Your <em>Order</em></h2>
+    <div class="upsell-grid" id="upsellGrid"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" style="display:inline-block;text-decoration:none;">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+      </a>
+      <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="product-detail.html?id=goat-meat">Village Goat Meat</a></li>
+        <li><a href="product-detail.html?id=country-chicken">Country Chicken</a></li>
+        <li><a href="product-detail.html?id=country-eggs">Country Eggs</a></li>
+        <li><a href="product-detail.html?id=river-fish">River Fish</a></li>
+        <li><a href="product-detail.html?id=full-goat">Full Goat</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="index.html#story">Our Story</a></li>
+        <li><a href="index.html#how">How It Works</a></li>
+        <li><a href="#">Sourcing Ethics</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/919949950743" target="_blank">WhatsApp Us</a></li>
+        <li><a href="#">Delivery Areas</a></li>
+        <li><a href="#">Order Tracking</a></li>
+        <li><a href="#">Returns Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <div class="footer-delivery">
+      <span class="dot"></span>
+      Delivering across Hyderabad — Banjara Hills · Jubilee Hills · Gachibowli · Kondapur · Madhapur
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20fresh%20meat" class="wa-float" target="_blank">💬</a>
+
+<script>
+// ─────────────────────────────────────────────
+//  PRODUCT LOOKUP (for images + Telugu names)
+// ─────────────────────────────────────────────
+const PRODUCT_META = {
+  'Village Goat Meat':    { img:'product/mutton.png',       nameTE:'Meka Mamsam',   id:'goat-meat' },
+  'Country Chicken':      { img:'product/country chiken.png', nameTE:'Nati Kodi',   id:'country-chicken' },
+  'Fresh River Fish':     { img:'product/fish.png',          nameTE:'Chepa Mukkalu', id:'river-fish' },
+  'Baby Goat Legs':       { img:'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png', nameTE:'Pilla Meka Kalu', id:'baby-goat-legs' },
+  'Country Eggs':         { img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', nameTE:'Nati Kodi Gudlu', id:'country-eggs' },
+  'Full Goat':            { img:'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png', nameTE:'Poora Meka',      id:'full-goat' },
+  'Goat Legs':            { img:'product/legs.png',          nameTE:'Meka Kalu',    id:'goat-legs' },
+  'Goat Liver':           { img:'product/liver.png',         nameTE:'Meka Kalleja', id:'goat-liver' },
+  'Goat Head':            { img:'product/head.png',          nameTE:'Meka Tala',    id:'goat-head' },
+};
+
+// ─────────────────────────────────────────────
+//  UPSELL PRODUCTS (shown below cart)
+// ─────────────────────────────────────────────
+const UPSELLS = [
+  { id:'goat-legs',   nameTE:'Meka Kalu',    name:'Goat Legs',     price:400,  unit:'4 pcs', img:'product/legs.png',          video:null },
+  { id:'goat-liver',  nameTE:'Meka Kalleja', name:'Goat Liver',    price:1000, unit:'kg',    img:'product/liver.png',          video:null },
+  { id:'country-eggs',nameTE:'Nati Kodi Gudlu', name:'Country Eggs', price:12, unit:'egg',   img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', video:null },
+  { id:'country-chicken', nameTE:'Nati Kodi', name:'Country Chicken', price:520, unit:'kg', img:'product/country chiken.png', video:'product/country chiken animated video.mp4' },
+];
+
+// ─────────────────────────────────────────────
+//  PROMO CODES
+// ─────────────────────────────────────────────
+const PROMOS = {
+  'ANGADI10':  { type:'percent', value:10,  label:'10% off' },
+  'FIRST100':  { type:'flat',    value:100, label:'₹100 off' },
+  'VILLAGE':   { type:'percent', value:5,   label:'5% off' },
+};
+
+// ─────────────────────────────────────────────
+//  DELIVERY OPTIONS
+// ─────────────────────────────────────────────
+const DELIVERY_OPTIONS = [
+  { id:'standard', name:'Standard Delivery', desc:'Delivered within 4–6 hours', price:0,   free_above:999  },
+  { id:'express',  name:'Express Delivery',  desc:'Delivered within 2 hours',   price:99,  free_above:null },
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let cart        = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+let promoCode   = null;
+let promoDiscount = 0;
+let selectedDelivery = 'standard';
+
+function saveCart() {
+  localStorage.setItem('angadi_cart', JSON.stringify(cart));
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function subtotal() {
+  return cart.reduce((s, i) => s + i.price * i.qty, 0);
+}
+function deliveryCost() {
+  const opt = DELIVERY_OPTIONS.find(d => d.id === selectedDelivery);
+  if (!opt) return 0;
+  if (opt.free_above !== null && subtotal() >= opt.free_above) return 0;
+  return opt.price;
+}
+function discountAmount() {
+  if (!promoCode) return 0;
+  const p = PROMOS[promoCode];
+  if (!p) return 0;
+  return p.type === 'percent' ? Math.round(subtotal() * p.value / 100) : p.value;
+}
+function total() {
+  return subtotal() - discountAmount() + deliveryCost();
+}
+function fmt(n) {
+  return '₹' + n.toLocaleString('en-IN');
+}
+function getItemMeta(name) {
+  // Try exact match first
+  if (PRODUCT_META[name]) return PRODUCT_META[name];
+  // Try matching base product name (before ' · ')
+  const base = name.split(' · ')[0].trim();
+  return PRODUCT_META[base] || { img:'product/mutton.png', nameTE:'', id:'shop' };
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render() {
+  updateNavBadge();
+
+  const sub = subtotal();
+  const itemCount = cart.reduce((s, i) => s + i.qty, 0);
+
+  // Subtitle
+  document.getElementById('cartSubtitle').innerHTML = cart.length === 0
+    ? 'Your cart is empty'
+    : `<strong class="text-clay-l">${itemCount} item${itemCount !== 1 ? 's' : ''}</strong> · ${fmt(sub)} total`;
+
+  if (cart.length === 0) {
+    renderEmpty();
+    document.getElementById('upsellSection').style.opacity = '1';
+  } else {
+    renderCartBody();
+  }
+  renderUpsells();
+}
+
+function renderEmpty() {
+  document.getElementById('cartBody').innerHTML = `
+    <div class="empty-cart">
+      <div class="empty-cart-icon">🛒</div>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven't added any village-fresh products yet.</p>
+      <a href="shop.html" class="btn-primary">🌾 Browse Products</a>
+    </div>
+  `;
+  document.getElementById('clearCartBtn').style.display = 'none';
+}
+
+function renderCartBody() {
+  document.getElementById('clearCartBtn').style.display = '';
+  const sub = subtotal();
+  const FREE_THRESHOLD = 999;
+  const remaining = Math.max(0, FREE_THRESHOLD - sub);
+  const progress = Math.min(100, (sub / FREE_THRESHOLD) * 100);
+
+  // Delivery nudge HTML
+  const nudgeHTML = remaining > 0
+    ? `<div class="delivery-nudge">
+        <div class="nudge-icon">🚚</div>
+        <div style="flex:1;">
+          <div class="nudge-text">Add <strong>${fmt(remaining)} more</strong> to get <strong style="color:var(--green);">FREE standard delivery</strong></div>
+          <div class="nudge-bar-wrap"><div class="nudge-bar" style="width:${progress}%"></div></div>
+        </div>
+      </div>`
+    : `<div class="delivery-nudge" style="border-color:rgba(76,175,80,0.3);background:rgba(76,175,80,0.06);">
+        <div class="nudge-icon">✅</div>
+        <div class="nudge-text"><strong style="color:var(--green);">You've unlocked FREE delivery!</strong> Your order qualifies for free standard delivery.</div>
+      </div>`;
+
+  // Cart items HTML
+  const itemsHTML = cart.map((item, idx) => {
+    const meta = getItemMeta(item.name);
+    const nameParts = item.name.split(' · ');
+    const displayName = nameParts[0];
+    const metaInfo = nameParts.slice(1).join(' · ');
+    return `
+      <div class="cart-item" id="cart-item-${idx}">
+        <a href="product-detail.html?id=${meta.id}" class="cart-item-img">
+          <img src="${meta.img}" alt="${displayName}">
+        </a>
+        <div class="cart-item-details">
+          <div class="cart-item-name-te">${meta.nameTE}</div>
+          <div class="cart-item-name">${displayName}</div>
+          ${metaInfo ? `<div class="cart-item-meta">${metaInfo}</div>` : ''}
+          <div class="cart-item-controls">
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty(${idx},-1)">−</button>
+              <span class="qty-val" id="qty-${idx}">${item.qty}</span>
+              <button class="qty-btn" onclick="changeQty(${idx},1)">+</button>
+            </div>
+            <button class="btn-remove" onclick="removeItem(${idx})">✕ Remove</button>
+          </div>
+        </div>
+        <div class="cart-item-price-col">
+          <div class="cart-item-price" id="price-${idx}">${fmt(item.price * item.qty)}</div>
+          <div class="cart-item-unit-price">${fmt(item.price)} × ${item.qty}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Delivery options HTML
+  const deliveryHTML = DELIVERY_OPTIONS.map(opt => {
+    const isFree = opt.free_above !== null && sub >= opt.free_above;
+    const isSelected = selectedDelivery === opt.id;
+    return `
+      <div class="delivery-option ${isSelected ? 'selected' : ''}" onclick="selectDelivery('${opt.id}')">
+        <div class="delivery-radio"></div>
+        <div class="delivery-option-info">
+          <div class="delivery-option-name">${opt.name}</div>
+          <div class="delivery-option-desc">${opt.desc}</div>
+        </div>
+        <div class="delivery-option-price ${isFree ? 'free' : ''}">
+          ${isFree ? 'FREE' : (opt.price === 0 ? 'FREE' : fmt(opt.price))}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Build promo line
+  const promoLine = promoCode
+    ? `<div class="price-row"><span>Promo (${promoCode})</span><span class="val discount">− ${fmt(discountAmount())}</span></div>`
+    : '';
+
+  // Delivery line
+  const delivCost = deliveryCost();
+  const delivLine = `<div class="price-row"><span>Delivery</span><span class="val ${delivCost === 0 ? 'free' : ''}">${delivCost === 0 ? 'FREE' : fmt(delivCost)}</span></div>`;
+
+  document.getElementById('cartBody').innerHTML = `
+    <!-- LEFT COL -->
+    <div class="cart-items-col">
+      ${nudgeHTML}
+      <div class="cart-section-label">Items in Your Cart</div>
+      ${itemsHTML}
+      <a href="shop.html" class="continue-link">← Continue Shopping</a>
+    </div>
+
+    <!-- RIGHT COL -->
+    <div class="summary-col">
+
+      <!-- DELIVERY TYPE -->
+      <div class="delivery-card">
+        <div class="delivery-card-title">Delivery Type</div>
+        ${deliveryHTML}
+      </div>
+
+      <!-- ORDER SUMMARY -->
+      <div class="summary-card">
+        <div class="summary-title">Order Summary</div>
+
+        <!-- PROMO -->
+        <div class="promo-row">
+          <input class="promo-input" id="promoInput" type="text" placeholder="Promo code" value="${promoCode || ''}" maxlength="20">
+          <button class="btn-promo" onclick="applyPromo()">Apply</button>
+        </div>
+        <div class="promo-msg" id="promoMsg"></div>
+
+        <!-- BREAKDOWN -->
+        <div class="price-row"><span>Subtotal (${cart.reduce((s,i)=>s+i.qty,0)} items)</span><span class="val">${fmt(sub)}</span></div>
+        ${promoLine}
+        ${delivLine}
+        <div class="price-row total"><span>Total</span><span class="val">${fmt(total())}</span></div>
+
+        <a href="checkout.html" class="btn-checkout">🛒 Proceed to Checkout</a>
+        <a href="https://wa.me/919949950743?text=${buildWAText()}" target="_blank" class="btn-whatsapp-checkout">💬 Order via WhatsApp</a>
+
+        <div class="trust-mini">
+          <div class="trust-mini-item">🔒 Secure Checkout</div>
+          <div class="trust-mini-item">❄️ Cold Chain</div>
+          <div class="trust-mini-item">✅ FSSAI Certified</div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  UPSELLS
+// ─────────────────────────────────────────────
+function renderUpsells() {
+  const cartNames = cart.map(i => i.name.split(' · ')[0]);
+  const shown = UPSELLS.filter(u => !cartNames.includes(u.name)).slice(0, 4);
+  if (shown.length === 0) { document.getElementById('upsellSection').style.display = 'none'; return; }
+  document.getElementById('upsellSection').style.display = '';
+  document.getElementById('upsellGrid').innerHTML = shown.map(u => `
+    <a href="product-detail.html?id=${u.id}" class="upsell-card">
+      <div class="upsell-img">
+        ${u.video
+          ? `<video autoplay muted loop playsinline><source src="${u.video}" type="video/mp4"></video>`
+          : `<img src="${u.img}" alt="${u.name}">`}
+      </div>
+      <div class="upsell-body">
+        <div class="upsell-name-te">${u.nameTE}</div>
+        <div class="upsell-name">${u.name}</div>
+        <div class="upsell-footer">
+          <div>
+            <div class="upsell-price">₹${u.price.toLocaleString('en-IN')}</div>
+            <span class="upsell-unit">per ${u.unit}</span>
+          </div>
+          <button class="btn-upsell-add" onclick="event.preventDefault();quickAdd('${u.name}',${u.price})">+</button>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function changeQty(idx, delta) {
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) {
+    removeItem(idx);
+    return;
+  }
+  saveCart();
+  render();
+}
+
+function removeItem(idx) {
+  const el = document.getElementById(`cart-item-${idx}`);
+  if (el) {
+    el.classList.add('removing');
+    setTimeout(() => { cart.splice(idx, 1); saveCart(); render(); }, 280);
+  } else {
+    cart.splice(idx, 1); saveCart(); render();
+  }
+}
+
+function quickAdd(name, price) {
+  const existing = cart.find(i => i.name === name);
+  if (existing) existing.qty++;
+  else cart.push({ name, price, qty: 1 });
+  saveCart();
+  render();
+  showToast(`✓ ${name} added`);
+}
+
+function selectDelivery(id) {
+  selectedDelivery = id;
+  render();
+}
+
+function applyPromo() {
+  const code = (document.getElementById('promoInput')?.value || '').trim().toUpperCase();
+  const msg = document.getElementById('promoMsg');
+  if (!code) { msg.textContent = 'Please enter a promo code.'; msg.className = 'promo-msg error'; return; }
+  if (PROMOS[code]) {
+    promoCode = code;
+    promoDiscount = discountAmount();
+    msg.textContent = `✓ "${code}" applied — ${PROMOS[code].label}`;
+    msg.className = 'promo-msg success';
+    render();
+  } else {
+    promoCode = null;
+    msg.textContent = 'Invalid promo code.';
+    msg.className = 'promo-msg error';
+    render();
+  }
+}
+
+document.getElementById('clearCartBtn').addEventListener('click', () => {
+  if (confirm('Clear your entire cart?')) {
+    cart = []; saveCart(); promoCode = null; render();
+  }
+});
+
+function buildWAText() {
+  if (cart.length === 0) return encodeURIComponent('Hi Angadi! I want to place an order.');
+  const lines = cart.map(i => `• ${i.name} × ${i.qty} = ₹${(i.price*i.qty).toLocaleString('en-IN')}`).join('\n');
+  const msg = `Hi Angadi! I'd like to place this order:\n\n${lines}\n\nTotal: ₹${total().toLocaleString('en-IN')}\n\nPlease confirm availability and delivery slot.`;
+  return encodeURIComponent(msg);
+}
+
+// ─────────────────────────────────────────────
+//  NAV + TOAST
+// ─────────────────────────────────────────────
+function updateNavBadge() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartBadge').textContent = total;
+}
+
+function showToast(msg) {
+  document.querySelectorAll('.angadi-toast').forEach(t => t.remove());
+  const toast = document.createElement('div');
+  toast.className = 'angadi-toast';
+  toast.style.cssText = `position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
+    background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;border-radius:100px;
+    font-size:0.85rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;`;
+  toast.textContent = msg;
+  if (!document.getElementById('toastStyle')) {
+    const s = document.createElement('style'); s.id = 'toastStyle';
+    s.textContent = `@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+// NAV SCROLL
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+
+// MOBILE MENU
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
