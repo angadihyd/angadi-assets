@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/Users/dasariprakash/Desktop/angadi assets/.claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(open -a Safari http://localhost:3000)",
+      "Bash(ls \"/Users/dasariprakash/Desktop/angadi desing/\" | head -20)"
+    ]
+  }
+}

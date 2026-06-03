@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Healthy, Hygienic & Handpicked</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --clay:#C4622D;
+  --clay-d:#7A3318;
+  --clay-l:#E8956A;
+  --gold:#D4A017;
+  --gold-l:#F5C842;
+  --cream:#F6EDD8;
+  --warm:#EDE0C4;
+  --ink:#080503;
+  --ink-2:#100804;
+  --ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);
+  --border-gold:rgba(212,160,23,0.25);
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--cream);
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4rem;height:70px;
+  background:rgba(8,5,3,0);
+  backdrop-filter:blur(0px);
+  border-bottom:1px solid transparent;
+  transition:all 0.5s ease;
+}
+nav.scrolled{
+  background:rgba(8,5,3,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom-color:var(--border);
+  height:60px;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:12px;
+  text-decoration:none;
+}
+.nav-logo-icon{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;color:var(--cream);
+  letter-spacing:0.05em;
+}
+.nav-logo-text{
+  font-family:'Playfair Display',serif;
+  font-size:1.4rem;font-weight:700;
+  color:var(--cream);
+  letter-spacing:0.04em;
+}
+.nav-logo-text span{
+  color:var(--gold);
+}
+.nav-links{
+  display:flex;align-items:center;gap:2.5rem;
+  list-style:none;
+}
+.nav-links a{
+  text-decoration:none;
+  font-size:0.88rem;font-weight:500;
+  color:rgba(246,237,216,0.7);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  transition:color 0.3s;
+}
+.nav-links a:hover{color:var(--cream);}
+.nav-right{
+  display:flex;align-items:center;gap:1.2rem;
+}
+.nav-cart{
+  position:relative;
+  background:none;border:1px solid var(--border);
+  color:var(--cream);
+  width:42px;height:42px;border-radius:10px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:all 0.3s;
+}
+.nav-cart:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
+.cart-badge{
+  position:absolute;top:-4px;right:-4px;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--clay);
+  font-size:0.65rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-order{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);
+  border:none;padding:0.6rem 1.5rem;
+  border-radius:8px;font-size:0.85rem;font-weight:600;
+  letter-spacing:0.05em;cursor:pointer;
+  transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;
+}
+.btn-order:hover{
+  background:linear-gradient(135deg,var(--clay-l),var(--clay));
+  transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(196,98,45,0.4);
+}
+.nav-hamburger{
+  display:none;flex-direction:column;gap:5px;cursor:pointer;
+  background:none;border:none;padding:4px;
+}
+.nav-hamburger span{
+  display:block;width:22px;height:2px;
+  background:var(--cream);border-radius:2px;
+  transition:all 0.3s;
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;
+  height:100vh;min-height:700px;
+  display:flex;align-items:center;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:url('ux ui desing/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center center/cover no-repeat;
+}
+.hero-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(
+    105deg,
+    rgba(8,5,3,0.88) 0%,
+    rgba(8,5,3,0.65) 55%,
+    rgba(8,5,3,0.25) 100%
+  );
+}
+.hero-content{
+  position:relative;z-index:2;
+  padding:0 4rem;
+  max-width:700px;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  background:rgba(212,160,23,0.12);
+  border:1px solid rgba(212,160,23,0.3);
+  border-radius:100px;
+  padding:0.35rem 1rem;
+  font-family:'Space Mono',monospace;
+  font-size:0.72rem;color:var(--gold);
+  letter-spacing:0.12em;text-transform:uppercase;
+  margin-bottom:1.8rem;
+}
+.hero-eyebrow::before{
+  content:'';width:6px;height:6px;
+  background:var(--gold);border-radius:50%;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.4;transform:scale(0.8);}
+}
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,8vw,7rem);
+  line-height:0.92;
+  letter-spacing:0.02em;
+  color:var(--cream);
+  margin-bottom:1.5rem;
+}
+.hero-title .line-gold{color:var(--gold);}
+.hero-title .line-clay{color:var(--clay-l);}
+.hero-sub{
+  font-size:1.05rem;font-weight:300;
+  color:rgba(246,237,216,0.75);
+  line-height:1.7;
+  max-width:480px;
+  margin-bottom:2.5rem;
+}
+.hero-sub strong{color:var(--cream);font-weight:500;}
+.hero-ctas{
+  display:flex;align-items:center;gap:1.2rem;
+  flex-wrap:wrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);
+  border:none;padding:0.9rem 2.2rem;
+  border-radius:10px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+  letter-spacing:0.02em;
+}
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 36px rgba(196,98,45,0.5);
+}
+.btn-ghost{
+  background:transparent;
+  color:var(--cream);
+  border:1px solid rgba(246,237,216,0.3);
+  padding:0.9rem 2.2rem;
+  border-radius:10px;font-size:0.95rem;font-weight:500;
+  cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-ghost:hover{
+  border-color:var(--cream);
+  background:rgba(246,237,216,0.06);
+}
+.hero-stats{
+  position:absolute;bottom:3rem;right:4rem;
+  z-index:2;
+  display:flex;gap:3rem;
+}
+.hero-stat{
+  text-align:center;
+}
+.hero-stat-number{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.8rem;line-height:1;
+  color:var(--gold);
+  display:block;
+}
+.hero-stat-label{
+  font-size:0.72rem;font-weight:500;
+  color:rgba(246,237,216,0.5);
+  letter-spacing:0.1em;text-transform:uppercase;
+  margin-top:0.3rem;
+}
+.hero-scroll{
+  position:absolute;bottom:3rem;left:50%;
+  transform:translateX(-50%);
+  z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:0.5rem;
+  opacity:0.5;
+}
+.hero-scroll span{
+  font-size:0.65rem;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--cream);
+}
+.scroll-line{
+  width:1px;height:50px;
+  background:linear-gradient(to bottom, var(--cream), transparent);
+  animation:scrollDown 1.8s ease infinite;
+}
+@keyframes scrollDown{
+  0%{transform:scaleY(0);transform-origin:top;}
+  50%{transform:scaleY(1);transform-origin:top;}
+  51%{transform:scaleY(1);transform-origin:bottom;}
+  100%{transform:scaleY(0);transform-origin:bottom;}
+}
+
+/* ── TICKER ── */
+.ticker{
+  background:var(--clay);
+  padding:0.9rem 0;
+  overflow:hidden;
+  white-space:nowrap;
+  border-top:1px solid rgba(246,237,216,0.1);
+  border-bottom:1px solid rgba(246,237,216,0.1);
+}
+.ticker-inner{
+  display:inline-flex;
+  animation:tickerMove 20s linear infinite;
+}
+.ticker-item{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1rem;letter-spacing:0.18em;
+  color:var(--cream);
+  padding:0 2rem;
+  display:inline-flex;align-items:center;gap:2rem;
+}
+.ticker-dot{
+  width:5px;height:5px;
+  background:rgba(246,237,216,0.5);
+  border-radius:50%;
+}
+@keyframes tickerMove{
+  from{transform:translateX(0);}
+  to{transform:translateX(-50%);}
+}
+
+/* ── SECTION BASE ── */
+section{padding:6rem 4rem;}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Space Mono',monospace;
+  font-size:0.7rem;color:var(--clay);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.section-eyebrow::before{
+  content:'';display:block;
+  width:20px;height:1px;background:var(--clay);
+}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:700;line-height:1.15;
+  color:var(--cream);
+  margin-bottom:1rem;
+}
+.section-title em{
+  font-style:italic;color:var(--gold);
+}
+.section-sub{
+  font-size:1rem;font-weight:300;
+  color:rgba(246,237,216,0.6);
+  line-height:1.7;max-width:500px;
+}
+
+/* ── PRODUCTS ── */
+.products-section{
+  background:var(--ink-2);
+}
+.products-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:3.5rem;flex-wrap:wrap;gap:1.5rem;
+}
+.products-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;
+}
+.product-card{
+  background:var(--ink-3);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:all 0.4s ease;
+  position:relative;
+}
+.product-card:hover{
+  border-color:rgba(196,98,45,0.5);
+  transform:translateY(-6px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(196,98,45,0.2);
+}
+.product-card:first-child{
+  grid-column:span 2;
+}
+.product-img-wrap{
+  position:relative;overflow:hidden;
+  height:260px;
+}
+.product-card:first-child .product-img-wrap{
+  height:280px;
+}
+/* Static cards: main image fills the wrap */
+.product-img-wrap:not(.has-video) img{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:transform 0.6s ease;
+  filter:brightness(0.9) saturate(1.1);
+}
+.product-card:hover .product-img-wrap:not(.has-video) img{
+  transform:scale(1.06);
+}
+.product-badge{
+  position:absolute;top:1rem;left:1rem;
+  background:rgba(8,5,3,0.75);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border-gold);
+  border-radius:100px;
+  padding:0.3rem 0.8rem;
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;color:var(--gold);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.product-fresh{
+  position:absolute;top:1rem;right:1rem;
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.6rem;font-weight:700;color:var(--cream);
+  letter-spacing:0.05em;text-transform:uppercase;
+  text-align:center;line-height:1.2;
+}
+.product-body{
+  padding:1.4rem 1.5rem 1.5rem;
+}
+.product-name-te{
+  font-size:0.72rem;font-weight:500;
+  color:var(--clay-l);letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:0.3rem;
+}
+.product-name{
+  font-family:'Playfair Display',serif;
+  font-size:1.25rem;font-weight:700;
+  color:var(--cream);
+  margin-bottom:0.5rem;
+}
+.product-card:first-child .product-name{
+  font-size:1.6rem;
+}
+.product-desc{
+  font-size:0.83rem;color:rgba(246,237,216,0.55);
+  line-height:1.6;margin-bottom:1.2rem;
+}
+.product-footer{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.product-price{
+  display:flex;flex-direction:column;
+}
+.product-price-main{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.8rem;line-height:1;
+  color:var(--gold);
+}
+.product-price-unit{
+  font-size:0.7rem;color:rgba(246,237,216,0.4);
+  margin-top:0.2rem;
+}
+.btn-add{
+  background:rgba(196,98,45,0.12);
+  border:1px solid var(--border);
+  color:var(--clay-l);
+  width:40px;height:40px;border-radius:10px;
+  font-size:1.3rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+}
+.btn-add:hover{
+  background:var(--clay);
+  border-color:var(--clay);
+  color:var(--cream);
+  transform:scale(1.1);
+}
+.view-all-link{
+  font-size:0.85rem;font-weight:500;
+  color:var(--clay-l);
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:0.4rem;
+  letter-spacing:0.05em;
+  transition:gap 0.3s;
+}
+.view-all-link:hover{gap:0.8rem;color:var(--cream);}
+
+/* ── WHY ANGADI ── */
+.why-section{
+  background:var(--ink);
+  position:relative;overflow:hidden;
+}
+.why-section::before{
+  content:'';position:absolute;
+  top:-200px;right:-200px;
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(196,98,45,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.why-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5rem;
+  align-items:center;
+  margin-top:4rem;
+}
+.why-image-wrap{
+  position:relative;
+}
+.why-image-main{
+  width:100%;aspect-ratio:4/5;
+  object-fit:cover;
+  border-radius:20px;
+  filter:brightness(0.85) saturate(1.1);
+}
+.why-image-accent{
+  position:absolute;
+  bottom:-2rem;right:-2rem;
+  width:55%;aspect-ratio:1;
+  object-fit:cover;
+  border-radius:16px;
+  border:4px solid var(--ink);
+  filter:brightness(0.9);
+}
+.why-badge{
+  position:absolute;top:1.5rem;left:1.5rem;
+  background:rgba(8,5,3,0.8);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--border-gold);
+  border-radius:12px;
+  padding:1rem 1.2rem;
+  display:flex;align-items:center;gap:0.8rem;
+}
+.why-badge-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.2rem;line-height:1;color:var(--gold);
+}
+.why-badge-text{
+  font-size:0.72rem;color:rgba(246,237,216,0.7);
+  line-height:1.4;
+}
+.why-pillars{
+  display:flex;flex-direction:column;gap:2rem;
+  margin-top:2.5rem;
+}
+.pillar{
+  display:flex;gap:1.2rem;
+  padding:1.5rem;
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-radius:14px;
+  transition:all 0.3s;
+}
+.pillar:hover{
+  background:rgba(196,98,45,0.06);
+  border-color:rgba(196,98,45,0.35);
+}
+.pillar-icon{
+  width:46px;height:46px;min-width:46px;
+  background:linear-gradient(135deg,rgba(196,98,45,0.2),rgba(196,98,45,0.05));
+  border:1px solid var(--border);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+}
+.pillar-title{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;font-weight:700;
+  color:var(--cream);margin-bottom:0.3rem;
+}
+.pillar-desc{
+  font-size:0.82rem;color:rgba(246,237,216,0.55);
+  line-height:1.6;
+}
+
+/* ── STORY ── */
+.story-section{
+  background:var(--ink-3);
+  position:relative;overflow:hidden;
+}
+.story-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5rem;align-items:center;
+}
+.story-image-wrap{
+  position:relative;border-radius:20px;overflow:hidden;
+  aspect-ratio:3/4;
+}
+.story-image-wrap img{
+  width:100%;height:100%;
+  object-fit:cover;
+  filter:brightness(0.8) saturate(1.2);
+}
+.story-image-wrap::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(8,5,3,0.6),transparent 60%);
+}
+.story-image-caption{
+  position:absolute;bottom:1.5rem;left:1.5rem;right:1.5rem;
+  z-index:2;
+}
+.story-image-caption p{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-size:1rem;color:var(--cream);
+  opacity:0.9;line-height:1.5;
+}
+.story-content .section-title{
+  margin-bottom:1.5rem;
+}
+.story-body{
+  font-size:0.95rem;color:rgba(246,237,216,0.65);
+  line-height:1.9;
+  margin-bottom:1.5rem;
+}
+.story-body strong{
+  color:var(--cream);font-weight:500;
+}
+.story-quote{
+  border-left:3px solid var(--clay);
+  padding-left:1.2rem;
+  margin:1.5rem 0;
+}
+.story-quote p{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-size:1.05rem;color:var(--cream);
+  line-height:1.6;
+}
+.story-quote cite{
+  font-size:0.78rem;color:var(--clay-l);
+  font-style:normal;display:block;margin-top:0.4rem;
+}
+.story-tags{
+  display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:1.5rem;
+}
+.story-tag{
+  background:rgba(196,98,45,0.1);
+  border:1px solid var(--border);
+  border-radius:100px;
+  padding:0.4rem 1rem;
+  font-size:0.78rem;color:var(--clay-l);
+  letter-spacing:0.05em;
+}
+
+/* ── HOW IT WORKS ── */
+.how-section{
+  background:var(--ink-2);
+  text-align:center;
+}
+.how-section .section-eyebrow,
+.how-section .section-title,
+.how-section .section-sub{
+  margin-left:auto;margin-right:auto;
+}
+.how-section .section-sub{text-align:center;}
+.steps-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:2rem;
+  margin-top:4rem;
+  position:relative;
+}
+.steps-grid::before{
+  content:'';
+  position:absolute;
+  top:3rem;left:calc(12.5% + 2rem);right:calc(12.5% + 2rem);
+  height:1px;
+  background:linear-gradient(to right,transparent,var(--border),var(--border),var(--border),transparent);
+}
+.step{
+  display:flex;flex-direction:column;align-items:center;
+  padding:2rem 1rem;
+  position:relative;
+}
+.step-num{
+  width:60px;height:60px;
+  background:var(--ink-3);
+  border:1px solid var(--border);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;color:var(--gold);
+  margin-bottom:1.5rem;
+  position:relative;z-index:1;
+  transition:all 0.3s;
+}
+.step:hover .step-num{
+  background:var(--clay);
+  border-color:var(--clay);
+  color:var(--cream);
+  transform:scale(1.1);
+}
+.step-icon{
+  font-size:2rem;margin-bottom:1rem;
+}
+.step-title{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;font-weight:700;
+  color:var(--cream);margin-bottom:0.5rem;
+}
+.step-desc{
+  font-size:0.82rem;color:rgba(246,237,216,0.5);
+  line-height:1.6;
+}
+
+/* ── TESTIMONIALS ── */
+.reviews-section{
+  background:var(--ink);
+  overflow:hidden;
+}
+.reviews-track{
+  display:flex;gap:1.5rem;
+  margin-top:3.5rem;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding-bottom:0.5rem;
+}
+.reviews-track::-webkit-scrollbar{display:none;}
+.review-card{
+  background:var(--ink-3);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:1.8rem;
+  min-width:320px;max-width:320px;
+  flex-shrink:0;
+  transition:border-color 0.3s;
+}
+.review-card:hover{border-color:rgba(196,98,45,0.4);}
+.review-stars{
+  display:flex;gap:3px;
+  margin-bottom:1rem;
+}
+.review-stars span{color:var(--gold);font-size:0.9rem;}
+.review-text{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-size:0.95rem;color:rgba(246,237,216,0.85);
+  line-height:1.7;
+  margin-bottom:1.2rem;
+}
+.review-author{
+  display:flex;align-items:center;gap:0.8rem;
+}
+.review-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--clay-d),var(--clay));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.85rem;color:var(--cream);
+  flex-shrink:0;
+}
+.review-name{
+  font-weight:600;font-size:0.88rem;color:var(--cream);
+}
+.review-location{
+  font-size:0.75rem;color:rgba(246,237,216,0.4);
+  margin-top:0.1rem;
+}
+.review-verified{
+  margin-left:auto;
+  font-size:0.65rem;color:var(--clay-l);
+  display:flex;align-items:center;gap:0.25rem;
+}
+
+/* ── CTA BANNER ── */
+.cta-section{
+  background:linear-gradient(135deg,var(--clay-d) 0%,#3A1508 50%,var(--ink) 100%);
+  padding:5rem 4rem;
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;
+  top:-100px;left:50%;transform:translateX(-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse,rgba(212,160,23,0.12) 0%,transparent 70%);
+}
+.cta-inner{
+  text-align:center;position:relative;z-index:1;
+  max-width:600px;margin:0 auto;
+}
+.cta-inner .section-eyebrow{justify-content:center;}
+.cta-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,6vw,5rem);
+  line-height:1;letter-spacing:0.04em;
+  color:var(--cream);margin-bottom:1rem;
+}
+.cta-title span{color:var(--gold);}
+.cta-sub{
+  font-size:1rem;color:rgba(246,237,216,0.7);
+  line-height:1.6;margin-bottom:2.5rem;
+}
+.cta-buttons{
+  display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.btn-whatsapp{
+  background:#25D366;
+  color:#fff;
+  border:none;padding:0.9rem 2rem;
+  border-radius:10px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-whatsapp:hover{
+  background:#1ebe57;
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(37,211,102,0.35);
+}
+
+/* ── VIDEO COLLAGE ── */
+/* ── VIDEO-FIRST PRODUCT CARDS ── */
+/* Video fills the full img-wrap, product image is small PIP corner */
+.product-img-wrap.has-video{
+  position:relative;overflow:hidden;
+}
+.product-img-wrap.has-video video{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  z-index:1;
+}
+/* Product meat image — small PIP, 1/3 width, bottom-right corner */
+.product-img-wrap.has-video .pip-product-img{
+  position:absolute !important;
+  bottom:14px !important;right:14px !important;
+  width:32% !important;height:auto !important;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:12px;
+  border:2.5px solid rgba(246,237,216,0.4);
+  box-shadow:0 6px 24px rgba(0,0,0,0.7),0 0 0 1px rgba(212,160,23,0.2);
+  z-index:10;
+  transition:transform 0.3s ease;
+}
+.product-card:hover .pip-product-img{
+  transform:scale(1.05) !important;
+}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--ink-2);
+  border-top:1px solid var(--border);
+  padding:4rem 4rem 2rem;
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:3rem;
+  margin-bottom:3rem;
+}
+.footer-brand .nav-logo{margin-bottom:1rem;}
+.footer-brand p{
+  font-size:0.85rem;color:rgba(246,237,216,0.5);
+  line-height:1.7;max-width:280px;
+}
+.footer-col h4{
+  font-family:'Space Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--clay-l);
+  margin-bottom:1.2rem;
+}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:0.6rem;}
+.footer-col ul li a{
+  font-size:0.85rem;color:rgba(246,237,216,0.5);
+  text-decoration:none;transition:color 0.3s;
+}
+.footer-col ul li a:hover{color:var(--cream);}
+.footer-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:2rem;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;gap:1rem;
+}
+.footer-bottom p{
+  font-size:0.78rem;color:rgba(246,237,216,0.3);
+}
+.footer-bottom a{color:var(--clay-l);text-decoration:none;}
+.footer-delivery{
+  display:flex;align-items:center;gap:0.5rem;
+  font-size:0.78rem;color:rgba(246,237,216,0.3);
+}
+.footer-delivery span{
+  width:8px;height:8px;
+  background:#4CAF50;border-radius:50%;
+  animation:pulse 2s infinite;
+}
+
+/* ── WHATSAPP FLOAT ── */
+.wa-float{
+  position:fixed;bottom:2rem;right:2rem;z-index:999;
+  width:56px;height:56px;
+  background:#25D366;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;
+  box-shadow:0 4px 20px rgba(37,211,102,0.4);
+  text-decoration:none;
+  transition:all 0.3s;
+  animation:waBounce 3s ease infinite;
+}
+.wa-float:hover{
+  transform:scale(1.1);
+  box-shadow:0 8px 32px rgba(37,211,102,0.5);
+}
+@keyframes waBounce{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-6px);}
+}
+
+/* ── MOBILE MENU ── */
+.mobile-menu{
+  display:none;
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:998;
+  background:rgba(8,5,3,0.97);
+  backdrop-filter:blur(20px);
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:2.5rem;
+}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.5rem;letter-spacing:0.08em;
+  color:var(--cream);text-decoration:none;
+  transition:color 0.3s;
+}
+.mobile-menu a:hover{color:var(--clay-l);}
+.mobile-close{
+  position:absolute;top:1.5rem;right:2rem;
+  background:none;border:none;
+  color:var(--cream);font-size:1.8rem;cursor:pointer;
+}
+
+/* ── FADE IN ANIMATIONS ── */
+.fade-up{
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+.fade-up:nth-child(2){transition-delay:0.1s;}
+.fade-up:nth-child(3){transition-delay:0.2s;}
+.fade-up:nth-child(4){transition-delay:0.3s;}
+.fade-up:nth-child(5){transition-delay:0.4s;}
+.fade-up:nth-child(6){transition-delay:0.5s;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .products-grid{grid-template-columns:repeat(2,1fr);}
+  .product-card:first-child{grid-column:span 2;}
+  .why-grid,.story-grid{gap:3rem;}
+  .steps-grid{grid-template-columns:repeat(2,1fr);}
+  .steps-grid::before{display:none;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:768px){
+  nav{padding:0 1.5rem;}
+  .nav-links,.nav-right .btn-order{display:none;}
+  .nav-hamburger{display:flex;}
+  section{padding:4rem 1.5rem;}
+  .hero-content{padding:0 1.5rem;}
+  .hero-stats{
+    position:static;
+    display:flex;justify-content:flex-start;
+    gap:2rem;margin-top:2rem;
+  }
+  .hero-scroll{display:none;}
+  .hero-title{font-size:clamp(3rem,12vw,5rem);}
+  .products-grid{grid-template-columns:1fr;}
+  .product-card:first-child{grid-column:span 1;}
+  .why-grid,.story-grid{grid-template-columns:1fr;}
+  .why-image-accent{display:none;}
+  .steps-grid{grid-template-columns:1fr 1fr;}
+  .footer-grid{grid-template-columns:1fr;}
+  .footer-bottom{flex-direction:column;text-align:center;}
+  .cta-section{padding:4rem 1.5rem;}
+  footer{padding:3rem 1.5rem 2rem;}
+}
+@media(max-width:480px){
+  .steps-grid{grid-template-columns:1fr;}
+  .hero-ctas{flex-direction:column;align-items:flex-start;}
+  .hero-ctas .btn-primary,.hero-ctas .btn-ghost{width:100%;justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="/" class="nav-logo">
+    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:50px;object-fit:contain;">
+  </a>
+  <ul class="nav-links">
+    <li><a href="#products">Shop</a></li>
+    <li><a href="#story">Our Story</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-cart" onclick="alert('Cart coming soon!')">
+      🛒
+      <span class="cart-badge">0</span>
+    </button>
+    <a href="#products" class="btn-order">Order Now →</a>
+    <button class="nav-hamburger" id="menuToggle">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="#products" onclick="closeMobile()">Shop</a>
+  <a href="#story" onclick="closeMobile()">Our Story</a>
+  <a href="#how" onclick="closeMobile()">How It Works</a>
+  <a href="#contact" onclick="closeMobile()">Contact</a>
+  <a href="#products" class="btn-primary" onclick="closeMobile()">Order Now →</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Hyderabad's Premium Village Meat</div>
+    <h1 class="hero-title">
+      <span class="line-gold">Telangana's Finest</span><br>
+      <span class="line-clay">From Villages</span><br>
+      To Your Table
+    </h1>
+    <p class="hero-sub">
+      <strong>Free-range goat, country chicken & farm eggs</strong> sourced directly from Telangana villages. Processed hygienically. Delivered cold to your door.
+    </p>
+    <div class="hero-ctas">
+      <a href="#products" class="btn-primary">🛒 Shop Now</a>
+      <a href="https://wa.me/919999999999?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="btn-ghost" target="_blank">💬 WhatsApp Order</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-number">500+</span>
+        <span class="hero-stat-label">Happy Families</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-number">100%</span>
+        <span class="hero-stat-label">Free Range</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-number">24hr</span>
+        <span class="hero-stat-label">Fresh Delivery</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">HEALTHY <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HYGIENIC <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HANDPICKED <span class="ticker-dot"></span></span>
+    <span class="ticker-item">FREE RANGE <span class="ticker-dot"></span></span>
+    <span class="ticker-item">VILLAGE FRESH <span class="ticker-dot"></span></span>
+    <span class="ticker-item">COLD CHAIN DELIVERY <span class="ticker-dot"></span></span>
+    <span class="ticker-item">TELANGANA SOURCED <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HEALTHY <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HYGIENIC <span class="ticker-dot"></span></span>
+    <span class="ticker-item">HANDPICKED <span class="ticker-dot"></span></span>
+    <span class="ticker-item">FREE RANGE <span class="ticker-dot"></span></span>
+    <span class="ticker-item">VILLAGE FRESH <span class="ticker-dot"></span></span>
+    <span class="ticker-item">COLD CHAIN DELIVERY <span class="ticker-dot"></span></span>
+    <span class="ticker-item">TELANGANA SOURCED <span class="ticker-dot"></span></span>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="products-header">
+    <div>
+      <div class="section-eyebrow">Fresh Today</div>
+      <h2 class="section-title">Our <em>Handpicked</em> Selection</h2>
+    </div>
+    <a href="shop.html" class="view-all-link">View All Products →</a>
+  </div>
+  <div class="products-grid">
+
+    <!-- Card 1 — Featured with Goat Farmer Video -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap has-video">
+        <video autoplay muted loop playsinline>
+          <source src="product/gaot farmer animated video.mp4" type="video/mp4">
+        </video>
+        <img src="product/mutton.png" alt="Village Goat Meat" class="pip-product-img">
+        <div class="product-badge">⭐ Bestseller</div>
+        <div class="product-fresh">FRESH<br>TODAY</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Meka Mamsam</div>
+        <div class="product-name">Village Goat Meat</div>
+        <div class="product-desc">Farm-raised Telangana goat, hand-cut to curry pieces. Rich flavour, tender texture. No hormones, no antibiotics.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹680</span>
+            <span class="product-price-unit">per kilogram</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Village Goat Meat',680)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 with Country Chicken Farmer Video -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap has-video">
+        <video autoplay muted loop playsinline>
+          <source src="product/country chiken animated video.mp4" type="video/mp4">
+        </video>
+        <img src="product/country chiken.png" alt="Country Chicken" class="pip-product-img">
+        <div class="product-badge">🌿 Nati</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Nati Kodi</div>
+        <div class="product-name">Country Chicken</div>
+        <div class="product-desc">Free-range country chicken raised in open villages. Firm, flavourful, slow-cooked perfection.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹520</span>
+            <span class="product-price-unit">per kilogram</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Country Chicken',520)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap">
+        <img src="product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png" alt="Baby Goat Legs">
+        <div class="product-badge">🏆 Premium</div>
+        <div class="product-fresh">LIMITED</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Pilla Meka Kalu</div>
+        <div class="product-name">Baby Goat Legs</div>
+        <div class="product-desc">Tender baby goat legs, perfect for slow-roast or biryani. Rare, seasonal, extraordinary.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹980</span>
+            <span class="product-price-unit">per kilogram</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Baby Goat Legs',980)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap">
+        <img src="product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png" alt="Country Eggs">
+        <div class="product-badge">🥚 Farm Fresh</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Nati Kodi Gudlu</div>
+        <div class="product-name">Country Eggs</div>
+        <div class="product-desc">Deep golden yolk, rich flavour. Free-range hens from Telangana farms. Packed in 6s and 12s.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹12</span>
+            <span class="product-price-unit">per egg</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Country Eggs',12)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5 with Fisherman Video -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap has-video">
+        <video autoplay muted loop playsinline>
+          <source src="product/fisher man animated video.mp4" type="video/mp4">
+        </video>
+        <img src="product/fish.png" alt="Fresh River Fish" class="pip-product-img">
+        <div class="product-badge">🐟 River Fresh</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Chepa Mukkalu</div>
+        <div class="product-name">Fresh River Fish</div>
+        <div class="product-desc">Freshwater fish from Telangana rivers, cleaned and cut to order. Packed same day.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹450</span>
+            <span class="product-price-unit">per kilogram</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Fresh River Fish',450)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="product-card fade-up">
+      <div class="product-img-wrap">
+        <img src="product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png" alt="Full Goat">
+        <div class="product-badge">👑 Whole</div>
+        <div class="product-fresh">ORDER<br>AHEAD</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name-te">Poora Meka</div>
+        <div class="product-name">Full Goat</div>
+        <div class="product-desc">Whole farm goat, cleaned and cut to your preference. Ideal for events, functions & large families.</div>
+        <div class="product-footer">
+          <div class="product-price">
+            <span class="product-price-main">₹8,500</span>
+            <span class="product-price-unit">per goat</span>
+          </div>
+          <button class="btn-add" onclick="addToCart('Full Goat',8500)">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- WHY ANGADI -->
+<section class="why-section" id="why">
+  <div class="why-grid">
+    <div class="why-image-wrap">
+      <img src="ux ui desing/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-image-main">
+      <img src="product/mutton.png" alt="Fresh cuts" class="why-image-accent">
+      <div class="why-badge">
+        <span class="why-badge-num">100%</span>
+        <span class="why-badge-text">Village<br>Sourced</span>
+      </div>
+    </div>
+    <div>
+      <div class="section-eyebrow">Why Angadi</div>
+      <h2 class="section-title">Where <em>Village Purity</em><br>Meets Modern Care</h2>
+      <p class="section-sub">We go to the source — Telangana villages — to handpick the healthiest animals so your family gets the best.</p>
+      <div class="why-pillars">
+        <div class="pillar fade-up">
+          <div class="pillar-icon">🌾</div>
+          <div>
+            <div class="pillar-title">Direct Village Sourcing</div>
+            <p class="pillar-desc">We partner with Telangana farmers to source free-range goats and country chicken. No middlemen, no factory farms.</p>
+          </div>
+        </div>
+        <div class="pillar fade-up">
+          <div class="pillar-icon">🧼</div>
+          <div>
+            <div class="pillar-title">Hygienic Processing Facility</div>
+            <p class="pillar-desc">FSSAI-compliant processing unit with stainless steel surfaces, daily sanitisation, and gloved handlers at every step.</p>
+          </div>
+        </div>
+        <div class="pillar fade-up">
+          <div class="pillar-icon">❄️</div>
+          <div>
+            <div class="pillar-title">Cold Chain Delivery</div>
+            <p class="pillar-desc">Chilled packing within 2 hours of processing. Insulated delivery bags maintain temperature from our unit to your door.</p>
+          </div>
+        </div>
+        <div class="pillar fade-up">
+          <div class="pillar-icon">🎯</div>
+          <div>
+            <div class="pillar-title">Cut to Order</div>
+            <p class="pillar-desc">Curry cut, biryani cut, boneless — tell us how you want it. We cut fresh to your specification before dispatch.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story-section" id="story">
+  <div class="story-grid">
+    <div class="story-image-wrap">
+      <img src="ux ui desing/766444cbfcf856006ff1aeb21ab561e4.jpg" alt="Farmer with red turban">
+      <div class="story-image-caption">
+        <p>"From Telangana's fields to Hyderabad's kitchens — this is Angadi."</p>
+      </div>
+    </div>
+    <div class="story-content">
+      <div class="section-eyebrow">Our Story</div>
+      <h2 class="section-title">Born in the <em>Villages of Telangana</em></h2>
+      <p class="story-body">
+        In the dusty lanes of rural Telangana, livestock has always been part of life — grazed freely, fed naturally, and raised with care passed down through generations. <strong>ANGADI was born to bring this authentic, wholesome produce to your urban kitchen.</strong>
+      </p>
+      <p class="story-body">
+        We source directly from our own villages and trusted farming families, procuring native-breed goats, country chicken, and cattle raised through traditional free-range and extensive rearing practices. No middlemen. No factory farms. Just the real thing — hygienically processed and delivered fresh to your doorstep.
+      </p>
+      <div class="story-quote">
+        <p>"We don't sell meat. We deliver the taste your grandmother cooked with."</p>
+        <cite>— Founder, ANGADI</cite>
+      </div>
+      <p class="story-body">
+        Today, we serve families across Hyderabad. Every order is personal. Every cut is fresh. Every delivery carries a piece of village Telangana.
+      </p>
+      <div class="story-tags">
+        <span class="story-tag">🌾 Village Sourced</span>
+        <span class="story-tag">🐐 Free Range</span>
+        <span class="story-tag">❄️ Cold Chain</span>
+        <span class="story-tag">🍽️ Authentic Taste</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-eyebrow">Simple Process</div>
+  <h2 class="section-title">How It <em>Works</em></h2>
+  <p class="section-sub">From village to your kitchen in under 24 hours. Here's how every Angadi order happens.</p>
+  <div class="steps-grid">
+    <div class="step fade-up">
+      <div class="step-num">01</div>
+      <div class="step-icon">📱</div>
+      <div class="step-title">Place Your Order</div>
+      <p class="step-desc">Order online or via WhatsApp. Choose your cut, quantity, and delivery slot. We confirm within minutes.</p>
+    </div>
+    <div class="step fade-up">
+      <div class="step-num">02</div>
+      <div class="step-icon">🌾</div>
+      <div class="step-title">Village Sourcing</div>
+      <p class="step-desc">We select the animal from our partner farms in Telangana. Free-range, healthy, verified.</p>
+    </div>
+    <div class="step fade-up">
+      <div class="step-num">03</div>
+      <div class="step-icon">🧼</div>
+      <div class="step-title">Hygienic Processing</div>
+      <p class="step-desc">Cleaned, cut to your specification, and packed in our FSSAI-compliant facility with full cold storage.</p>
+    </div>
+    <div class="step fade-up">
+      <div class="step-num">04</div>
+      <div class="step-icon">🚚</div>
+      <div class="step-title">Cold Delivery</div>
+      <p class="step-desc">Insulated packaging, temperature-monitored delivery. Fresh at your door within the promised window.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="reviews-section">
+  <div class="section-eyebrow">Reviews</div>
+  <h2 class="section-title">What <em>Families</em> Say</h2>
+  <div class="reviews-track">
+
+    <div class="review-card">
+      <div class="review-stars">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+      <p class="review-text">"The mutton biryani I made with Angadi's goat was the best I've cooked in years. The meat was so tender, it fell off the bone. My husband thought I changed my recipe!"</p>
+      <div class="review-author">
+        <div class="review-avatar">S</div>
+        <div>
+          <div class="review-name">Sravanthi M.</div>
+          <div class="review-location">Banjara Hills, Hyderabad</div>
+        </div>
+        <div class="review-verified">✓ Verified</div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+      <p class="review-text">"Ordered the full goat for my son's birthday function. They cut it exactly how I asked — curry pieces and some ribs separate. Delivered on time, perfectly packed. Will order again."</p>
+      <div class="review-author">
+        <div class="review-avatar">R</div>
+        <div>
+          <div class="review-name">Ravi Shankar K.</div>
+          <div class="review-location">Kondapur, Hyderabad</div>
+        </div>
+        <div class="review-verified">✓ Verified</div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+      <p class="review-text">"Country chicken from Angadi is the real deal. You can taste the difference immediately. The eggs are also incredible — deep orange yolk, just like from the village."</p>
+      <div class="review-author">
+        <div class="review-avatar">P</div>
+        <div>
+          <div class="review-name">Padmaja N.</div>
+          <div class="review-location">Jubilee Hills, Hyderabad</div>
+        </div>
+        <div class="review-verified">✓ Verified</div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+      <p class="review-text">"I've tried 4-5 premium meat delivery apps. Angadi is the only one that consistently delivers freshness. The packaging keeps it perfectly cold. Highly recommend."</p>
+      <div class="review-author">
+        <div class="review-avatar">V</div>
+        <div>
+          <div class="review-name">Venkat Rao D.</div>
+          <div class="review-location">Madhapur, Hyderabad</div>
+        </div>
+        <div class="review-verified">✓ Verified</div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">
+        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+      </div>
+      <p class="review-text">"WhatsApp ordering is so convenient. I messaged at 8am, they confirmed in 5 minutes, delivered by 12. The goat keema was fresh and clean. My kids ate so well!"</p>
+      <div class="review-author">
+        <div class="review-avatar">A</div>
+        <div>
+          <div class="review-name">Anitha B.</div>
+          <div class="review-location">Gachibowli, Hyderabad</div>
+        </div>
+        <div class="review-verified">✓ Verified</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-inner">
+    <div class="section-eyebrow">Ready to Order?</div>
+    <h2 class="cta-title">Taste the <span>Difference</span> Today</h2>
+    <p class="cta-sub">Join 500+ Hyderabad families who've switched to real village meat. First order? We'll make sure it's perfect.</p>
+    <div class="cta-buttons">
+      <a href="shop.html" class="btn-primary">🛒 Shop Online</a>
+      <a href="https://wa.me/919999999999?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="btn-whatsapp" target="_blank">💬 Order on WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="nav-logo">
+        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:60px;object-fit:contain;margin-bottom:0.5rem;">
+      </a>
+      <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="shop.html">Village Goat Meat</a></li>
+        <li><a href="shop.html">Country Chicken</a></li>
+        <li><a href="shop.html">Country Eggs</a></li>
+        <li><a href="shop.html">River Fish</a></li>
+        <li><a href="shop.html">Full Goat</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#story">Our Story</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#">Sourcing Ethics</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/919999999999" target="_blank">WhatsApp Us</a></li>
+        <li><a href="#">Delivery Areas</a></li>
+        <li><a href="#">Order Tracking</a></li>
+        <li><a href="#">Returns Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Angadi. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <div class="footer-delivery">
+      <span></span>
+      Delivering across Hyderabad — Banjara Hills · Jubilee Hills · Gachibowli · Kondapur · Madhapur
+    </div>
+  </div>
+</footer>
+
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/919999999999?text=Hi%20Angadi!%20I%20want%20to%20order%20fresh%20meat" class="wa-float" target="_blank" title="Order on WhatsApp">💬</a>
+
+<script>
+// NAV SCROLL
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// MOBILE MENU
+const menuToggle = document.getElementById('menuToggle');
+const menuClose = document.getElementById('menuClose');
+const mobileMenu = document.getElementById('mobileMenu');
+menuToggle.addEventListener('click', () => mobileMenu.classList.add('open'));
+menuClose.addEventListener('click', () => mobileMenu.classList.remove('open'));
+function closeMobile() { mobileMenu.classList.remove('open'); }
+
+// CART
+let cartCount = 0;
+const cartBadge = document.querySelector('.cart-badge');
+function addToCart(name, price) {
+  cartCount++;
+  cartBadge.textContent = cartCount;
+  cartBadge.style.transform = 'scale(1.4)';
+  setTimeout(() => cartBadge.style.transform = 'scale(1)', 300);
+  // Simple toast
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
+    background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;
+    border-radius:100px;font-size:0.85rem;font-weight:600;
+    z-index:9999;white-space:nowrap;
+    animation:fadeToast 2.5s forwards;
+  `;
+  toast.textContent = `✓ ${name} added to cart`;
+  const style = document.createElement('style');
+  style.textContent = `@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+  document.head.appendChild(style);
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2600);
+}
+
+// FADE IN ON SCROLL
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
