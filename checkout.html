@@ -530,8 +530,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 // ─────────────────────────────────────────────
 //  CONFIG — Replace before going live
 // ─────────────────────────────────────────────
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://jivkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FcPo69PYVbXXlp1eRO_56Q_iXW0dgd0';
 const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID';
 
 // ─────────────────────────────────────────────
@@ -790,7 +790,7 @@ function autoFillFromProfile() {
 if (cart.length === 0) window.location.href = 'cart.html';
 
 // Init Supabase (if configured)
-if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+if (true) { // Supabase connected
   try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
 }
 
