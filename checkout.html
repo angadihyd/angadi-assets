@@ -261,6 +261,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
     <button class="nav-cart" onclick="window.location.href='cart.html'">
       🛒<span class="cart-badge" id="cartBadge">0</span>
     </button>
+    <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
     <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
   </div>
 </nav>
@@ -801,6 +802,16 @@ window.addEventListener('scroll', () => document.getElementById('navbar')?.class
 document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
 document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
 function closeMobile(){ document.getElementById('mobileMenu').classList.remove('open'); }
+
+// NAV LOGIN STATE
+(function(){
+  const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
+  const btn = document.getElementById('navLoginBtn');
+  if(btn && u.loggedIn){
+    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    btn.href = 'my-profile.html';
+  }
+})();
 </script>
 </body>
 </html>

@@ -312,6 +312,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <li><a href="index.html#contact">Contact</a></li>
   </ul>
   <div class="nav-right">
+    <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
     <a href="shop.html" class="btn-nav">🛒 Shop Again</a>
     <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
   </div>
@@ -720,6 +721,16 @@ const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold:0.08 });
 document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+// NAV LOGIN STATE
+(function(){
+  const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
+  const btn = document.getElementById('navLoginBtn');
+  if(btn && u.loggedIn){
+    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    btn.href = 'my-profile.html';
+  }
+})();
 </script>
 </body>
 </html>

@@ -983,6 +983,7 @@ footer{
       🛒
       <span class="cart-badge">0</span>
     </button>
+    <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
     <a href="#products" class="btn-order">Order Now →</a>
     <button class="nav-hamburger" id="menuToggle">
       <span></span><span></span><span></span>
@@ -1518,6 +1519,16 @@ function addToCart(name, price) {
 }
 
 updateBadge();
+
+// NAV LOGIN STATE
+(function(){
+  const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
+  const btn = document.getElementById('navLoginBtn');
+  if(btn && u.loggedIn){
+    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    btn.href = 'my-profile.html';
+  }
+})();
 
 // FADE IN ON SCROLL
 const observer = new IntersectionObserver((entries) => {

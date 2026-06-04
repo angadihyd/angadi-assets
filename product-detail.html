@@ -607,6 +607,7 @@ footer{
     <button class="nav-cart" id="cartBtn">
       🛒<span class="cart-badge" id="cartBadge">0</span>
     </button>
+    <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
     <a href="cart.html" class="btn-order">Cart →</a>
     <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
   </div>
@@ -1584,6 +1585,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
   });
 });
+
+// NAV LOGIN STATE
+(function(){
+  const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
+  const btn = document.getElementById('navLoginBtn');
+  if(btn && u.loggedIn){
+    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    btn.href = 'my-profile.html';
+  }
+})();
 </script>
 </body>
 </html>
