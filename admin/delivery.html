@@ -177,6 +177,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 /* ── ASSIGNED BADGE ── */
 .assigned-to{display:flex;align-items:center;gap:0.5rem;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:8px;padding:0.4rem 0.8rem;font-size:0.75rem;color:var(--green);}
 
+/* ── MAP MODAL ── */
+.map-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem;}
+.map-modal-overlay.open{display:flex;}
+.map-modal{background:var(--ink-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;width:100%;max-width:680px;animation:slideIn 0.25s ease;}
+.map-modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;border-bottom:1px solid var(--border);}
+.map-modal-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--cream);}
+.map-modal-addr{font-size:0.72rem;color:rgba(246,237,216,0.4);margin-top:0.1rem;font-family:'Space Mono',monospace;}
+.map-modal-close{background:none;border:1px solid var(--border);color:var(--cream);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:border-color 0.2s;flex-shrink:0;}
+.map-modal-close:hover{border-color:var(--clay);}
+.map-modal iframe{display:block;width:100%;height:380px;border:none;}
+.map-modal-actions{display:flex;gap:0.6rem;padding:0.9rem 1.3rem;border-top:1px solid var(--border);}
+
 /* ── RESPONSIVE ── */
 @media(max-width:1100px){.delivery-grid{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:768px){
@@ -194,6 +206,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 
 <div class="guard hidden" id="guard">
   <div class="guard-box"><p>Please log in first.</p><a href="dashboard.html">← Login</a></div>
+</div>
+
+<!-- MAP MODAL -->
+<div class="map-modal-overlay" id="mapModal" onclick="if(event.target===this)closeMapModal()">
+  <div class="map-modal">
+    <div class="map-modal-header">
+      <div>
+        <div class="map-modal-title" id="mapModalTitle">Customer Location</div>
+        <div class="map-modal-addr" id="mapModalAddr"></div>
+      </div>
+      <button class="map-modal-close" onclick="closeMapModal()">✕</button>
+    </div>
+    <iframe id="mapModalFrame" src="" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <div class="map-modal-actions">
+      <a id="mapModalNav" href="#" target="_blank" class="btn-sm maps">🧭 Get Directions</a>
+      <a id="mapModalOpen" href="#" target="_blank" class="btn-sm">🗺 Open in Google Maps</a>
+    </div>
+  </div>
 </div>
 
 <div class="admin-layout" id="adminLayout">
@@ -477,10 +507,10 @@ function buildOrderCard(o, animIdx){
       <div class="order-action-bar">
 
         <!-- Maps buttons -->
-        <a href="${mapsUrl}" target="_blank" class="btn-sm maps" title="View customer location on Google Maps">
+        <button class="btn-sm maps" onclick="openMapModal('${o.customer?.name||''}','${addr}','${encodeURIComponent([a.flat,a.area,a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '))}')">
           🗺 View Location
-        </a>
-        <a href="${mapsNavUrl}" target="_blank" class="btn-sm maps" title="Get directions to customer">
+        </button>
+        <a href="${mapsNavUrl}" target="_blank" class="btn-sm maps">
           🧭 Navigate
         </a>
 
@@ -784,6 +814,21 @@ function showToast(msg){
   if(!document.getElementById('tStyle')){const s=document.createElement('style');s.id='tStyle';s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;document.head.appendChild(s);}
   document.body.appendChild(toast);setTimeout(()=>toast.remove(),2600);
 }
+
+// ── MAP MODAL ──
+function openMapModal(customerName, addrDisplay, addrEncoded) {
+  document.getElementById('mapModalTitle').textContent = customerName ? `📍 ${customerName}` : 'Customer Location';
+  document.getElementById('mapModalAddr').textContent = decodeURIComponent(addrEncoded);
+  document.getElementById('mapModalFrame').src = `https://maps.google.com/maps?q=${addrEncoded}&output=embed&hl=en`;
+  document.getElementById('mapModalNav').href = `https://www.google.com/maps/dir/?api=1&destination=${addrEncoded}`;
+  document.getElementById('mapModalOpen').href = `https://www.google.com/maps/search/?api=1&query=${addrEncoded}`;
+  document.getElementById('mapModal').classList.add('open');
+}
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('open');
+  document.getElementById('mapModalFrame').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal(); });
 </script>
 </body>
 </html>

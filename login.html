@@ -654,7 +654,7 @@ document.getElementById('forgotForm').addEventListener('submit', async (e) => {
   }
 
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html?view=reset-password'
+    redirectTo: window.location.href.split('?')[0] + '?view=reset-password'
   });
   setLoading('fpBtn', false, 'Send Reset Link →');
   if (error) { setStatus('fp-status', 'error', error.message); return; }

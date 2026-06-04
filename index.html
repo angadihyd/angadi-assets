@@ -1170,7 +1170,7 @@ footer{
     <!-- Card 6 -->
     <div class="product-card fade-up">
       <div class="product-img-wrap">
-        <img src="product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png" alt="Full Goat">
+        <img src="product/mutton.png" alt="Full Goat">
         <div class="product-badge">👑 Whole</div>
         <div class="product-fresh">ORDER<br>AHEAD</div>
       </div>
@@ -1471,13 +1471,22 @@ menuClose.addEventListener('click', () => mobileMenu.classList.remove('open'));
 function closeMobile() { mobileMenu.classList.remove('open'); }
 
 // CART
-let cartCount = 0;
+const CART_KEY = 'angadi_cart';
+function getCart() { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
+function saveCartData(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); }
 const cartBadge = document.querySelector('.cart-badge');
+function updateBadge() {
+  const c = getCart();
+  const total = c.reduce((s, i) => s + i.qty, 0);
+  if (cartBadge) cartBadge.textContent = total || 0;
+}
 function addToCart(name, price) {
-  cartCount++;
-  cartBadge.textContent = cartCount;
-  cartBadge.style.transform = 'scale(1.4)';
-  setTimeout(() => cartBadge.style.transform = 'scale(1)', 300);
+  const cart = getCart();
+  const existing = cart.find(i => i.name === name);
+  if (existing) { existing.qty++; } else { cart.push({ name, price, qty: 1 }); }
+  saveCartData(cart);
+  updateBadge();
+  if (cartBadge) { cartBadge.style.transform = 'scale(1.4)'; setTimeout(() => cartBadge.style.transform = 'scale(1)', 300); }
   // Simple toast
   const toast = document.createElement('div');
   toast.style.cssText = `
@@ -1494,6 +1503,8 @@ function addToCart(name, price) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2600);
 }
+
+updateBadge();
 
 // FADE IN ON SCROLL
 const observer = new IntersectionObserver((entries) => {
