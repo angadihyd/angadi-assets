@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/supabase/:path*",
+      "destination": "https://ijvkvgmzjjhwvrwtladj.supabase.co/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
