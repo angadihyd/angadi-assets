@@ -473,6 +473,34 @@ let otpTimer = null;
 let _lastEmail = '';
 
 // ─────────────────────────────────────────────
+//  ADMIN / DELIVERY PARTNER QUICK LOGIN
+// ─────────────────────────────────────────────
+const ADMIN_USER  = 'admin';
+const ADMIN_PASS  = 'Sunset@123';
+// Delivery partners: { username: password }
+const DELIVERY_PARTNERS = {
+  'raju':    'raju123',
+  'suresh':  'suresh123',
+  'praveen': 'praveen123',
+};
+
+function checkSpecialLogin(email, pass) {
+  // Admin login
+  if (email === ADMIN_USER && pass === ADMIN_PASS) {
+    sessionStorage.setItem('angadi_admin', '1');
+    window.location.href = 'admin/dashboard.html';
+    return true;
+  }
+  // Delivery partner login
+  if (DELIVERY_PARTNERS[email] && DELIVERY_PARTNERS[email] === pass) {
+    sessionStorage.setItem('angadi_delivery', email);
+    window.location.href = 'admin/delivery.html';
+    return true;
+  }
+  return false;
+}
+
+// ─────────────────────────────────────────────
 //  VIEW SWITCHING
 // ─────────────────────────────────────────────
 function showView(id) {
@@ -533,6 +561,10 @@ document.getElementById('signinForm').addEventListener('submit', async (e) => {
   clearStatus('si-status');
   const email = document.getElementById('siEmail').value.trim();
   const pass  = document.getElementById('siPass').value;
+
+  // Check admin / delivery partner first
+  if (checkSpecialLogin(email, pass)) return;
+
   let ok = true;
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

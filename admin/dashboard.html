@@ -695,6 +695,85 @@ function showToast(msg) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2600);
 }
+
+// ── NEW ORDER ALERT SYSTEM ──
+let _lastOrderCount = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]').length;
+let _lastOrderIds   = new Set(JSON.parse(localStorage.getItem('angadi_all_orders')||'[]').map(o=>o.orderId));
+
+function showNewOrderAlert(order) {
+  // Browser notification
+  if (Notification.permission === 'granted') {
+    new Notification('🛒 New Angadi Order!', {
+      body: `${order.customer?.name||'Customer'} — ₹${order.total||0} · ${order.payment==='cod'?'COD':'Paid Online'}`,
+      icon: '../angadi/Andadi logo .png'
+    });
+  }
+  // In-page popup
+  const old = document.getElementById('newOrderAlert');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'newOrderAlert';
+  el.style.cssText = `
+    position:fixed;top:80px;right:1.5rem;z-index:9999;
+    background:#1A0E06;border:1px solid #C4622D;border-radius:14px;
+    padding:1.2rem 1.4rem;min-width:280px;max-width:340px;
+    box-shadow:0 8px 32px rgba(196,98,45,0.4);
+    animation:slideInAlert 0.4s ease;
+  `;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.7rem;">
+      <span style="font-size:1.4rem;">🛒</span>
+      <div>
+        <div style="font-weight:700;color:#F6EDD8;font-size:0.95rem;">New Order Received!</div>
+        <div style="font-size:0.72rem;color:#E8956A;font-family:monospace;">${order.orderId}</div>
+      </div>
+      <button onclick="document.getElementById('newOrderAlert').remove()" style="margin-left:auto;background:none;border:none;color:#F6EDD8;cursor:pointer;font-size:1.2rem;opacity:0.5;">✕</button>
+    </div>
+    <div style="font-size:0.82rem;color:rgba(246,237,216,0.7);margin-bottom:0.5rem;">👤 ${order.customer?.name||'—'} &nbsp;·&nbsp; ₹${order.total||0}</div>
+    <div style="font-size:0.78rem;color:rgba(246,237,216,0.45);">📍 ${order.customer?.address?.area||'—'} &nbsp;·&nbsp; ${order.payment==='cod'?'💵 COD':'✅ Paid'}</div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.9rem;">
+      <a href="orders.html" style="flex:1;background:#C4622D;color:#F6EDD8;border:none;border-radius:8px;padding:0.5rem;font-size:0.78rem;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;">View Orders →</a>
+    </div>
+  `;
+  if (!document.getElementById('alertKf')) {
+    const s=document.createElement('style');s.id='alertKf';
+    s.textContent=`@keyframes slideInAlert{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(el);
+  // Auto-dismiss after 15 seconds
+  setTimeout(() => { if (document.getElementById('newOrderAlert')) document.getElementById('newOrderAlert').remove(); }, 15000);
+  // Sound alert
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime+0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.4);
+  } catch(e) {}
+}
+
+function pollNewOrders() {
+  const orders = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+  orders.forEach(o => {
+    if (!_lastOrderIds.has(o.orderId)) {
+      _lastOrderIds.add(o.orderId);
+      showNewOrderAlert(o);
+      // Refresh dashboard
+      initDashboard();
+    }
+  });
+}
+
+// Request notification permission & start polling
+if (Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+setInterval(pollNewOrders, 8000); // Poll every 8 seconds
 </script>
 </body>
 </html>

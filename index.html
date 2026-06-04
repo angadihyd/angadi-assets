@@ -131,6 +131,42 @@ nav.scrolled{
   transform:translateY(-1px);
   box-shadow:0 8px 24px rgba(196,98,45,0.4);
 }
+/* ── PROFILE NAV BTN ── */
+.btn-nav{
+  background:rgba(196,98,45,0.12);
+  border:1px solid rgba(196,98,45,0.3);
+  color:var(--cream);
+  padding:0.45rem 1rem;border-radius:8px;
+  font-size:0.82rem;font-weight:600;
+  cursor:pointer;transition:all 0.3s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
+}
+.btn-nav:hover{background:rgba(196,98,45,0.22);border-color:var(--clay);}
+.nav-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0;
+}
+/* ── CART ADD EFFECT ── */
+@keyframes cartPop{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.5);}
+  70%{transform:scale(0.9);}
+  100%{transform:scale(1);}
+}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-60px) scale(0.8);}
+}
+.cart-float{
+  position:fixed;pointer-events:none;
+  font-size:0.8rem;font-weight:700;
+  color:var(--cream);background:var(--clay);
+  padding:0.3rem 0.7rem;border-radius:100px;
+  z-index:9999;white-space:nowrap;
+  animation:floatUp 0.9s ease forwards;
+}
 .nav-hamburger{
   display:none;flex-direction:column;gap:5px;cursor:pointer;
   background:none;border:none;padding:4px;
@@ -936,32 +972,85 @@ footer{
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:768px){
-  nav{padding:0 1.5rem;}
+  nav{padding:0 1.2rem;height:60px;}
   .nav-links,.nav-right .btn-order{display:none;}
   .nav-hamburger{display:flex;}
-  section{padding:4rem 1.5rem;}
-  .hero-content{padding:0 1.5rem;}
+  .nav-right{gap:0.8rem;}
+  .nav-right .btn-nav{display:none;}
+  section{padding:4rem 1.2rem;}
+
+  /* ── HERO MOBILE ── */
+  .hero{height:100svh;min-height:600px;}
+  .hero-bg{
+    background-position:60% center;
+  }
+  .hero-bg::after{
+    background:linear-gradient(
+      160deg,
+      rgba(8,5,3,0.92) 0%,
+      rgba(8,5,3,0.75) 50%,
+      rgba(8,5,3,0.55) 100%
+    );
+  }
+  .hero-content{
+    padding:0 1.2rem;
+    max-width:100%;
+    padding-top:4rem;
+  }
+  .hero-eyebrow{font-size:0.65rem;padding:0.3rem 0.8rem;margin-bottom:1.2rem;}
+  .hero-title{
+    font-size:clamp(2.8rem,13vw,4.5rem);
+    line-height:0.9;
+  }
+  .hero-sub{
+    font-size:0.88rem;
+    margin:1rem 0 1.5rem;
+    max-width:85%;
+  }
+  .hero-ctas{flex-direction:column;gap:0.8rem;width:100%;}
+  .hero-ctas .btn-primary,.hero-ctas .btn-ghost{
+    width:100%;justify-content:center;
+    padding:0.85rem 1.5rem;font-size:0.9rem;
+  }
   .hero-stats{
     position:static;
     display:flex;justify-content:flex-start;
-    gap:2rem;margin-top:2rem;
+    gap:1.5rem;margin-top:1.5rem;
+    flex-wrap:wrap;
   }
+  .hero-stat-number{font-size:1.4rem;}
+  .hero-stat-label{font-size:0.6rem;}
   .hero-scroll{display:none;}
-  .hero-title{font-size:clamp(3rem,12vw,5rem);}
+
+  /* ── PRODUCTS ── */
   .products-grid{grid-template-columns:1fr;}
   .product-card:first-child{grid-column:span 1;}
+  .product-img-wrap{height:220px;}
+
+  /* ── WHY / STORY ── */
   .why-grid,.story-grid{grid-template-columns:1fr;}
+  .why-image-wrap{height:280px;}
   .why-image-accent{display:none;}
+  .why-image-main{height:280px;}
+
+  /* ── STEPS ── */
   .steps-grid{grid-template-columns:1fr 1fr;}
+
+  /* ── FOOTER ── */
   .footer-grid{grid-template-columns:1fr;}
   .footer-bottom{flex-direction:column;text-align:center;}
-  .cta-section{padding:4rem 1.5rem;}
-  footer{padding:3rem 1.5rem 2rem;}
+  .cta-section{padding:4rem 1.2rem;}
+  footer{padding:3rem 1.2rem 2rem;}
 }
 @media(max-width:480px){
+  .hero-title{font-size:clamp(2.5rem,15vw,3.8rem);}
+  .hero-sub{font-size:0.82rem;max-width:100%;}
+  .hero-eyebrow{font-size:0.6rem;}
+  .hero-stat{min-width:70px;}
   .steps-grid{grid-template-columns:1fr;}
-  .hero-ctas{flex-direction:column;align-items:flex-start;}
-  .hero-ctas .btn-primary,.hero-ctas .btn-ghost{width:100%;justify-content:center;}
+  .products-section .section-title{font-size:1.8rem;}
+  .product-img-wrap{height:200px;}
+  .why-image-wrap,.why-image-main{height:240px;}
 }
 </style>
 </head>
@@ -1089,7 +1178,7 @@ footer{
             <span class="product-price-main">₹680</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Village Goat Meat',680)">+</button>
+          <button class="btn-add" onclick="addToCart('Village Goat Meat',680,this)">+</button>
         </div>
       </div>
     </div>
@@ -1112,7 +1201,7 @@ footer{
             <span class="product-price-main">₹520</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Country Chicken',520)">+</button>
+          <button class="btn-add" onclick="addToCart('Country Chicken',520,this)">+</button>
         </div>
       </div>
     </div>
@@ -1133,7 +1222,7 @@ footer{
             <span class="product-price-main">₹980</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Baby Goat Legs',980)">+</button>
+          <button class="btn-add" onclick="addToCart('Baby Goat Legs',980,this)">+</button>
         </div>
       </div>
     </div>
@@ -1153,7 +1242,7 @@ footer{
             <span class="product-price-main">₹12</span>
             <span class="product-price-unit">per egg</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Country Eggs',12)">+</button>
+          <button class="btn-add" onclick="addToCart('Country Eggs',12,this)">+</button>
         </div>
       </div>
     </div>
@@ -1176,7 +1265,7 @@ footer{
             <span class="product-price-main">₹450</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Fresh River Fish',450)">+</button>
+          <button class="btn-add" onclick="addToCart('Fresh River Fish',450,this)">+</button>
         </div>
       </div>
     </div>
@@ -1197,7 +1286,7 @@ footer{
             <span class="product-price-main">₹8,500</span>
             <span class="product-price-unit">per goat</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Full Goat',8500)">+</button>
+          <button class="btn-add" onclick="addToCart('Full Goat',8500,this)">+</button>
         </div>
       </div>
     </div>
@@ -1209,7 +1298,7 @@ footer{
 <section class="why-section" id="why">
   <div class="why-grid">
     <div class="why-image-wrap">
-      <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-image-main">
+      <img src="ux ui design/goat_herd_upscaled_4x.png" alt="White goats in village" class="why-image-main">
       <img src="product/mutton.png" alt="Fresh cuts" class="why-image-accent">
       <div class="why-badge">
         <span class="why-badge-num">100%</span>
@@ -1494,26 +1583,52 @@ function updateBadge() {
   const total = c.reduce((s, i) => s + i.qty, 0);
   if (cartBadge) cartBadge.textContent = total || 0;
 }
-function addToCart(name, price) {
+function addToCart(name, price, btnEl) {
   const cart = getCart();
   const existing = cart.find(i => i.name === name);
   if (existing) { existing.qty++; } else { cart.push({ name, price, qty: 1 }); }
   saveCartData(cart);
   updateBadge();
-  if (cartBadge) { cartBadge.style.transform = 'scale(1.4)'; setTimeout(() => cartBadge.style.transform = 'scale(1)', 300); }
-  // Simple toast
+
+  // Badge pop animation
+  if (cartBadge) {
+    cartBadge.style.animation = 'none';
+    cartBadge.offsetHeight;
+    cartBadge.style.animation = 'cartPop 0.4s ease';
+  }
+
+  // Float-up effect from button
+  if (btnEl) {
+    const rect = btnEl.getBoundingClientRect();
+    const fl = document.createElement('div');
+    fl.className = 'cart-float';
+    fl.textContent = '+1 added';
+    fl.style.left = (rect.left + rect.width/2) + 'px';
+    fl.style.top = (rect.top + window.scrollY) + 'px';
+    document.body.appendChild(fl);
+    setTimeout(() => fl.remove(), 950);
+  }
+
+  // Bottom toast
+  const existing_toast = document.querySelector('.cart-toast-msg');
+  if (existing_toast) existing_toast.remove();
   const toast = document.createElement('div');
+  toast.className = 'cart-toast-msg';
   toast.style.cssText = `
     position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);
-    background:#C4622D;color:#F6EDD8;padding:0.7rem 1.5rem;
+    background:#C4622D;color:#F6EDD8;padding:0.65rem 1.4rem;
     border-radius:100px;font-size:0.85rem;font-weight:600;
-    z-index:9999;white-space:nowrap;
+    z-index:9999;white-space:nowrap;display:flex;align-items:center;gap:0.5rem;
+    box-shadow:0 4px 20px rgba(196,98,45,0.5);
     animation:fadeToast 2.5s forwards;
   `;
-  toast.textContent = `✓ ${name} added to cart`;
-  const style = document.createElement('style');
-  style.textContent = `@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
-  document.head.appendChild(style);
+  toast.innerHTML = `<span style="font-size:1rem;">✓</span> <strong>${name.split(' ').slice(0,2).join(' ')}</strong> added to cart`;
+  if (!document.getElementById('toastKf')) {
+    const s = document.createElement('style');
+    s.id = 'toastKf';
+    s.textContent = `@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;
+    document.head.appendChild(s);
+  }
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2600);
 }
@@ -1525,7 +1640,9 @@ updateBadge();
   const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
   const btn = document.getElementById('navLoginBtn');
   if(btn && u.loggedIn){
-    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    const name = u.name ? u.name.split(' ')[0] : 'Account';
+    const initials = name.charAt(0).toUpperCase();
+    btn.innerHTML = `<span class="nav-avatar">${initials}</span> ${name}`;
     btn.href = 'my-profile.html';
   }
 })();
