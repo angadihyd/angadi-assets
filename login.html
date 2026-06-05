@@ -494,7 +494,7 @@ function checkSpecialLogin(email, pass) {
   // Delivery partner login
   if (DELIVERY_PARTNERS[email] && DELIVERY_PARTNERS[email] === pass) {
     sessionStorage.setItem('angadi_delivery', email);
-    window.location.href = 'admin/delivery.html';
+    window.location.href = 'admin/delivery-partner.html';
     return true;
   }
   return false;

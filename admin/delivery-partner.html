@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Partner — Angadi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);
+  --green:#4CAF50;--red:#E57373;--orange:#FFB74D;
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.12) 0%, transparent 60%),
+    linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
+  color:var(--cream);min-height:100vh;
+}
+
+/* ── HEADER ── */
+.header{
+  background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 1.5rem;height:65px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.header-logo{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--cream);letter-spacing:0.08em;}
+.header-logo span{color:var(--gold);}
+.header-right{display:flex;align-items:center;gap:1rem;}
+.partner-name{font-size:0.82rem;color:rgba(246,237,216,0.5);}
+.partner-name strong{color:var(--clay-l);display:block;font-size:0.9rem;}
+.btn-logout{background:none;border:1px solid rgba(229,115,115,0.3);color:rgba(229,115,115,0.7);border-radius:8px;padding:0.4rem 0.9rem;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.3s;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;padding:1.2rem 1.5rem;}
+.stat-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;padding:1rem;text-align:center;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--clay);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.gold::before{background:var(--gold);}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;color:var(--gold);}
+.stat-label{font-size:0.6rem;color:rgba(246,237,216,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+
+/* ── STATUS TOGGLE ── */
+.status-bar{
+  margin:0 1.5rem 1rem;
+  background:var(--ink-3);border:1px solid var(--border);border-radius:14px;
+  padding:1rem 1.2rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.status-label{font-size:0.78rem;color:rgba(246,237,216,0.5);}
+.status-label strong{color:var(--cream);display:block;font-size:0.88rem;margin-bottom:0.2rem;}
+.status-btns{display:flex;gap:0.5rem;}
+.status-btn{padding:0.4rem 0.9rem;border-radius:8px;border:1px solid var(--border);font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.25s;}
+.status-btn.available{border-color:rgba(76,175,80,0.4);color:var(--green);background:rgba(76,175,80,0.08);}
+.status-btn.available.active{background:var(--green);color:#fff;border-color:var(--green);}
+.status-btn.busy{border-color:rgba(255,183,77,0.4);color:var(--orange);background:rgba(255,183,77,0.06);}
+.status-btn.busy.active{background:var(--orange);color:#fff;border-color:var(--orange);}
+.status-btn.offline{border-color:var(--border);color:rgba(246,237,216,0.35);}
+.status-btn.offline.active{background:rgba(255,255,255,0.1);color:var(--cream);}
+
+/* ── SECTION TITLE ── */
+.section-head{padding:0 1.5rem;margin-bottom:0.8rem;}
+.section-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);}
+.section-title span{font-style:italic;color:var(--gold);}
+.section-sub{font-size:0.75rem;color:rgba(246,237,216,0.35);margin-top:0.2rem;}
+
+/* ── ORDER CARD ── */
+.orders-list{padding:0 1.5rem 6rem;}
+.order-card{background:var(--ink-3);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem;transition:border-color 0.3s;}
+.order-card:hover{border-color:rgba(196,98,45,0.4);}
+.order-header{padding:1rem 1.2rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+.order-id{font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--gold);font-weight:700;}
+.order-time{font-size:0.68rem;color:rgba(246,237,216,0.3);margin-top:0.15rem;}
+.order-customer{font-size:0.95rem;font-weight:700;color:var(--cream);margin-top:0.3rem;}
+.order-address{font-size:0.78rem;color:rgba(246,237,216,0.5);line-height:1.5;margin-top:0.2rem;display:flex;gap:0.3rem;align-items:flex-start;}
+.order-slot{display:inline-flex;align-items:center;gap:0.3rem;background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:100px;padding:0.2rem 0.6rem;font-size:0.65rem;color:var(--gold);margin-top:0.5rem;font-family:'Space Mono',monospace;}
+.order-amount{text-align:right;flex-shrink:0;}
+.order-total{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);line-height:1;}
+.order-pay{font-size:0.65rem;color:rgba(246,237,216,0.3);}
+.status-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:100px;padding:0.18rem 0.6rem;font-size:0.65rem;font-weight:700;margin-top:0.3rem;}
+.status-pill.out_for_delivery{background:rgba(196,98,45,0.12);border:1px solid var(--border);color:var(--clay-l);}
+.status-pill.confirmed{background:rgba(100,181,246,0.1);border:1px solid rgba(100,181,246,0.2);color:#64B5F6;}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── ACTIONS ── */
+.order-actions{
+  padding:0.8rem 1.2rem;
+  background:rgba(255,255,255,0.015);
+  border-top:1px solid rgba(196,98,45,0.08);
+  display:flex;gap:0.5rem;flex-wrap:wrap;
+}
+.btn-action{
+  flex:1;min-width:100px;
+  display:flex;align-items:center;justify-content:center;gap:0.4rem;
+  padding:0.6rem 0.8rem;border-radius:10px;
+  font-size:0.78rem;font-weight:600;
+  cursor:pointer;border:none;font-family:'DM Sans',sans-serif;
+  transition:all 0.25s;text-decoration:none;
+}
+.btn-map{background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.25);color:#64B5F6;}
+.btn-map:hover{background:rgba(100,181,246,0.2);}
+.btn-wa{background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);color:#25D366;}
+.btn-wa:hover{background:rgba(37,211,102,0.18);}
+.btn-deliver{background:linear-gradient(135deg,var(--green),#388E3C);color:#fff;border:none;}
+.btn-deliver:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(76,175,80,0.4);}
+.btn-delivered{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);cursor:default;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:4rem 1.5rem;}
+.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:0.3;}
+.empty h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:0.5rem;}
+.empty p{font-size:0.85rem;color:rgba(246,237,216,0.35);}
+
+/* ── MAP MODAL ── */
+.map-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem;}
+.map-overlay.open{display:flex;}
+.map-box{background:var(--ink-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;width:100%;max-width:600px;}
+.map-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);}
+.map-title{font-size:0.9rem;font-weight:700;color:var(--cream);}
+.map-addr{font-size:0.7rem;color:rgba(246,237,216,0.4);margin-top:0.1rem;font-family:'Space Mono',monospace;}
+.map-close{background:none;border:1px solid var(--border);color:var(--cream);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
+.map-box iframe{display:block;width:100%;height:320px;border:none;}
+.map-footer{display:flex;gap:0.5rem;padding:0.8rem 1.2rem;border-top:1px solid var(--border);}
+.map-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.55rem;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;}
+
+/* ── TOAST ── */
+@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">ANGADI <span>DELIVERY</span></div>
+  <div class="header-right">
+    <div class="partner-name">
+      <strong id="partnerNameDisplay">Partner</strong>
+      Delivery Partner
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- MAP MODAL -->
+<div class="map-overlay" id="mapModal" onclick="if(event.target===this)closeMap()">
+  <div class="map-box">
+    <div class="map-header">
+      <div>
+        <div class="map-title" id="mapTitle">Customer Location</div>
+        <div class="map-addr" id="mapAddr"></div>
+      </div>
+      <button class="map-close" onclick="closeMap()">✕</button>
+    </div>
+    <iframe id="mapFrame" src="" loading="lazy"></iframe>
+    <div class="map-footer">
+      <a id="mapNav" href="#" target="_blank" class="map-btn btn-map">🧭 Directions</a>
+      <a id="mapOpen" href="#" target="_blank" class="map-btn" style="background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);">🗺 Open Maps</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH CHECK ──
+const partnerUsername = sessionStorage.getItem('angadi_delivery');
+if (!partnerUsername) { window.location.href = '../login.html'; }
+
+// Partner data
+const PARTNERS = {
+  'raju':    { name:'Raju Kumar',    phone:'9876501234', id:'db1' },
+  'suresh':  { name:'Suresh Babu',   phone:'9876502345', id:'db2' },
+  'praveen': { name:'Praveen Yadav', phone:'9876503456', id:'db3' },
+};
+const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', id:'' };
+document.getElementById('partnerNameDisplay').textContent = partner.name.split(' ')[0];
+
+// ── DATA ──
+function getOrders(){ return JSON.parse(localStorage.getItem('angadi_all_orders')||'[]'); }
+function saveOrders(o){ localStorage.setItem('angadi_all_orders', JSON.stringify(o)); }
+function getMyStatus(){ return localStorage.getItem('angadi_partner_status_'+partnerUsername)||'available'; }
+function saveMyStatus(s){ localStorage.setItem('angadi_partner_status_'+partnerUsername, s); }
+
+// ── HELPERS ──
+function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
+function formatTime(iso){ const d=new Date(iso); return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function addrStr(a){ return [a?.flat,a?.area,a?.city||'Hyderabad'].filter(Boolean).join(', '); }
+
+// ── STATS ──
+function renderStats(){
+  const orders = getOrders();
+  const mine = orders.filter(o => o.assignedTo === partner.id);
+  const delivered = mine.filter(o => o.status === 'delivered').length;
+  const active = mine.filter(o => o.status === 'out_for_delivery').length;
+  const pending = mine.filter(o => ['confirmed','processing'].includes(o.status)).length;
+  document.getElementById('statDelivered').textContent = delivered;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statPending').textContent = pending;
+}
+
+// ── STATUS ──
+let currentStatus = getMyStatus();
+function setStatus(s){
+  currentStatus = s;
+  saveMyStatus(s);
+  document.querySelectorAll('.status-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.status === s);
+  });
+  document.getElementById('statusText').textContent =
+    s === 'available' ? '🟢 Available' : s === 'busy' ? '🟡 On Delivery' : '⚫ Offline';
+}
+setStatus(currentStatus);
+
+// ── RENDER ORDERS ──
+function renderOrders(){
+  const orders = getOrders();
+  const mine = orders.filter(o => o.assignedTo === partner.id);
+  const container = document.getElementById('ordersList');
+
+  if(!mine.length){
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <h3>No Orders Assigned</h3>
+        <p>You have no assigned orders right now.<br>Check back soon!</p>
+      </div>`;
+    return;
+  }
+
+  // Sort: active first, then pending, then delivered
+  const sorted = [...mine].sort((a,b)=>{
+    const rank = {out_for_delivery:0, confirmed:1, processing:1, delivered:2};
+    return (rank[a.status]||1) - (rank[b.status]||1);
+  });
+
+  container.innerHTML = sorted.map(o => {
+    const a = o.customer?.address||{};
+    const addr = addrStr(a);
+    const addrEnc = encodeURIComponent([a.flat, a.area, a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '));
+    const isDelivered = o.status === 'delivered';
+    const waText = encodeURIComponent(`Hi ${o.customer?.name||''}! Your Angadi order ${o.orderId} is on the way. 🚚`);
+    const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' · ');
+
+    return `
+    <div class="order-card" id="card-${o.orderId}">
+      <div class="order-header">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+            <span class="order-id">${o.orderId}</span>
+            <span class="status-pill ${o.status}"><span class="dot"></span>${o.status==='out_for_delivery'?'Out for Delivery':o.status==='delivered'?'✅ Delivered':'Confirmed'}</span>
+          </div>
+          <div class="order-time">🕐 ${formatTime(o.placedAt||new Date().toISOString())}</div>
+          <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
+          <div class="order-address">📍 ${addr||'—'}</div>
+          <div class="order-slot">🚚 ${o.customer?.slot||'—'}</div>
+          <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
+        </div>
+        <div class="order-amount">
+          <div class="order-total">${fmt(o.total||0)}</div>
+          <div class="order-pay">${o.payment==='cod'?'💵 COD':'✅ Paid'}</div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <button class="btn-action btn-map" onclick="openMap('${o.customer?.name||''}','${addr}','${addrEnc}','${addrEnc}')">🗺 Map</button>
+        <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${waText}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>
+        ${!isDelivered
+          ? `<button class="btn-action btn-deliver" onclick="markDelivered('${o.orderId}')">✅ Mark Delivered</button>`
+          : `<div class="btn-action btn-delivered">✅ Delivered</div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markDelivered(orderId){
+  const orders = getOrders();
+  const idx = orders.findIndex(o=>o.orderId===orderId);
+  if(idx!==-1){
+    orders[idx].status = 'delivered';
+    orders[idx].deliveredAt = new Date().toISOString();
+    saveOrders(orders);
+    showToast('✅ Order '+orderId+' marked delivered!');
+    renderOrders();
+    renderStats();
+  }
+}
+
+// ── MAP ──
+function openMap(name, addr, addrEnc){
+  document.getElementById('mapTitle').textContent = name ? '📍 '+name : 'Customer Location';
+  document.getElementById('mapAddr').textContent = decodeURIComponent(addrEnc);
+  document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${addrEnc}&output=embed&hl=en`;
+  document.getElementById('mapNav').href = `https://www.google.com/maps/dir/?api=1&destination=${addrEnc}`;
+  document.getElementById('mapOpen').href = `https://www.google.com/maps/search/?api=1&query=${addrEnc}`;
+  document.getElementById('mapModal').classList.add('open');
+}
+function closeMap(){
+  document.getElementById('mapModal').classList.remove('open');
+  document.getElementById('mapFrame').src='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMap();});
+
+// ── TOAST ──
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#C4622D;color:#F6EDD8;padding:0.6rem 1.4rem;border-radius:100px;font-size:0.82rem;font-weight:600;z-index:9999;white-space:nowrap;animation:fadeToast 2.5s forwards;';
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);
+}
+
+// ── LOGOUT ──
+function logout(){
+  sessionStorage.removeItem('angadi_delivery');
+  window.location.href='../login.html';
+}
+
+// ── INIT ──
+renderStats();
+renderOrders();
+setInterval(()=>{renderOrders();renderStats();}, 15000); // refresh every 15s
+</script>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-card green">
+    <div class="stat-num" id="statDelivered">0</div>
+    <div class="stat-label">Delivered</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statActive">0</div>
+    <div class="stat-label">Active</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-num" id="statPending">0</div>
+    <div class="stat-label">Pending</div>
+  </div>
+</div>
+
+<!-- STATUS -->
+<div class="status-bar">
+  <div class="status-label">
+    <strong id="statusText">🟢 Available</strong>
+    Your current status
+  </div>
+  <div class="status-btns">
+    <button class="status-btn available active" data-status="available" onclick="setStatus('available')">Available</button>
+    <button class="status-btn busy" data-status="busy" onclick="setStatus('busy')">On Delivery</button>
+    <button class="status-btn offline" data-status="offline" onclick="setStatus('offline')">Offline</button>
+  </div>
+</div>
+
+<!-- ORDERS -->
+<div class="section-head">
+  <div class="section-title">My <span>Orders</span></div>
+  <div class="section-sub">Your assigned deliveries today</div>
+</div>
+<div class="orders-list" id="ordersList"></div>
+
+</body>
+</html>
