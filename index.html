@@ -186,16 +186,33 @@ nav.scrolled{
 }
 .hero-bg{
   position:absolute;inset:0;
-  background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center center/cover no-repeat;
+  background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') 65% center/cover no-repeat;
+}
+/* Goat herd layer — blended naturally over the scene */
+.hero-bg::before{
+  content:'';position:absolute;inset:0;
+  background:url('ux ui design/goat_herd_upscaled_4x.png') right bottom/60% auto no-repeat;
+  mix-blend-mode:luminosity;
+  opacity:0.55;
+  z-index:1;
 }
 .hero-bg::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(
-    105deg,
-    rgba(8,5,3,0.88) 0%,
-    rgba(8,5,3,0.65) 55%,
-    rgba(8,5,3,0.25) 100%
-  );
+  content:'';position:absolute;inset:0;z-index:2;
+  background:
+    linear-gradient(105deg,
+      rgba(8,5,3,0.92) 0%,
+      rgba(8,5,3,0.70) 45%,
+      rgba(8,5,3,0.15) 100%),
+    linear-gradient(to top,
+      rgba(8,5,3,0.7) 0%,
+      transparent 35%);
+}
+/* Premium warm dust particles effect */
+.hero-dust{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:
+    radial-gradient(ellipse 40% 30% at 75% 80%, rgba(212,160,23,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 20% at 60% 70%, rgba(196,98,45,0.06) 0%, transparent 60%);
 }
 .hero-content{
   position:relative;z-index:2;
@@ -982,15 +999,22 @@ footer{
   /* ── HERO MOBILE ── */
   .hero{height:100svh;min-height:600px;}
   .hero-bg{
-    background-position:60% center;
+    background-position:55% center;
+  }
+  .hero-bg::before{
+    background-size:90% auto;
+    background-position:right 85%;
+    opacity:0.45;
   }
   .hero-bg::after{
-    background:linear-gradient(
-      160deg,
-      rgba(8,5,3,0.92) 0%,
-      rgba(8,5,3,0.75) 50%,
-      rgba(8,5,3,0.55) 100%
-    );
+    background:
+      linear-gradient(160deg,
+        rgba(8,5,3,0.93) 0%,
+        rgba(8,5,3,0.78) 50%,
+        rgba(8,5,3,0.45) 100%),
+      linear-gradient(to top,
+        rgba(8,5,3,0.75) 0%,
+        transparent 40%);
   }
   .hero-content{
     padding:0 1.2rem;
@@ -1093,6 +1117,7 @@ footer{
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
+  <div class="hero-dust"></div>
   <div class="hero-content">
     <div class="hero-eyebrow">Hyderabad's Premium Village Meat</div>
     <h1 class="hero-title">
@@ -1298,7 +1323,7 @@ footer{
 <section class="why-section" id="why">
   <div class="why-grid">
     <div class="why-image-wrap">
-      <img src="ux ui design/goat_herd_upscaled_4x.png" alt="White goats in village" class="why-image-main">
+      <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-image-main">
       <img src="product/mutton.png" alt="Fresh cuts" class="why-image-accent">
       <div class="why-badge">
         <span class="why-badge-num">100%</span>
