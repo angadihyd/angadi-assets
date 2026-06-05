@@ -538,41 +538,60 @@ section{padding:6rem 4rem;}
   align-items:center;
   margin-top:4rem;
 }
-.why-image-wrap{
+/* Premium 3-image mosaic */
+.why-mosaic{
   position:relative;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto auto;
+  gap:0.75rem;
 }
-.why-image-main{
-  width:100%;aspect-ratio:4/5;
-  object-fit:cover;
-  border-radius:20px;
-  filter:brightness(0.85) saturate(1.1);
+.why-mosaic-img{
+  object-fit:cover;border-radius:16px;
+  filter:brightness(0.88) saturate(1.15);
+  width:100%;display:block;
+  transition:filter 0.4s, transform 0.4s;
 }
-.why-image-accent{
-  position:absolute;
-  bottom:-2rem;right:-2rem;
-  width:55%;aspect-ratio:1;
-  object-fit:cover;
-  border-radius:16px;
-  border:4px solid var(--ink);
-  filter:brightness(0.9);
+.why-mosaic-img:hover{filter:brightness(0.95) saturate(1.2);transform:scale(1.01);}
+.why-mosaic-img.main{
+  grid-column:1 / -1;
+  height:260px;
+  border-radius:18px 18px 8px 8px;
 }
-.why-badge{
-  position:absolute;top:1.5rem;left:1.5rem;
-  background:rgba(8,5,3,0.8);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--border-gold);
-  border-radius:12px;
-  padding:1rem 1.2rem;
-  display:flex;align-items:center;gap:0.8rem;
+.why-mosaic-img.left{
+  height:180px;
+  border-radius:8px 8px 18px 8px;
 }
-.why-badge-num{
+.why-mosaic-img.right{
+  height:180px;
+  border-radius:8px 8px 8px 18px;
+}
+.why-mosaic-badge{
+  position:absolute;bottom:-1.2rem;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  border:3px solid var(--ink);
+  border-radius:100px;
+  padding:0.55rem 1.4rem;
+  display:flex;align-items:center;gap:0.6rem;
+  white-space:nowrap;
+  box-shadow:0 8px 24px rgba(196,98,45,0.4);
+  z-index:2;
+}
+.why-mosaic-badge-num{
   font-family:'Bebas Neue',sans-serif;
-  font-size:2.2rem;line-height:1;color:var(--gold);
+  font-size:1.5rem;line-height:1;color:var(--cream);
 }
-.why-badge-text{
-  font-size:0.72rem;color:rgba(246,237,216,0.7);
-  line-height:1.4;
+.why-mosaic-badge-text{
+  font-size:0.72rem;color:rgba(246,237,216,0.85);
+  line-height:1.3;font-weight:500;
 }
+/* keep old classes for fallback */
+.why-image-wrap{position:relative;}
+.why-image-main{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:20px;filter:brightness(0.85) saturate(1.1);}
+.why-image-accent{display:none;}
+.why-badge{display:none;}
+.why-badge-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1;color:var(--gold);}
+.why-badge-text{font-size:0.72rem;color:rgba(246,237,216,0.7);line-height:1.4;}
 .why-pillars{
   display:flex;flex-direction:column;gap:2rem;
   margin-top:2.5rem;
@@ -1053,7 +1072,8 @@ footer{
 
   /* ── WHY / STORY ── */
   .why-grid,.story-grid{grid-template-columns:1fr;}
-  .why-image-wrap{height:280px;}
+  .why-mosaic-img.main{height:200px;}
+  .why-mosaic-img.left,.why-mosaic-img.right{height:130px;}
   .why-image-accent{display:none;}
   .why-image-main{height:280px;}
 
@@ -1323,9 +1343,16 @@ footer{
 <section class="why-section" id="why">
   <div class="why-grid">
     <div class="why-image-wrap">
-      <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-image-main">
-      <img src="product/mutton.png" alt="Fresh cuts" class="why-image-accent">
-      <div class="why-badge">
+      <div class="why-mosaic">
+        <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-mosaic-img main">
+        <img src="ux ui design/64bd2336e5c9ec0ac42a19c9e5861d6c.jpg" alt="Village goats" class="why-mosaic-img left">
+        <img src="ux ui design/774faf00ec39721760fbff902faa1367.jpg" alt="Farm fresh" class="why-mosaic-img right">
+        <div class="why-mosaic-badge">
+          <span class="why-mosaic-badge-num">100%</span>
+          <span class="why-mosaic-badge-text">Village<br>Sourced</span>
+        </div>
+      </div>
+      <div class="why-badge" style="display:none;">
         <span class="why-badge-num">100%</span>
         <span class="why-badge-text">Village<br>Sourced</span>
       </div>
