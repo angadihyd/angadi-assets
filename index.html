@@ -43,7 +43,7 @@ body{
     radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.13) 0%, transparent 60%),
     radial-gradient(ellipse 80% 40% at 80% 50%, rgba(212,160,23,0.07) 0%, transparent 55%),
     linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
-  background-attachment:fixed;
+  
   color:var(--cream);
   overflow-x:hidden;
 }
@@ -1021,7 +1021,7 @@ footer{
   .nav-links,.nav-right .btn-order{display:none;}
   .nav-hamburger{display:flex;}
   .nav-right{gap:0.8rem;}
-  .nav-right .btn-nav{display:none;}
+  .nav-right .btn-nav{font-size:0.75rem;padding:0.4rem 0.8rem;}
   section{padding:4rem 1.2rem;}
 
   /* ── HERO MOBILE ── */
@@ -1143,6 +1143,7 @@ footer{
   <a href="#story" onclick="closeMobile()">Our Story</a>
   <a href="#how" onclick="closeMobile()">How It Works</a>
   <a href="#contact" onclick="closeMobile()">Contact</a>
+  <a href="login.html" id="mobileLoginBtn" onclick="closeMobile()" style="font-size:1.5rem;">👤 Login</a>
   <a href="#products" class="btn-primary" onclick="closeMobile()">Order Now →</a>
 </div>
 
@@ -1703,11 +1704,12 @@ updateBadge();
 (function(){
   const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
   const btn = document.getElementById('navLoginBtn');
-  if(btn && u.loggedIn){
+  const mobileBtn = document.getElementById('mobileLoginBtn');
+  if(u.loggedIn){
     const name = u.name ? u.name.split(' ')[0] : 'Account';
     const initials = name.charAt(0).toUpperCase();
-    btn.innerHTML = `<span class="nav-avatar">${initials}</span> ${name}`;
-    btn.href = 'my-profile.html';
+    if(btn){ btn.innerHTML=`<span class="nav-avatar">${initials}</span> ${name}`; btn.href='my-profile.html'; }
+    if(mobileBtn){ mobileBtn.textContent=`👤 ${name}`; mobileBtn.href='my-profile.html'; }
   }
 })();
 
