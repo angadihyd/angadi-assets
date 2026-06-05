@@ -496,7 +496,6 @@ const DELIVERY_PARTNERS = {
   'praveen': 'praveen123',
 };
 
-function checkSpecialLogin(email, pass) {
   // Admin login
   if (email === ADMIN_USER && pass === ADMIN_PASS) {
     sessionStorage.setItem('angadi_admin', '1');
@@ -588,7 +587,6 @@ document.getElementById('signinForm').addEventListener('submit', async (e) => {
   const pass  = document.getElementById('siPass').value;
 
   // Check admin / delivery partner first
-  if (checkSpecialLogin(email, pass)) return;
 
   let ok = true;
 

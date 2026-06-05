@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Partner Login — Angadi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;
+}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.12) 0%, transparent 60%),
+    linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
+  color:var(--cream);
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;
+}
+.login-card{
+  background:var(--ink-2);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:2.5rem 2rem;
+  width:100%;max-width:380px;
+  position:relative;overflow:hidden;
+}
+.login-card::before{
+  content:'';position:absolute;top:-120px;right:-120px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(196,98,45,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.logo-area{text-align:center;margin-bottom:2rem;}
+.logo-icon{
+  width:64px;height:64px;
+  background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;margin:0 auto 1rem;
+}
+.logo-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.08em;color:var(--cream);}
+.logo-title span{color:var(--gold);}
+.logo-sub{font-size:0.78rem;color:rgba(246,237,216,0.35);margin-top:0.3rem;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;}
+
+.form-label{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.4);display:block;margin-bottom:0.4rem;}
+.form-input{
+  width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:10px;padding:0.8rem 1rem;font-size:0.92rem;
+  color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;
+  transition:border-color 0.3s;margin-bottom:1.2rem;
+}
+.form-input::placeholder{color:rgba(246,237,216,0.18);}
+.form-input:focus{border-color:var(--clay);box-shadow:0 0 0 3px rgba(196,98,45,0.1);}
+.form-input.error{border-color:var(--red);}
+
+.btn-login{
+  width:100%;background:linear-gradient(135deg,var(--clay),var(--clay-d));
+  color:var(--cream);border:none;padding:0.9rem;border-radius:12px;
+  font-size:0.95rem;font-weight:700;cursor:pointer;
+  transition:all 0.3s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+}
+.btn-login:hover{background:linear-gradient(135deg,var(--clay-l),var(--clay));transform:translateY(-1px);box-shadow:0 8px 24px rgba(196,98,45,0.4);}
+
+.error-msg{
+  background:rgba(229,115,115,0.1);border:1px solid rgba(229,115,115,0.25);
+  color:var(--red);border-radius:10px;padding:0.75rem 1rem;
+  font-size:0.82rem;text-align:center;margin-bottom:1rem;display:none;
+}
+.error-msg.show{display:block;}
+
+.back-link{
+  display:block;text-align:center;margin-top:1.5rem;
+  font-size:0.8rem;color:rgba(246,237,216,0.3);
+  text-decoration:none;transition:color 0.3s;
+}
+.back-link:hover{color:var(--clay-l);}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo-area">
+    <div class="logo-icon">🚚</div>
+    <div class="logo-title">ANGADI <span>DELIVERY</span></div>
+    <div class="logo-sub">Partner Login</div>
+  </div>
+
+  <div class="error-msg" id="errMsg">Invalid username or password</div>
+
+  <label class="form-label">Username</label>
+  <input class="form-input" id="username" type="text" placeholder="Enter your username" autocapitalize="off" autocomplete="username">
+
+  <label class="form-label">Password</label>
+  <input class="form-input" id="password" type="password" placeholder="Enter your password" autocomplete="current-password">
+
+  <button class="btn-login" id="loginBtn" onclick="doLogin()">
+    🚚 Sign In
+  </button>
+
+  <a href="../login.html" class="back-link">← Customer Login</a>
+</div>
+
+<script>
+const PARTNERS = {
+  'raju':    { pass:'raju123',    name:'Raju Kumar',    id:'db1' },
+  'suresh':  { pass:'suresh123',  name:'Suresh Babu',   id:'db2' },
+  'praveen': { pass:'praveen123', name:'Praveen Yadav', id:'db3' },
+};
+
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('username').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+
+function doLogin() {
+  const user = document.getElementById('username').value.trim().toLowerCase();
+  const pass = document.getElementById('password').value;
+  const err  = document.getElementById('errMsg');
+  const btn  = document.getElementById('loginBtn');
+
+  err.classList.remove('show');
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+
+  if (!user || !pass) {
+    err.textContent = 'Please enter username and password';
+    err.classList.add('show');
+    return;
+  }
+
+  if (PARTNERS[user] && PARTNERS[user].pass === pass) {
+    btn.textContent = '✅ Logging in...';
+    sessionStorage.setItem('angadi_delivery', user);
+    setTimeout(() => { window.location.href = 'delivery-partner.html'; }, 500);
+  } else {
+    document.getElementById('username').classList.add('error');
+    document.getElementById('password').classList.add('error');
+    err.textContent = 'Invalid username or password. Contact admin.';
+    err.classList.add('show');
+    document.getElementById('password').value = '';
+  }
+}
+</script>
+</body>
+</html>
