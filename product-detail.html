@@ -1584,11 +1584,12 @@ async function initDetail(){
   let inStock = true;
   // Merge live price / stock / availability from Supabase
   try {
-    const sb = supabase.createClient(
-      'https://www.angadi.farm/api/supabase',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ'
-    );
-    const { data } = await sb.from('products').select('*').eq('slug', productId).maybeSingle();
+    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+    const res = await fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=*&slug=eq.' + encodeURIComponent(productId), {
+      headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
+    });
+    const arr = res.ok ? await res.json() : [];
+    const data = (Array.isArray(arr) && arr.length) ? arr[0] : null;
     if (data){
       if (!product) product = baseFromDb(data);
       product.price = Number(data.price);
@@ -1641,6 +1642,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   }
 })();
 </script>
-<script src="mobile-nav.js?v=2" defer></script>
+<script src="mobile-nav.js?v=3" defer></script>
 </body>
 </html>

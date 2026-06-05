@@ -1370,12 +1370,16 @@ function renderProductCards(list){
 }
 
 async function loadProducts(){
-  if (!_sb) return;  // keep static fallback cards
+  // Plain fetch to the same-origin proxy — no CDN library dependency
   try {
-    const { data, error } = await _sb.from('products').select('*').eq('active', true).order('sort_order', { ascending:true });
-    if (error || !data || !data.length) return;  // keep static fallback
+    const res = await fetch(SUPABASE_URL + '/rest/v1/products?select=*&active=eq.true&order=sort_order.asc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok){ console.warn('products fetch failed', res.status); return; }  // keep static fallback
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) return;  // keep static fallback
     renderProductCards(data);
-  } catch(e){ /* keep static fallback */ }
+  } catch(e){ console.warn('products load error', e); /* keep static fallback */ }
 }
 
 // ── FILTERS
@@ -1454,6 +1458,6 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 // Load live catalog from Supabase (replaces static cards; falls back to them on error)
 loadProducts();
 </script>
-<script src="mobile-nav.js?v=2" defer></script>
+<script src="mobile-nav.js?v=3" defer></script>
 </body>
 </html>
