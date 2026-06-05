@@ -40,7 +40,7 @@ html{scroll-behavior:smooth;}
 body{
   font-family:'DM Sans',sans-serif;
   background:
-    radial-gradient(rgba(212,160,23,0.045) 1px, transparent 1.6px),
+    radial-gradient(rgba(212,160,23,0.06) 1px, transparent 1.7px),
     radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.13) 0%, transparent 60%),
     radial-gradient(ellipse 80% 40% at 80% 50%, rgba(212,160,23,0.07) 0%, transparent 55%),
     linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
@@ -528,7 +528,7 @@ section{padding:6rem 4rem;}
 /* ── WHY ANGADI ── */
 .why-section{
   background:
-    radial-gradient(rgba(212,160,23,0.045) 1px, transparent 1.6px),
+    radial-gradient(rgba(212,160,23,0.06) 1px, transparent 1.7px),
     radial-gradient(ellipse 100% 50% at 100% 50%, rgba(212,160,23,0.08) 0%, transparent 60%),
     radial-gradient(ellipse 60% 40% at 0% 100%, rgba(196,98,45,0.10) 0%, transparent 55%),
     linear-gradient(180deg, #080503 0%, #130803 50%, #0d0502 100%);
@@ -1029,7 +1029,7 @@ footer{
   .nav-hamburger{display:flex;}
   .nav-right{gap:0.8rem;}
   .nav-right .btn-nav{font-size:0.75rem;padding:0.4rem 0.8rem;}
-  section{padding:4rem 1.2rem;}
+  section{padding:2.6rem 1.2rem;}   /* tighter vertical rhythm between sections on mobile */
 
   /* ── HERO MOBILE ── */
   .hero{height:100svh;min-height:640px;align-items:center;}
@@ -1090,8 +1090,8 @@ footer{
 
   /* ── WHY / STORY ── */
   .why-grid,.story-grid{grid-template-columns:1fr;}
-  .why-image-wrap{margin-bottom:3rem;}          /* clearance so the 100% badge doesn't cover the heading */
-  .why-grid{margin-top:2.5rem;row-gap:3rem;}
+  .why-grid{margin-top:1.5rem;gap:2.5rem;}      /* enough to clear the 100% badge, not excessive */
+  .why-image-wrap{margin-bottom:1.2rem;}
   .why-mosaic-img.main{height:200px;}
   .why-mosaic-img.left,.why-mosaic-img.right{height:130px;}
   .why-image-accent{display:none;}
@@ -1161,7 +1161,7 @@ footer{
   <div class="hero-bg"></div>
   <div class="hero-dust"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow">Hyderabad's Premium Village Meat · v6</div>
+    <div class="hero-eyebrow">Hyderabad's Premium Village Meat</div>
     <h1 class="hero-title">
       <span class="line-gold">Telangana's Finest</span><br>
       <span class="line-clay">From Villages</span><br>
