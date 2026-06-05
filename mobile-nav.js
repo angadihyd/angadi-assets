@@ -46,8 +46,10 @@
     /* ===== Mobile refinements ===== */
     '@media (max-width:720px){',
     '  nav{padding-left:1rem !important;padding-right:1rem !important;}',
-    '  nav .angadi-brand-mark{width:38px;height:38px;}',
-    '  nav .angadi-brand-name{font-size:1.3rem;}',
+    '  nav .angadi-brand-mark{width:36px;height:36px;}',
+    '  nav .angadi-brand-name{font-size:1.25rem;white-space:nowrap;}',
+    '  .angadi-brand-tag{display:none;}',            /* hide tagline on phones — keeps header clean */
+    '  #navLoginBtn{max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
     '  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px)) !important;}',
     '  .ang-mnav{position:fixed !important;left:0 !important;right:0 !important;bottom:0 !important;top:auto !important;height:auto !important;z-index:1200;display:flex;',
     '    background:rgba(16,8,4,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);',

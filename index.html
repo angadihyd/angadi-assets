@@ -1719,6 +1719,29 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 </script>
-<script src="mobile-nav.js?v=4" defer></script>
+<script>
+/* Live prices/stock on the homepage featured cards (matches by product name) */
+(function(){
+  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+  fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=name,price,unit,in_stock',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+    .then(function(r){return r.ok?r.json():[];})
+    .then(function(list){
+      if(!Array.isArray(list)||!list.length) return;
+      var byName={}; list.forEach(function(p){byName[p.name]=p;});
+      document.querySelectorAll('.products-grid .product-card').forEach(function(card){
+        var nameEl=card.querySelector('.product-name'); if(!nameEl) return;
+        var p=byName[nameEl.textContent.trim()]; if(!p) return;
+        var priceEl=card.querySelector('.product-price-main');
+        if(priceEl) priceEl.textContent='₹'+Number(p.price).toLocaleString('en-IN');
+        var btn=card.querySelector('.btn-add');
+        if(btn){
+          if(!p.in_stock){ btn.disabled=true; btn.style.opacity='0.35'; btn.style.cursor='not-allowed'; btn.onclick=function(e){e.preventDefault();}; }
+          else { btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); addToCart(p.name, Number(p.price), btn); }; }
+        }
+      });
+    }).catch(function(){});
+})();
+</script>
+<script src="mobile-nav.js?v=5" defer></script>
 </body>
 </html>
