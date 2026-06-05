@@ -794,5 +794,7 @@ if (typeof Notification !== 'undefined' && Notification.permission === 'default'
 }
 setInterval(pollNewOrders, 8000); // Poll every 8 seconds (proxy has no websocket)
 </script>
+<script>window.ANGADI_PUSH_ROLE='admin';</script>
+<script src="../push-register.js" defer></script>
 </body>
 </html>

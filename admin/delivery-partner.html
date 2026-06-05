@@ -186,6 +186,8 @@ const PARTNERS = {
 };
 const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', id:partnerUsername };
 const CODE = partner.id;
+window.ANGADI_PUSH_ROLE = 'partner';
+window.ANGADI_PUSH_CODE = CODE;
 
 // ── Supabase ──
 const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
@@ -500,5 +502,6 @@ else init();
 </div>
 <div class="orders-list" id="ordersList"></div>
 
+<script src="../push-register.js" defer></script>
 </body>
 </html>
