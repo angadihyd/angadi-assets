@@ -49,7 +49,7 @@
     '  nav .angadi-brand-mark{width:38px;height:38px;}',
     '  nav .angadi-brand-name{font-size:1.3rem;}',
     '  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px)) !important;}',
-    '  .ang-mnav{position:fixed;left:0;right:0;bottom:0;z-index:1200;display:flex;',
+    '  .ang-mnav{position:fixed !important;left:0 !important;right:0 !important;bottom:0 !important;top:auto !important;height:auto !important;z-index:1200;display:flex;',
     '    background:rgba(16,8,4,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);',
     '    border-top:1px solid rgba(212,160,23,0.22);',
     '    padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -6px 24px rgba(0,0,0,0.4);}',
@@ -85,9 +85,10 @@
     });
   }
 
-  // ── bottom tab bar ──
-  var nav = document.createElement('nav');
+  // ── bottom tab bar (a DIV, not <nav>, so the site's global nav{} styles can't hijack it) ──
+  var nav = document.createElement('div');
   nav.className = 'ang-mnav';
+  nav.setAttribute('role', 'navigation');
   nav.setAttribute('aria-label', 'Primary');
   nav.innerHTML = TABS.map(function (t) {
     var active = t.match.indexOf(page) !== -1;
