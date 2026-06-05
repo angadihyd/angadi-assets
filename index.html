@@ -1089,8 +1089,10 @@ footer{
   .product-img-wrap{height:220px;}
 
   /* ── WHY / STORY ── */
-  .why-grid,.story-grid{grid-template-columns:1fr;}
-  .why-grid{margin-top:1.5rem;gap:2rem;}
+  /* Use plain block stacking on mobile so the photos and heading can never overlap */
+  .why-grid,.story-grid{display:block;margin-top:1.5rem;}
+  .why-image-wrap{margin-bottom:2rem;}
+  .story-grid > *:first-child{margin-bottom:2rem;}
   .why-mosaic-img.main{height:200px;}
   .why-mosaic-img.left,.why-mosaic-img.right{height:130px;}
   .why-image-accent{display:none;}
