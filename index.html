@@ -1021,16 +1021,18 @@ footer{
     background-size:170%;
   }
   .hero-bg::before{
+    /* Light in middle so goats show, dark on left for text */
     background:
       linear-gradient(to right,
-        rgba(8,5,3,0.90) 0%,
-        rgba(8,5,3,0.70) 50%,
-        rgba(8,5,3,0.10) 100%);
+        rgba(8,5,3,0.88) 0%,
+        rgba(8,5,3,0.55) 45%,
+        rgba(8,5,3,0.05) 100%);
   }
   .hero-bg::after{
+    /* Dark top for nav, dark bottom for subtitle, CLEAR in middle for goats */
     background:
-      linear-gradient(to top,   rgba(8,5,3,0.85) 0%, transparent 35%),
-      linear-gradient(to bottom, rgba(8,5,3,0.40) 0%, transparent 12%);
+      linear-gradient(to bottom, rgba(8,5,3,0.55) 0%, transparent 18%),
+      linear-gradient(to top,    rgba(8,5,3,0.88) 0%, transparent 30%);
   }
   .hero-content{
     padding:0 1.4rem;
@@ -1048,7 +1050,7 @@ footer{
   }
   .hero-sub{
     font-size:0.85rem;
-    margin:3.5rem 0 1.4rem;
+    margin:5rem 0 1.2rem;
     max-width:62%;
   }
   .hero-ctas{flex-direction:column;gap:0.7rem;width:100%;}
