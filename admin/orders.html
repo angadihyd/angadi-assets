@@ -291,7 +291,7 @@ function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.locati
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
 
 // ── Supabase ──
-const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
 let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
@@ -347,14 +347,17 @@ const DEMOS=[
 ];
 
 async function loadOrders(notifyNew){
-  let rows = null;
+  let rows = null, loadErr = null;
   if (sb){
     try {
       const { data, error } = await sb.from('orders').select('*').order('placed_at',{ascending:false});
-      if (!error && data) rows = data.map(fromDb);
-    } catch(e){ console.warn('load failed', e); }
+      if (error) loadErr = error;
+      else rows = (data||[]).map(fromDb);   // empty array is a valid result — do NOT show demos
+    } catch(e){ loadErr = e; }
   }
-  if (!rows || !rows.length){
+  if (rows === null){
+    // Supabase truly unavailable or errored — surface it instead of hiding behind demos
+    if (loadErr){ console.error('Supabase read failed:', loadErr); showToast('⚠ DB read failed: '+(loadErr.message||loadErr)); }
     rows = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
     if (rows.length < DEMOS.length) rows = DEMOS;
   }

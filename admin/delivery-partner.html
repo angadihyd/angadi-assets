@@ -188,7 +188,7 @@ const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', 
 const CODE = partner.id;
 
 // ── Supabase ──
-const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
 let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
