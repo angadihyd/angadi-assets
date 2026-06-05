@@ -350,7 +350,6 @@ function renderOrders(){
       </div>
       <div class="order-actions">
         <button class="btn-action btn-map" onclick="openMap('${o.customer?.name||''}','${addr}','${addrEnc}','${addrEnc}')">🗺 Map</button>
-        <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${waText}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>
         ${actionBtn}
       </div>
     </div>`;
@@ -418,7 +417,7 @@ async function init(){
       .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => { await refresh(); })
       .subscribe();
   }
-  setInterval(refresh, 15000);     // polling fallback
+  setInterval(refresh, 8000);      // polling = live updates (proxy has no websocket)
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();

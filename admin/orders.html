@@ -396,7 +396,7 @@ async function init(){
       }).subscribe();
   }
   // Polling fallback (in case realtime isn't enabled)
-  setInterval(async ()=>{ await loadOrders(true); renderStats(); renderTable(); }, 20000);
+  setInterval(async ()=>{ await loadOrders(true); renderStats(); renderTable(); }, 8000);
 }
 async function refreshOrders(){ await loadOrders(false); renderStats(); renderTable(); showToast('Orders refreshed'); }
 

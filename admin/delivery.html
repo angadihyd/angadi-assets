@@ -455,7 +455,7 @@ async function init(){
         await loadData(); renderStats(); renderOrders(); renderDBoys();
       }).subscribe();
   }
-  setInterval(async ()=>{ await loadData(); renderStats(); renderOrders(); renderDBoys(); }, 15000);
+  setInterval(async ()=>{ await loadData(); renderStats(); renderOrders(); renderDBoys(); }, 8000);
 }
 
 function renderStats(){
