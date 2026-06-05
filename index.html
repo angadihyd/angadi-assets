@@ -39,7 +39,11 @@ html{scroll-behavior:smooth;}
 }
 body{
   font-family:'DM Sans',sans-serif;
-  background:var(--ink);
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 80% 50%, rgba(212,160,23,0.07) 0%, transparent 55%),
+    linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
+  background-attachment:fixed;
   color:var(--cream);
   overflow-x:hidden;
 }
@@ -520,7 +524,10 @@ section{padding:6rem 4rem;}
 
 /* ── WHY ANGADI ── */
 .why-section{
-  background:var(--ink);
+  background:
+    radial-gradient(ellipse 100% 50% at 100% 50%, rgba(212,160,23,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(196,98,45,0.10) 0%, transparent 55%),
+    linear-gradient(180deg, #080503 0%, #130803 50%, #0d0502 100%);
   position:relative;overflow:hidden;
 }
 .why-section::before{
@@ -627,7 +634,10 @@ section{padding:6rem 4rem;}
 
 /* ── STORY ── */
 .story-section{
-  background:var(--ink-3);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(196,98,45,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(212,160,23,0.07) 0%, transparent 55%),
+    linear-gradient(160deg, #0d0502 0%, #1a0c04 40%, #110703 100%);
   position:relative;overflow:hidden;
 }
 .story-grid{
