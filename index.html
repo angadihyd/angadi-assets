@@ -40,10 +40,13 @@ html{scroll-behavior:smooth;}
 body{
   font-family:'DM Sans',sans-serif;
   background:
+    radial-gradient(rgba(212,160,23,0.045) 1px, transparent 1.6px),
     radial-gradient(ellipse 120% 60% at 50% 100%, rgba(196,98,45,0.13) 0%, transparent 60%),
     radial-gradient(ellipse 80% 40% at 80% 50%, rgba(212,160,23,0.07) 0%, transparent 55%),
     linear-gradient(160deg, #080503 0%, #110703 35%, #1a0c04 60%, #0d0502 100%);
-  
+  background-size:23px 23px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment:fixed, scroll, scroll, scroll;
+  background-color:#080503;
   color:var(--cream);
   overflow-x:hidden;
 }
@@ -525,9 +528,11 @@ section{padding:6rem 4rem;}
 /* ── WHY ANGADI ── */
 .why-section{
   background:
+    radial-gradient(rgba(212,160,23,0.045) 1px, transparent 1.6px),
     radial-gradient(ellipse 100% 50% at 100% 50%, rgba(212,160,23,0.08) 0%, transparent 60%),
     radial-gradient(ellipse 60% 40% at 0% 100%, rgba(196,98,45,0.10) 0%, transparent 55%),
     linear-gradient(180deg, #080503 0%, #130803 50%, #0d0502 100%);
+  background-size:23px 23px, 100% 100%, 100% 100%, 100% 100%;
   position:relative;overflow:hidden;
 }
 .why-section::before{
@@ -1085,6 +1090,8 @@ footer{
 
   /* ── WHY / STORY ── */
   .why-grid,.story-grid{grid-template-columns:1fr;}
+  .why-image-wrap{margin-bottom:3rem;}          /* clearance so the 100% badge doesn't cover the heading */
+  .why-grid{margin-top:2.5rem;row-gap:3rem;}
   .why-mosaic-img.main{height:200px;}
   .why-mosaic-img.left,.why-mosaic-img.right{height:130px;}
   .why-image-accent{display:none;}
