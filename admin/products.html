@@ -131,6 +131,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
   .edit-panel{width:100%;right:-100%;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -202,10 +203,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 // ─────────────────────────────────────────────
 //  AUTH
 // ─────────────────────────────────────────────
-if (sessionStorage.getItem('angadi_admin') !== '1') {
+// ── Supabase ──
+const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
+
+// DB row → UI product (admin uses ../ image prefix)
+function rowToProduct(r){
+  return { id:r.slug, name:r.name, nameTE:r.name_te, price:Number(r.price), unit:r.unit,
+    img:(r.image||'').startsWith('../')?r.image:'../'+(r.image||''), category:r.category,
+    badge:r.badge, inStock:r.in_stock, featured:r.featured, sortOrder:r.sort_order };
+}
+// UI product → DB row
+function productToRow(p){
+  return { slug:p.id, name:p.name, name_te:p.nameTE, price:p.price, unit:p.unit,
+    image:(p.img||'').replace(/^\.\.\//,''), category:p.category, badge:p.badge,
+    in_stock:p.inStock, featured:p.featured, active:true };
+}
+async function persistProduct(p){
+  if(!sb) return;
+  const { error } = await sb.from('products').upsert(productToRow(p), { onConflict:'slug' });
+  if(error){ console.warn('save failed', error); showToast('⚠ Save failed: '+error.message); }
+}
+
+const IS_ADMIN = sessionStorage.getItem('angadi_admin') === '1';
+if (!IS_ADMIN) {
   document.getElementById('guard').classList.remove('hidden');
   document.getElementById('adminLayout').style.display = 'none';
-} else { init(); }
+}
 function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
 
 // ─────────────────────────────────────────────
@@ -223,7 +249,7 @@ const DEFAULT_PRODUCTS = [
   { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/mutton.png',category:'goat',badge:'👑 Whole',inStock:true,featured:false},
 ];
 
-let products = JSON.parse(localStorage.getItem('angadi_products') || JSON.stringify(DEFAULT_PRODUCTS));
+let products = [];
 let currentFilter = 'all';
 
 function saveProducts(){ localStorage.setItem('angadi_products', JSON.stringify(products)); }
@@ -232,7 +258,19 @@ function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
 // ─────────────────────────────────────────────
 //  RENDER
 // ─────────────────────────────────────────────
-function init(){ renderProducts(); }
+async function init(){
+  if (sb){
+    try {
+      const { data, error } = await sb.from('products').select('*').order('sort_order',{ascending:true});
+      if (!error && data && data.length) products = data.map(rowToProduct);
+      else products = JSON.parse(localStorage.getItem('angadi_products')||JSON.stringify(DEFAULT_PRODUCTS));
+    } catch(e){ products = JSON.parse(localStorage.getItem('angadi_products')||JSON.stringify(DEFAULT_PRODUCTS)); }
+  } else {
+    products = JSON.parse(localStorage.getItem('angadi_products')||JSON.stringify(DEFAULT_PRODUCTS));
+  }
+  renderProducts();
+}
+if (IS_ADMIN) init();
 
 function filterProducts(f){
   currentFilter = f;
@@ -296,21 +334,21 @@ function savePrice(idx){
   const val = parseFloat(document.getElementById(`priceInput-${idx}`)?.value);
   if (!val || val <= 0) { showToast('Invalid price'); return; }
   products[idx].price = val;
-  saveProducts();
+  saveProducts(); persistProduct(products[idx]);
   renderProducts();
   showToast(`✓ ${products[idx].name} price updated to ${fmt(val)}`);
 }
 
 function toggleStock(idx, val){
   products[idx].inStock = val;
-  saveProducts();
+  saveProducts(); persistProduct(products[idx]);
   renderProducts();
   showToast(`${products[idx].name} → ${val?'In Stock':'Out of Stock'}`);
 }
 
 function toggleFeatured(idx){
   products[idx].featured = !products[idx].featured;
-  saveProducts();
+  saveProducts(); persistProduct(products[idx]);
   renderProducts();
   showToast(`${products[idx].name} ${products[idx].featured?'added to':'removed from'} homepage`);
 }
@@ -319,6 +357,7 @@ function resetToDefaults(){
   if (!confirm('Reset all prices to default values?')) return;
   products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
   saveProducts();
+  products.forEach(persistProduct);
   renderProducts();
   showToast('✓ Prices reset to defaults');
 }
@@ -464,7 +503,7 @@ function saveEdit(e, idx){
     inStock:  document.getElementById('ef-stock').value === '1',
     img:      document.getElementById('ef-img').value.trim(),
   };
-  saveProducts(); renderProducts(); closePanel();
+  saveProducts(); persistProduct(products[idx]); renderProducts(); closePanel();
   showToast(`✓ ${products[idx].name} updated`);
 }
 
@@ -483,7 +522,7 @@ function saveNewProduct(e){
     featured: false,
   };
   products.push(newP);
-  saveProducts(); renderProducts(); closePanel();
+  saveProducts(); persistProduct(newP); renderProducts(); closePanel();
   showToast(`✓ ${newP.name} added`);
 }
 

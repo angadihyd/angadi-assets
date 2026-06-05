@@ -415,6 +415,16 @@ const ADMIN_USER    = 'admin';
 const ADMIN_PASS    = 'Sunset@123'; // Change before going live!
 const DEV_MODE      = false; // Supabase connected
 
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
+let allOrders = [];
+function fromDb(r){
+  return { orderId:r.order_id, customer:r.customer, items:r.items,
+    subtotal:r.subtotal, delivery:r.delivery, discount:r.discount, total:r.total,
+    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    assignedTo:r.assigned_to, acceptedBy:r.accepted_by, placedAt:r.placed_at };
+}
+
 // ─────────────────────────────────────────────
 //  ADMIN LOGIN
 // ─────────────────────────────────────────────
@@ -482,9 +492,11 @@ function getDemoOrders() {
 // ─────────────────────────────────────────────
 //  INIT DASHBOARD
 // ─────────────────────────────────────────────
-function initDashboard() {
+async function initDashboard() {
   setTopbarInfo();
-  const orders = loadOrders();
+  const orders = await loadOrders();
+  allOrders = orders;
+  _lastOrderIds = new Set(orders.map(o => o.orderId)); // seed so we don't alert on existing orders
   renderStats(orders);
   renderChart(orders);
   renderRecentOrders(orders);
@@ -492,13 +504,18 @@ function initDashboard() {
   renderAlerts(orders);
 }
 
-function loadOrders() {
+async function loadOrders() {
+  if (sb){
+    try {
+      const { data, error } = await sb.from('orders').select('*').order('placed_at', { ascending:false });
+      if (!error && data) return data.map(fromDb);
+    } catch(e){ console.warn('Supabase load failed', e); }
+  }
+  // fallback
   const stored = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
   if (DEV_MODE && stored.length < 5) {
     const demos = getDemoOrders().filter(d => !stored.find(s => s.orderId === d.orderId));
-    const merged = [...stored, ...demos];
-    localStorage.setItem('angadi_all_orders', JSON.stringify(merged));
-    return merged;
+    return [...stored, ...demos];
   }
   return stored;
 }
@@ -508,14 +525,16 @@ function isToday(iso) {
   const d = new Date(iso); const t = new Date();
   return d.toDateString() === t.toDateString();
 }
+const STATUS_FLOW = ['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery','delivered','completed'];
 function normaliseStatus(s) {
-  if (!s) return 'confirmed';
+  if (!s) return 'pending';
   if (['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
-  return ['confirmed','processing','out_for_delivery','delivered','cancelled'].includes(s) ? s : 'confirmed';
+  if (s==='processing') return 'preparing';
+  return [...STATUS_FLOW,'cancelled'].includes(s) ? s : 'pending';
 }
 function statusLabel(s) {
-  const map = { confirmed:'Confirmed', processing:'Processing', out_for_delivery:'Out for Delivery', delivered:'Delivered', cancelled:'Cancelled' };
-  return map[normaliseStatus(s)] || 'Confirmed';
+  const map = { pending:'Pending', confirmed:'Confirmed', preparing:'Preparing', ready:'Ready', assigned:'Assigned', picked_up:'Picked Up', out_for_delivery:'Out for Delivery', delivered:'Delivered', completed:'Completed', cancelled:'Cancelled' };
+  return map[normaliseStatus(s)] || 'Pending';
 }
 
 function setTopbarInfo() {
@@ -526,7 +545,7 @@ function setTopbarInfo() {
 
 function renderStats(orders) {
   const today   = orders.filter(o => isToday(o.placedAt));
-  const pending = orders.filter(o => ['confirmed','processing','out_for_delivery'].includes(normaliseStatus(o.status)));
+  const pending = orders.filter(o => !['delivered','completed','cancelled'].includes(normaliseStatus(o.status)));
   const revenue = today.reduce((s,o) => s + (o.total||0), 0);
   const totalRev= orders.reduce((s,o) => s + (o.total||0), 0);
   const unique  = [...new Set(orders.map(o => o.customer?.phone))].length;
@@ -539,7 +558,7 @@ function renderStats(orders) {
   document.getElementById('statCustomers').textContent          = unique;
 
   // Summary
-  const delivered = today.filter(o => normaliseStatus(o.status) === 'delivered').length;
+  const delivered = today.filter(o => ['delivered','completed'].includes(normaliseStatus(o.status))).length;
   const cod       = today.filter(o => o.payment === 'cod').length;
   document.getElementById('sumOrders').textContent    = today.length;
   document.getElementById('sumDelivered').textContent = delivered;
@@ -757,23 +776,23 @@ function showNewOrderAlert(order) {
   } catch(e) {}
 }
 
-function pollNewOrders() {
-  const orders = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+async function pollNewOrders() {
+  if (sessionStorage.getItem('angadi_admin') !== '1') return;
+  const orders = await loadOrders();
+  let isNew = false;
   orders.forEach(o => {
-    if (!_lastOrderIds.has(o.orderId)) {
-      _lastOrderIds.add(o.orderId);
-      showNewOrderAlert(o);
-      // Refresh dashboard
-      initDashboard();
-    }
+    if (!_lastOrderIds.has(o.orderId)) { _lastOrderIds.add(o.orderId); showNewOrderAlert(o); isNew = true; }
   });
+  // Refresh dashboard numbers every poll (cheap), re-render with latest
+  allOrders = orders;
+  renderStats(orders); renderChart(orders); renderRecentOrders(orders); renderAlerts(orders);
 }
 
 // Request notification permission & start polling
-if (Notification.permission === 'default') {
+if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
   Notification.requestPermission();
 }
-setInterval(pollNewOrders, 8000); // Poll every 8 seconds
+setInterval(pollNewOrders, 8000); // Poll every 8 seconds (proxy has no websocket)
 </script>
 </body>
 </html>

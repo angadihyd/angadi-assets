@@ -592,6 +592,7 @@ footer{
   .weight-options,.cut-options{gap:0.4rem;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1554,21 +1555,62 @@ function bindInteractions(p) {
 // ─────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('id') || 'goat-meat';
-const product = PRODUCTS[productId];
 
-if (product) {
-  renderProduct(product);
-} else {
+// Build a minimal product object for DB-only products (added via admin, no editorial content)
+function baseFromDb(d){
+  return {
+    id:d.slug, name:d.name, nameTE:d.name_te, category:d.category,
+    badge:d.badge, freshLabel:d.fresh_label, price:d.price, unit:d.unit,
+    video:d.video||'', mainImg:d.image, thumbs:[{src:d.image,label:d.name}],
+    weights:[], cuts:[], shortDesc:d.short_desc,
+    deliveryNote:'Order before 11 AM · Delivered within 4–6 hours',
+    description:`<p>${d.short_desc||''}</p>`, sourcing:{steps:[]},
+    nutrition:[], nutritionNote:'', cooking:''
+  };
+}
+function showNotFound(){
   document.getElementById('productHero').innerHTML = `
     <div class="not-found" style="grid-column:1/-1;">
       <h2>Product Not Found</h2>
       <p>We couldn't find that product.</p>
       <a href="shop.html" class="btn-primary" style="margin-top:1rem;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;padding:0.9rem 2rem;border-radius:10px;font-weight:600;">← Back to Shop</a>
-    </div>
-  `;
+    </div>`;
   document.getElementById('tabsSection').style.display = 'none';
   document.getElementById('relatedSection').style.display = 'none';
 }
+
+async function initDetail(){
+  let product = PRODUCTS[productId] ? { ...PRODUCTS[productId] } : null;
+  let inStock = true;
+  // Merge live price / stock / availability from Supabase
+  try {
+    const sb = supabase.createClient(
+      'https://www.angadi.farm/api/supabase',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ'
+    );
+    const { data } = await sb.from('products').select('*').eq('slug', productId).maybeSingle();
+    if (data){
+      if (!product) product = baseFromDb(data);
+      product.price = Number(data.price);
+      product.unit  = data.unit;
+      product.name  = data.name;
+      product.nameTE = data.name_te;
+      product.badge = data.badge;
+      if (!product.shortDesc) product.shortDesc = data.short_desc;
+      inStock = data.in_stock;
+    }
+  } catch(e){ /* offline → use static product */ }
+
+  if (!product){ showNotFound(); return; }
+  renderProduct(product);
+
+  // Sold-out handling
+  if (!inStock){
+    const btn = document.getElementById('addCartBtn');
+    if (btn){ btn.disabled = true; btn.style.opacity = '0.45'; btn.style.cursor = 'not-allowed'; btn.innerHTML = '😔 Sold Out'; }
+  }
+}
+initDetail();
 
 // NAV SCROLL
 const navbar = document.getElementById('navbar');

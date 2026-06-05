@@ -793,6 +793,7 @@ footer{
   .shop-hero-title{font-size:2.5rem;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1323,15 +1324,76 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 2600);
 }
 
+// ── DYNAMIC PRODUCTS (Supabase, with offline fallback to static cards) ──
+const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+let _sb = null;
+try { _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
+
+function unitLabel(u){ return u === 'kg' ? 'kilogram' : u; }
+function esc(s){ return (s||'').replace(/'/g,"\\'"); }
+
+function productCardHTML(p){
+  const sold = !p.in_stock;
+  return `
+  <a href="product-detail.html?id=${p.slug}" class="product-card fade-up visible" data-category="${p.category}" data-price="${p.price}" data-name="${p.name}" data-order="${p.sort_order||100}">
+    <div class="product-img-wrap${p.video?' has-video':''}">
+      ${p.video?`<video autoplay muted loop playsinline><source src="${p.video}" type="video/mp4"></video>`:''}
+      <img src="${p.image}" alt="${p.name}" class="pip-product-img"${sold?' style="filter:grayscale(0.7);opacity:0.6;"':''}>
+      ${p.badge?`<div class="product-badge">${p.badge}</div>`:''}
+      ${p.fresh_label?`<div class="product-fresh">${p.fresh_label.replace(' ','<br>')}</div>`:''}
+      ${sold?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,5,3,0.45);"><span style="background:#7A3318;color:#F6EDD8;padding:0.35rem 1rem;border-radius:100px;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;">SOLD OUT</span></div>`:''}
+    </div>
+    <div class="product-body">
+      <div class="product-name-te">${p.name_te||''}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-desc">${p.short_desc||''}</div>
+      <div class="product-footer">
+        <div class="product-price">
+          <span class="product-price-main">₹${Number(p.price).toLocaleString('en-IN')}</span>
+          <span class="product-price-unit">per ${unitLabel(p.unit)}</span>
+        </div>
+        ${sold
+          ? `<button class="btn-add" disabled style="opacity:0.35;cursor:not-allowed;">+</button>`
+          : `<button class="btn-add" onclick="event.preventDefault();event.stopPropagation();addToCart('${esc(p.name)}',${p.price},this)">+</button>`}
+      </div>
+    </div>
+  </a>`;
+}
+
+function renderProductCards(list){
+  const grid = document.getElementById('shopGrid');
+  const cards = list.map(productCardHTML).join('');
+  grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon">🔍</div><p>No products in this category yet.</p></div>`;
+  updateCategoryCounts();
+  applyFiltersAndSort();
+}
+
+async function loadProducts(){
+  if (!_sb) return;  // keep static fallback cards
+  try {
+    const { data, error } = await _sb.from('products').select('*').eq('active', true).order('sort_order', { ascending:true });
+    if (error || !data || !data.length) return;  // keep static fallback
+    renderProductCards(data);
+  } catch(e){ /* keep static fallback */ }
+}
+
 // ── FILTERS
 const filterTabs = document.querySelectorAll('.filter-tab');
-const allCards = document.querySelectorAll('#shopGrid .product-card');
-const emptyState = document.getElementById('emptyState');
+let emptyState = document.getElementById('emptyState');
 const resultsNum = document.getElementById('resultsNum');
 let activeFilter = 'all';
 let activeSort = 'default';
 
+function updateCategoryCounts() {
+  const cards = document.querySelectorAll('#shopGrid .product-card');
+  const counts = { all: cards.length, goat:0, chicken:0, fish:0, eggs:0 };
+  cards.forEach(c => { const cat = c.dataset.category; if (counts[cat] !== undefined) counts[cat]++; });
+  Object.keys(counts).forEach(k => { const el = document.getElementById('count-'+k); if (el) el.textContent = counts[k]; });
+}
+
 function applyFiltersAndSort() {
+  const allCards = document.querySelectorAll('#shopGrid .product-card');
   // Filter
   let visible = [];
   allCards.forEach(card => {
@@ -1352,9 +1414,10 @@ function applyFiltersAndSort() {
   // Re-append in sorted order (hidden cards stay hidden)
   visible.forEach(card => grid.appendChild(card));
 
-  // Empty state
-  emptyState.classList.toggle('visible', visible.length === 0);
-  resultsNum.textContent = visible.length;
+  // Empty state (re-query: grid may have been re-rendered)
+  const es = document.getElementById('emptyState');
+  if (es) es.classList.toggle('visible', visible.length === 0);
+  if (resultsNum) resultsNum.textContent = visible.length;
 }
 
 filterTabs.forEach(tab => {
@@ -1387,6 +1450,9 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
     btn.href = 'my-profile.html';
   }
 })();
+
+// Load live catalog from Supabase (replaces static cards; falls back to them on error)
+loadProducts();
 </script>
 </body>
 </html>
