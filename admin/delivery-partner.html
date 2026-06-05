@@ -6,6 +6,7 @@
 <title>Delivery Partner — Angadi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -88,6 +89,10 @@ body{
 .status-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:100px;padding:0.18rem 0.6rem;font-size:0.65rem;font-weight:700;margin-top:0.3rem;}
 .status-pill.out_for_delivery{background:rgba(196,98,45,0.12);border:1px solid var(--border);color:var(--clay-l);}
 .status-pill.confirmed{background:rgba(100,181,246,0.1);border:1px solid rgba(100,181,246,0.2);color:#64B5F6;}
+.status-pill.ready{background:rgba(196,98,45,0.16);border:1px solid rgba(196,98,45,0.35);color:var(--clay-l);}
+.status-pill.assigned{background:rgba(100,181,246,0.1);border:1px solid rgba(100,181,246,0.2);color:#64B5F6;}
+.status-pill.picked_up{background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);color:var(--gold);}
+.status-pill.delivered,.status-pill.completed{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);}
 .dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
@@ -173,18 +178,37 @@ body{
 const partnerUsername = sessionStorage.getItem('angadi_delivery');
 if (!partnerUsername) { window.location.href = 'delivery-login.html'; }
 
-// Partner data
+// Partner data — id === delivery_boys.code
 const PARTNERS = {
   'raju':    { name:'Raju Kumar',    phone:'9876501234', id:'db1' },
   'suresh':  { name:'Suresh Babu',   phone:'9876502345', id:'db2' },
   'praveen': { name:'Praveen Yadav', phone:'9876503456', id:'db3' },
 };
-const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', id:'' };
-document.getElementById('partnerNameDisplay').textContent = partner.name.split(' ')[0];
+const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', id:partnerUsername };
+const CODE = partner.id;
 
-// ── DATA ──
-function getOrders(){ return JSON.parse(localStorage.getItem('angadi_all_orders')||'[]'); }
-function saveOrders(o){ localStorage.setItem('angadi_all_orders', JSON.stringify(o)); }
+// ── Supabase ──
+const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
+
+let allOrders = [];
+function fromDb(r){
+  return { orderId:r.order_id, customer:r.customer, items:r.items, total:r.total,
+    payment:r.payment, status:r.status, assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
+    readyAt:r.ready_at, placedAt:r.placed_at };
+}
+async function loadOrders(){
+  if (sb){
+    try {
+      const { data, error } = await sb.from('orders').select('*').order('placed_at',{ascending:false});
+      if (!error && data){ allOrders = data.map(fromDb); return; }
+    } catch(e){ console.warn('load failed', e); }
+  }
+  allOrders = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+}
+
 function getMyStatus(){ return localStorage.getItem('angadi_partner_status_'+partnerUsername)||'available'; }
 function saveMyStatus(s){ localStorage.setItem('angadi_partner_status_'+partnerUsername, s); }
 
@@ -192,61 +216,118 @@ function saveMyStatus(s){ localStorage.setItem('angadi_partner_status_'+partnerU
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
 function formatTime(iso){ const d=new Date(iso); return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
 function addrStr(a){ return [a?.flat,a?.area,a?.city||'Hyderabad'].filter(Boolean).join(', '); }
+const STAGE_LABEL = {assigned:'Assigned',picked_up:'Picked Up',out_for_delivery:'Out for Delivery',delivered:'✅ Delivered'};
 
 // ── STATS ──
 function renderStats(){
-  const orders = getOrders();
-  const mine = orders.filter(o => o.assignedTo === partner.id);
-  const delivered = mine.filter(o => o.status === 'delivered').length;
-  const active = mine.filter(o => o.status === 'out_for_delivery').length;
-  const pending = mine.filter(o => ['confirmed','processing'].includes(o.status)).length;
-  document.getElementById('statDelivered').textContent = delivered;
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statPending').textContent = pending;
+  const mine = allOrders.filter(o => o.assignedTo === CODE);
+  const delivered = mine.filter(o => ['delivered','completed'].includes(o.status)).length;
+  const active = mine.filter(o => ['assigned','picked_up','out_for_delivery'].includes(o.status)).length;
+  const offers = allOrders.filter(o => o.status==='ready' && !o.assignedTo).length;
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v;};
+  set('statDelivered', delivered);
+  set('statActive', active);
+  set('statPending', offers);
 }
 
-// ── STATUS ──
+// ── SELF STATUS (persist to delivery_boys so broadcast audience is real) ──
 let currentStatus = getMyStatus();
-function setStatus(s){
+async function setStatus(s){
   currentStatus = s;
   saveMyStatus(s);
-  document.querySelectorAll('.status-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.status === s);
-  });
-  document.getElementById('statusText').textContent =
-    s === 'available' ? '🟢 Available' : s === 'busy' ? '🟡 On Delivery' : '⚫ Offline';
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.toggle('active', b.dataset.status === s));
+  const txt = document.getElementById('statusText');
+  if (txt) txt.textContent = s === 'available' ? '🟢 Available' : s === 'busy' ? '🟡 On Delivery' : '⚫ Offline';
+  renderOffers();
+  if (sb){ try { await sb.from('delivery_boys').update({status:s}).eq('code', CODE); } catch(e){} }
 }
-setStatus(currentStatus);
 
-// ── RENDER ORDERS ──
+// ── AVAILABLE OFFERS (broadcast) ──
+function renderOffers(){
+  const container = document.getElementById('offersList');
+  if (!container) return;
+  const offers = allOrders.filter(o => o.status==='ready' && !o.assignedTo)
+                          .sort((a,b)=> new Date(a.readyAt||a.placedAt) - new Date(b.readyAt||b.placedAt));
+  if (currentStatus !== 'available'){
+    container.innerHTML = `<div class="empty"><div class="empty-icon">😴</div><h3>You're ${currentStatus==='busy'?'On Delivery':'Offline'}</h3><p>Switch to <strong>Available</strong> to receive new order offers.</p></div>`;
+    return;
+  }
+  if (!offers.length){
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><h3>No Open Offers</h3><p>New orders ready for pickup will appear here.</p></div>`;
+    return;
+  }
+  container.innerHTML = offers.map(o => {
+    const addr = addrStr(o.customer?.address);
+    const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' · ');
+    return `
+    <div class="order-card" style="border-color:rgba(196,98,45,0.4);">
+      <div class="order-header">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+            <span class="order-id">${o.orderId}</span>
+            <span class="status-pill ready"><span class="dot"></span>📣 New Offer</span>
+          </div>
+          <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
+          <div class="order-address">📍 ${addr||'—'}</div>
+          <div class="order-slot">🚚 ${o.customer?.slot||'—'}</div>
+          <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
+        </div>
+        <div class="order-amount">
+          <div class="order-total">${fmt(o.total||0)}</div>
+          <div class="order-pay">${o.payment==='cod'?'💵 COD':'✅ Paid'}</div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <button class="btn-action btn-deliver" style="flex:1;" onclick="acceptOffer('${o.orderId}')">✋ Accept Order</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Race-safe claim — only succeeds if still ready & unassigned
+async function acceptOffer(orderId){
+  if (!sb){ showToast('⚠ Offline — cannot accept'); return; }
+  const now = new Date().toISOString();
+  const { data, error } = await sb.from('orders')
+    .update({ assigned_to:CODE, accepted_by:partner.name, status:'assigned', accepted_at:now })
+    .eq('order_id', orderId).eq('status','ready').is('assigned_to', null)
+    .select();
+  if (error){ showToast('⚠ '+error.message); return; }
+  if (!data || !data.length){ showToast('😕 Order already taken by another partner'); await refresh(); return; }
+  showToast('✅ You accepted '+orderId+'!');
+  await refresh();
+}
+
+// ── RENDER MY ORDERS ──
 function renderOrders(){
-  const orders = getOrders();
-  const mine = orders.filter(o => o.assignedTo === partner.id);
   const container = document.getElementById('ordersList');
+  if (!container) return;
+  const mine = allOrders.filter(o => o.assignedTo === CODE && o.status!=='cancelled');
 
   if(!mine.length){
     container.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📦</div>
         <h3>No Orders Assigned</h3>
-        <p>You have no assigned orders right now.<br>Check back soon!</p>
+        <p>Accept an offer above to start delivering.</p>
       </div>`;
     return;
   }
-
-  // Sort: active first, then pending, then delivered
-  const sorted = [...mine].sort((a,b)=>{
-    const rank = {out_for_delivery:0, confirmed:1, processing:1, delivered:2};
-    return (rank[a.status]||1) - (rank[b.status]||1);
-  });
+  const rank = {assigned:0, picked_up:1, out_for_delivery:2, delivered:3, completed:4};
+  const sorted = [...mine].sort((a,b)=> (rank[a.status]??0) - (rank[b.status]??0));
 
   container.innerHTML = sorted.map(o => {
     const a = o.customer?.address||{};
     const addr = addrStr(a);
     const addrEnc = encodeURIComponent([a.flat, a.area, a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '));
-    const isDelivered = o.status === 'delivered';
     const waText = encodeURIComponent(`Hi ${o.customer?.name||''}! Your Angadi order ${o.orderId} is on the way. 🚚`);
     const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' · ');
+
+    let actionBtn = '';
+    if (o.status==='assigned')              actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','picked_up')">📍 Reached Store · Confirm Pickup</button>`;
+    else if (o.status==='picked_up')        actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','out_for_delivery')">🚚 Start Delivery</button>`;
+    else if (o.status==='out_for_delivery') actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','delivered')">✅ Mark Delivered</button>`;
+    else                                    actionBtn = `<div class="btn-action btn-delivered">✅ Delivered</div>`;
 
     return `
     <div class="order-card" id="card-${o.orderId}">
@@ -254,7 +335,7 @@ function renderOrders(){
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
             <span class="order-id">${o.orderId}</span>
-            <span class="status-pill ${o.status}"><span class="dot"></span>${o.status==='out_for_delivery'?'Out for Delivery':o.status==='delivered'?'✅ Delivered':'Confirmed'}</span>
+            <span class="status-pill ${o.status}"><span class="dot"></span>${STAGE_LABEL[o.status]||o.status}</span>
           </div>
           <div class="order-time">🕐 ${formatTime(o.placedAt||new Date().toISOString())}</div>
           <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
@@ -270,27 +351,32 @@ function renderOrders(){
       <div class="order-actions">
         <button class="btn-action btn-map" onclick="openMap('${o.customer?.name||''}','${addr}','${addrEnc}','${addrEnc}')">🗺 Map</button>
         <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${waText}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>
-        ${!isDelivered
-          ? `<button class="btn-action btn-deliver" onclick="markDelivered('${o.orderId}')">✅ Mark Delivered</button>`
-          : `<div class="btn-action btn-delivered">✅ Delivered</div>`
-        }
+        ${actionBtn}
       </div>
     </div>`;
   }).join('');
 }
 
-function markDelivered(orderId){
-  const orders = getOrders();
-  const idx = orders.findIndex(o=>o.orderId===orderId);
-  if(idx!==-1){
-    orders[idx].status = 'delivered';
-    orders[idx].deliveredAt = new Date().toISOString();
-    saveOrders(orders);
-    showToast('✅ Order '+orderId+' marked delivered!');
-    renderOrders();
-    renderStats();
+async function advance(orderId, newStatus){
+  const now = new Date().toISOString();
+  const patch = { status:newStatus };
+  if (newStatus==='picked_up')        patch.picked_up_at = now;
+  if (newStatus==='delivered')        patch.delivered_at = now;
+  if (sb){
+    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
+    if (error){ showToast('⚠ '+error.message); return; }
+    // keep delivery_boys status in sync
+    try {
+      if (newStatus==='out_for_delivery') await sb.from('delivery_boys').update({status:'busy', active_order_id:orderId}).eq('code',CODE);
+      if (newStatus==='delivered')        await sb.from('delivery_boys').update({status:'available', active_order_id:null}).eq('code',CODE);
+    } catch(e){}
   }
+  if (newStatus==='delivered') showToast('🎉 Order '+orderId+' delivered!');
+  else showToast('✓ '+orderId+' → '+(STAGE_LABEL[newStatus]||newStatus));
+  await refresh();
 }
+
+async function refresh(){ await loadOrders(); renderStats(); renderOffers(); renderOrders(); }
 
 // ── MAP ──
 function openMap(name, addr, addrEnc){
@@ -321,9 +407,21 @@ function logout(){
 }
 
 // ── INIT ──
-renderStats();
-renderOrders();
-setInterval(()=>{renderOrders();renderStats();}, 15000); // refresh every 15s
+async function init(){
+  const nameEl = document.getElementById('partnerNameDisplay');
+  if (nameEl) nameEl.textContent = partner.name.split(' ')[0];
+  await loadOrders();
+  setStatus(currentStatus);        // also persists status + renders offers
+  renderStats(); renderOrders();
+  if (sb){
+    sb.channel('orders-partner')
+      .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => { await refresh(); })
+      .subscribe();
+  }
+  setInterval(refresh, 15000);     // polling fallback
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 
 <!-- STATS -->
@@ -355,10 +453,17 @@ setInterval(()=>{renderOrders();renderStats();}, 15000); // refresh every 15s
   </div>
 </div>
 
-<!-- ORDERS -->
+<!-- AVAILABLE OFFERS -->
 <div class="section-head">
-  <div class="section-title">My <span>Orders</span></div>
-  <div class="section-sub">Your assigned deliveries today</div>
+  <div class="section-title">Available <span>Offers</span></div>
+  <div class="section-sub">Orders ready for pickup — first to accept wins</div>
+</div>
+<div class="orders-list" id="offersList"></div>
+
+<!-- MY ORDERS -->
+<div class="section-head" style="margin-top:1.5rem;">
+  <div class="section-title">My <span>Deliveries</span></div>
+  <div class="section-sub">Orders you've accepted</div>
 </div>
 <div class="orders-list" id="ordersList"></div>
 

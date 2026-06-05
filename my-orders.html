@@ -117,6 +117,29 @@ nav.scrolled{height:60px;}
 .status-badge.delivered .dot{background:var(--green);}
 .status-badge.cancelled    {background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.2);color:var(--red);}
 .status-badge.cancelled .dot{background:var(--red);}
+.status-badge.pending,.status-badge.preparing{background:rgba(255,183,77,0.12);border:1px solid rgba(255,183,77,0.25);color:var(--orange);}
+.status-badge.pending .dot,.status-badge.preparing .dot{background:var(--orange);animation:pulse 2s infinite;}
+.status-badge.ready{background:rgba(196,98,45,0.14);border:1px solid rgba(196,98,45,0.3);color:var(--clay-l);}
+.status-badge.ready .dot{background:var(--clay-l);animation:pulse 1.2s infinite;}
+.status-badge.assigned{background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.25);color:var(--blue);}
+.status-badge.assigned .dot{background:var(--blue);animation:pulse 2s infinite;}
+.status-badge.picked_up{background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.25);color:var(--gold);}
+.status-badge.picked_up .dot{background:var(--gold);animation:pulse 2s infinite;}
+.status-badge.completed{background:rgba(76,175,80,0.12);border:1px solid rgba(76,175,80,0.25);color:var(--green);}
+.status-badge.completed .dot{background:var(--green);}
+/* ── Tracking timeline ── */
+.track{display:flex;flex-direction:column;gap:0;margin:0 0 1.2rem;padding:1rem 1.1rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;}
+.track-step{display:flex;align-items:flex-start;gap:0.75rem;position:relative;padding-bottom:0.9rem;}
+.track-step:last-child{padding-bottom:0;}
+.track-step:not(:last-child)::before{content:'';position:absolute;left:10px;top:22px;bottom:-2px;width:2px;background:var(--border);}
+.track-step.done:not(:last-child)::before{background:var(--clay);}
+.track-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;background:var(--ink-2);color:rgba(246,237,216,0.3);z-index:1;}
+.track-step.done .track-dot{background:var(--clay);border-color:var(--clay);color:#fff;}
+.track-step.current .track-dot{background:var(--gold);border-color:var(--gold);color:#080503;box-shadow:0 0 0 4px rgba(212,160,23,0.15);}
+.track-label{font-size:0.82rem;font-weight:600;color:rgba(246,237,216,0.4);padding-top:0.1rem;}
+.track-step.done .track-label,.track-step.current .track-label{color:var(--cream);}
+.track-step.current .track-label{color:var(--gold);}
+.track-cancelled{padding:0.9rem 1.1rem;margin-bottom:1.2rem;background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.25);border-radius:14px;color:var(--red);font-weight:600;font-size:0.85rem;text-align:center;}
 .status-badge.cod          {background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);color:rgba(212,160,23,0.8);}
 .status-badge.cod .dot{background:var(--gold);}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
@@ -289,9 +312,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <div class="filter-bar">
       <div class="filter-tabs" id="filterTabs">
         <button class="filter-tab active" data-status="all">All <span class="count" id="cnt-all">0</span></button>
-        <button class="filter-tab" data-status="confirmed">Confirmed <span class="count" id="cnt-confirmed">0</span></button>
-        <button class="filter-tab" data-status="processing">Processing <span class="count" id="cnt-processing">0</span></button>
-        <button class="filter-tab" data-status="out_for_delivery">Out for Delivery <span class="count" id="cnt-out_for_delivery">0</span></button>
+        <button class="filter-tab" data-status="preparing">Preparing <span class="count" id="cnt-preparing">0</span></button>
+        <button class="filter-tab" data-status="on_the_way">On the Way <span class="count" id="cnt-on_the_way">0</span></button>
         <button class="filter-tab" data-status="delivered">Delivered <span class="count" id="cnt-delivered">0</span></button>
         <button class="filter-tab" data-status="cancelled">Cancelled <span class="count" id="cnt-cancelled">0</span></button>
       </div>
@@ -366,9 +388,17 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
 // ─────────────────────────────────────────────
 //  CONFIG
 // ─────────────────────────────────────────────
-const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
+const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
 const DEV_MODE     = false; // Supabase connected
+
+// DB row (snake_case) → UI order (camelCase)
+function fromDb(r){
+  return { orderId:r.order_id, customer:r.customer, items:r.items,
+    subtotal:r.subtotal, delivery:r.delivery, discount:r.discount, total:r.total,
+    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    assignedTo:r.assigned_to, acceptedBy:r.accepted_by, placedAt:r.placed_at };
+}
 
 // ─────────────────────────────────────────────
 //  PRODUCT IMAGE MAP
@@ -391,20 +421,21 @@ function formatDate(iso){
   return d.toLocaleDateString('en-IN',{ day:'numeric', month:'short', year:'numeric' })
     + ' · ' + d.toLocaleTimeString('en-IN',{ hour:'2-digit', minute:'2-digit' });
 }
+const STATUS_FLOW = ['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery','delivered','completed'];
 function statusLabel(s){
   const map = {
-    confirmed:'Confirmed', confirmed_cod:'Confirmed',
-    processing:'Processing', out_for_delivery:'Out for Delivery',
-    delivered:'Delivered', cancelled:'Cancelled',
-    paid:'Confirmed', paid_dev:'Confirmed',
+    pending:'Order Placed', confirmed:'Confirmed', preparing:'Preparing Your Meat',
+    ready:'Finding Delivery Partner', assigned:'Partner Assigned', picked_up:'Picked Up',
+    out_for_delivery:'Out for Delivery', delivered:'Delivered', completed:'Completed',
+    cancelled:'Cancelled',
   };
-  return map[s] || 'Confirmed';
+  return map[normaliseStatus(s)] || 'Order Placed';
 }
 function normaliseStatus(s){
-  if (!s) return 'confirmed';
+  if (!s) return 'pending';
   if (['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
-  const valid = ['confirmed','processing','out_for_delivery','delivered','cancelled'];
-  return valid.includes(s) ? s : 'confirmed';
+  if (s==='processing') return 'preparing';
+  return [...STATUS_FLOW,'cancelled'].includes(s) ? s : 'pending';
 }
 
 // ─────────────────────────────────────────────
@@ -418,16 +449,26 @@ async function loadOrders(){
   // 1. Last order from localStorage (always show this)
   const lastOrder = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
 
-  if (!DEV_MODE && user.id) {
-    // PRODUCTION: fetch from Supabase
+  if (!DEV_MODE && user.phone) {
+    // PRODUCTION: fetch from Supabase + subscribe for live tracking
     try {
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      if (!window._sb) window._sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const sb = window._sb;
       const { data, error } = await sb
         .from('orders')
         .select('*')
         .eq('customer->>phone', user.phone)
         .order('placed_at', { ascending: false });
-      if (!error && data) { allOrders = data; renderOrders(); return; }
+      if (!error && data) {
+        allOrders = data.map(fromDb);
+        renderOrders();
+        if (!window._sbSub){
+          window._sbSub = sb.channel('orders-customer')
+            .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, () => loadOrders())
+            .subscribe();
+        }
+        return;
+      }
     } catch(e){ console.warn('Supabase fetch failed', e); }
   }
 
@@ -498,7 +539,7 @@ function renderOrders(){
 
   // Update header
   const total     = allOrders.length;
-  const delivered = allOrders.filter(o => normaliseStatus(o.status) === 'delivered').length;
+  const delivered = allOrders.filter(o => ['delivered','completed'].includes(normaliseStatus(o.status))).length;
   const spent     = allOrders.reduce((s,o) => s + (o.total||0), 0);
   document.getElementById('orderStats').innerHTML = `
     <div class="order-stat"><div class="order-stat-num">${total}</div><div class="order-stat-label">Orders</div></div>
@@ -510,22 +551,31 @@ function renderOrders(){
       ? 'No orders yet'
       : `Showing orders for <strong>${user.name || user.phone || 'your account'}</strong>`;
 
+  // Status groups for customer-facing filtering
+  const GROUPS = {
+    preparing:  ['pending','confirmed','preparing'],
+    on_the_way: ['ready','assigned','picked_up','out_for_delivery'],
+    delivered:  ['delivered','completed'],
+    cancelled:  ['cancelled'],
+  };
+  const groupOf = s => Object.keys(GROUPS).find(g => GROUPS[g].includes(s));
+
   // Update filter counts
-  const statusCounts = {};
+  const groupCounts = {};
   allOrders.forEach(o => {
-    const s = normaliseStatus(o.status);
-    statusCounts[s] = (statusCounts[s] || 0) + 1;
+    const g = groupOf(normaliseStatus(o.status));
+    if (g) groupCounts[g] = (groupCounts[g] || 0) + 1;
   });
   document.getElementById('cnt-all').textContent = total;
-  ['confirmed','processing','out_for_delivery','delivered','cancelled'].forEach(s => {
-    const el = document.getElementById('cnt-' + s);
-    if (el) el.textContent = statusCounts[s] || 0;
+  ['preparing','on_the_way','delivered','cancelled'].forEach(g => {
+    const el = document.getElementById('cnt-' + g);
+    if (el) el.textContent = groupCounts[g] || 0;
   });
 
   // Filter + search
   const filtered = allOrders.filter(o => {
     const s = normaliseStatus(o.status);
-    const matchStatus = activeFilter === 'all' || s === activeFilter;
+    const matchStatus = activeFilter === 'all' || groupOf(s) === activeFilter;
     const q = searchQuery.toLowerCase();
     const matchSearch = !q
       || (o.orderId||'').toLowerCase().includes(q)
@@ -556,6 +606,32 @@ function renderOrders(){
       card.classList.toggle('open');
     });
   });
+}
+
+// ─────────────────────────────────────────────
+//  TRACKING TIMELINE
+// ─────────────────────────────────────────────
+const MILESTONES = [
+  { icon:'📝', label:'Order Placed' },
+  { icon:'✓',  label:'Confirmed' },
+  { icon:'🔪', label:'Preparing' },
+  { icon:'📦', label:'Ready for Pickup' },
+  { icon:'🚚', label:'Out for Delivery' },
+  { icon:'🏁', label:'Delivered' },
+];
+function milestoneIndex(s){
+  return { pending:0, confirmed:1, preparing:2, ready:3, assigned:3, picked_up:3,
+           out_for_delivery:4, delivered:5, completed:5 }[normaliseStatus(s)] ?? 0;
+}
+function buildTimeline(order){
+  const s = normaliseStatus(order.status);
+  if (s === 'cancelled') return `<div class="track-cancelled">✕ This order was cancelled</div>`;
+  const curr = milestoneIndex(s);
+  return `<div class="track">${MILESTONES.map((m,i)=>{
+    const cls = i < curr ? 'done' : i === curr ? 'done current' : '';
+    const mark = i < curr ? '✓' : m.icon;
+    return `<div class="track-step ${cls}"><div class="track-dot">${mark}</div><div class="track-label">${m.label}${order.acceptedBy && i===3 ? ' · '+order.acceptedBy : ''}</div></div>`;
+  }).join('')}</div>`;
 }
 
 // ─────────────────────────────────────────────
@@ -596,6 +672,8 @@ function buildOrderCard(order, idx){
       </div>
 
       <div class="order-card-body">
+        <!-- Live tracking -->
+        ${buildTimeline(order)}
         <!-- Items -->
         <div class="order-items-list">
           ${items.map(item => `
@@ -643,8 +721,8 @@ function buildOrderCard(order, idx){
             <div class="order-footer-actions">
               <button class="btn-action primary" onclick="reorder(${idx})">🔄 Reorder</button>
               <a href="https://wa.me/919949950743?text=${waText}" target="_blank" class="btn-action wa">💬 Help</a>
-              ${status === 'delivered' ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">🧾 Invoice</button>` : ''}
-              ${(status === 'confirmed' || status === 'processing') ? `<button class="btn-action" style="color:var(--red);border-color:rgba(229,115,115,0.2);" onclick="cancelOrder('${order.orderId}',${idx})">✕ Cancel</button>` : ''}
+              ${['delivered','completed'].includes(status) ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">🧾 Invoice</button>` : ''}
+              ${['pending','confirmed','preparing'].includes(status) ? `<button class="btn-action" style="color:var(--red);border-color:rgba(229,115,115,0.2);" onclick="cancelOrder('${order.orderId}',${idx})">✕ Cancel</button>` : ''}
             </div>
           </div>
         </div>
@@ -670,12 +748,17 @@ function reorder(idx) {
   showToast(`✓ ${order.items.length} item${order.items.length>1?'s':''} added to cart`);
 }
 
-function cancelOrder(orderId, idx) {
+async function cancelOrder(orderId, idx) {
   if (!confirm(`Cancel order ${orderId}?`)) return;
   allOrders[idx].status = 'cancelled';
-  localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
   renderOrders();
   showToast(`Order ${orderId} cancelled`);
+  if (window._sb){
+    const { error } = await window._sb.from('orders').update({ status:'cancelled' }).eq('order_id', orderId);
+    if (error) console.warn('cancel failed', error);
+  } else {
+    localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
+  }
 }
 
 function downloadInvoice(orderId) {

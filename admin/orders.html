@@ -100,6 +100,24 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 .status-pill.out_for_delivery .dot{background:var(--clay-l);animation:pulse 2s infinite;}
 .status-pill.delivered{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);}
 .status-pill.delivered .dot{background:var(--green);}
+.status-pill.pending{background:rgba(255,152,0,0.12);border:1px solid rgba(255,152,0,0.25);color:#FFB74D;}
+.status-pill.pending .dot{background:#FFB74D;animation:pulse 2s infinite;}
+.status-pill.preparing{background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.2);color:var(--gold);}
+.status-pill.preparing .dot{background:var(--gold);animation:pulse 2s infinite;}
+.status-pill.ready{background:rgba(196,98,45,0.14);border:1px solid rgba(196,98,45,0.3);color:var(--clay-l);}
+.status-pill.ready .dot{background:var(--clay-l);animation:pulse 1.2s infinite;}
+.status-pill.assigned{background:rgba(100,181,246,0.12);border:1px solid rgba(100,181,246,0.2);color:var(--blue);}
+.status-pill.assigned .dot{background:var(--blue);animation:pulse 2s infinite;}
+.status-pill.picked_up{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);}
+.status-pill.picked_up .dot{background:var(--clay-l);animation:pulse 2s infinite;}
+.status-pill.completed{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);color:var(--green);}
+.status-pill.completed .dot{background:var(--green);}
+.act-btn{display:inline-flex;align-items:center;gap:0.3rem;padding:0.4rem 0.85rem;border-radius:8px;font-size:0.74rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--cream);transition:all 0.2s;white-space:nowrap;}
+.act-btn:hover{border-color:var(--clay-l);}
+.act-btn.primary{background:var(--clay);border-color:var(--clay);color:#fff;}
+.act-btn.primary:hover{background:var(--clay-l);}
+.act-btn.danger{color:#E57373;border-color:rgba(229,115,115,0.25);}
+.act-btn.success{background:var(--green);border-color:var(--green);color:#fff;}
 .status-pill.cancelled{background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.15);color:var(--red);}
 .status-pill.cancelled .dot{background:var(--red);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
@@ -146,6 +164,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
   .search-input{width:140px;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -201,8 +220,11 @@ tr:hover td{background:rgba(255,255,255,0.012);}
       <div class="filter-bar">
         <div class="filter-tabs-wrap" style="display:flex;gap:0.5rem;flex-wrap:wrap;" id="filterTabs">
           <button class="filter-tab active" data-f="all">All <span class="count-pill" id="cnt-all">0</span></button>
+          <button class="filter-tab" data-f="pending">🔔 New <span class="count-pill" id="cnt-pending">0</span></button>
           <button class="filter-tab" data-f="confirmed">Confirmed <span class="count-pill" id="cnt-confirmed">0</span></button>
-          <button class="filter-tab" data-f="processing">Processing <span class="count-pill" id="cnt-processing">0</span></button>
+          <button class="filter-tab" data-f="preparing">Preparing <span class="count-pill" id="cnt-preparing">0</span></button>
+          <button class="filter-tab" data-f="ready">Ready <span class="count-pill" id="cnt-ready">0</span></button>
+          <button class="filter-tab" data-f="assigned">Assigned <span class="count-pill" id="cnt-assigned">0</span></button>
           <button class="filter-tab" data-f="out_for_delivery">Out for Delivery <span class="count-pill" id="cnt-ofd">0</span></button>
           <button class="filter-tab" data-f="delivered">Delivered <span class="count-pill" id="cnt-delivered">0</span></button>
           <button class="filter-tab" data-f="cancelled">Cancelled <span class="count-pill" id="cnt-cancelled">0</span></button>
@@ -255,25 +277,47 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 // ─────────────────────────────────────────────
 //  AUTH GUARD
 // ─────────────────────────────────────────────
-if (sessionStorage.getItem('angadi_admin') !== '1') {
+const IS_ADMIN = sessionStorage.getItem('angadi_admin') === '1';
+if (!IS_ADMIN) {
   document.getElementById('guard').classList.remove('hidden');
   document.getElementById('adminLayout').style.display = 'none';
-} else {
-  init();
 }
+// init() is invoked at the very end of the script, after `sb` is initialised
 function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
 
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
+
+// ── Supabase ──
+const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
+
+// DB row (snake_case) → UI order (camelCase)
+function fromDb(r){
+  return {
+    orderId:o_(r.order_id), customer:r.customer, items:r.items,
+    subtotal:r.subtotal, delivery:r.delivery, discount:r.discount, total:r.total,
+    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
+    readyAt:r.ready_at, acceptedAt:r.accepted_at, pickedUpAt:r.picked_up_at, deliveredAt:r.delivered_at,
+    placedAt:r.placed_at,
+  };
+}
+function o_(v){ return v || ''; }
+
+const STATUS_FLOW = ['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery','delivered','completed'];
 function normaliseStatus(s){
-  if (!s) return 'confirmed';
+  if (!s) return 'pending';
   if (['paid','paid_dev','confirmed_cod'].includes(s)) return 'confirmed';
-  return ['confirmed','processing','out_for_delivery','delivered','cancelled'].includes(s)?s:'confirmed';
+  if (s==='processing') return 'preparing';
+  return [...STATUS_FLOW,'cancelled'].includes(s) ? s : 'pending';
 }
 function statusLabel(s){
-  return {confirmed:'Confirmed',processing:'Processing',out_for_delivery:'Out for Delivery',delivered:'Delivered',cancelled:'Cancelled'}[normaliseStatus(s)]||'Confirmed';
+  return {pending:'Pending Review',confirmed:'Confirmed',preparing:'Preparing',ready:'Ready · Finding Partner',assigned:'Partner Assigned',picked_up:'Picked Up',out_for_delivery:'Out for Delivery',delivered:'Delivered',completed:'Completed',cancelled:'Cancelled'}[normaliseStatus(s)]||'Pending Review';
 }
 function formatDate(iso){
   const d=new Date(iso);
@@ -292,40 +336,71 @@ function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../pr
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-let allOrders=[], activeFilter='all', searchQuery='', dateFilter='';
+let allOrders=[], activeFilter='all', searchQuery='', dateFilter='', seenIds=new Set();
 
-function loadAllOrders(){
-  const stored = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
-  if (stored.length<5){
-    // seed demos
-    const demos=[
-      {orderId:'ANG-001',customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 4B',area:'Banjara Hills',pincode:'500034'}},items:[{name:'Village Goat Meat · 1kg',price:680,qty:2},{name:'Country Chicken',price:520,qty:1}],subtotal:1880,delivery:0,discount:0,total:1880,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-1800000).toISOString()},
-      {orderId:'ANG-002',customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)',address:{flat:'Apt 12',area:'Jubilee Hills',pincode:'500033'}},items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],subtotal:1144,delivery:0,discount:0,total:1144,payment:'cod',status:'processing',placedAt:new Date(Date.now()-4320000).toISOString()},
-      {orderId:'ANG-003',customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)',address:{flat:'H.No 45',area:'Madhapur',pincode:'500081'}},items:[{name:'Country Chicken · 1kg',price:520,qty:2}],subtotal:1040,delivery:0,discount:0,total:1040,payment:'razorpay',status:'out_for_delivery',placedAt:new Date(Date.now()-7200000).toISOString()},
-      {orderId:'ANG-004',customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)',address:{flat:'Villa 7',area:'Kondapur',pincode:'500084'}},items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],subtotal:2040,delivery:0,discount:0,total:2040,payment:'cod',status:'delivered',placedAt:new Date(Date.now()-86400000).toISOString()},
-      {orderId:'ANG-005',customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 2A',area:'Gachibowli',pincode:'500032'}},items:[{name:'Full Goat',price:8500,qty:1}],subtotal:8500,delivery:0,discount:0,total:8500,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-360000).toISOString()},
-    ];
-    const merged=[...stored,...demos.filter(d=>!stored.find(s=>s.orderId===d.orderId))];
-    localStorage.setItem('angadi_all_orders',JSON.stringify(merged));
-    return merged;
+const DEMOS=[
+  {orderId:'ANG-001',customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 4B',area:'Banjara Hills',pincode:'500034'}},items:[{name:'Village Goat Meat · 1kg',price:680,qty:2},{name:'Country Chicken',price:520,qty:1}],subtotal:1880,delivery:0,discount:0,total:1880,payment:'razorpay',status:'pending',placedAt:new Date(Date.now()-1800000).toISOString()},
+  {orderId:'ANG-002',customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)',address:{flat:'Apt 12',area:'Jubilee Hills',pincode:'500033'}},items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],subtotal:1144,delivery:0,discount:0,total:1144,payment:'cod',status:'preparing',placedAt:new Date(Date.now()-4320000).toISOString()},
+  {orderId:'ANG-003',customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)',address:{flat:'H.No 45',area:'Madhapur',pincode:'500081'}},items:[{name:'Country Chicken · 1kg',price:520,qty:2}],subtotal:1040,delivery:0,discount:0,total:1040,payment:'razorpay',status:'out_for_delivery',placedAt:new Date(Date.now()-7200000).toISOString()},
+  {orderId:'ANG-004',customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)',address:{flat:'Villa 7',area:'Kondapur',pincode:'500084'}},items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],subtotal:2040,delivery:0,discount:0,total:2040,payment:'cod',status:'delivered',placedAt:new Date(Date.now()-86400000).toISOString()},
+  {orderId:'ANG-005',customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 2A',area:'Gachibowli',pincode:'500032'}},items:[{name:'Full Goat',price:8500,qty:1}],subtotal:8500,delivery:0,discount:0,total:8500,payment:'razorpay',status:'pending',placedAt:new Date(Date.now()-360000).toISOString()},
+];
+
+async function loadOrders(notifyNew){
+  let rows = null;
+  if (sb){
+    try {
+      const { data, error } = await sb.from('orders').select('*').order('placed_at',{ascending:false});
+      if (!error && data) rows = data.map(fromDb);
+    } catch(e){ console.warn('load failed', e); }
   }
-  return stored;
+  if (!rows || !rows.length){
+    rows = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+    if (rows.length < DEMOS.length) rows = DEMOS;
+  }
+  // detect newly-arrived pending orders for notification
+  if (notifyNew){
+    rows.forEach(o=>{
+      if (!seenIds.has(o.orderId) && normaliseStatus(o.status)==='pending'){
+        showToast('🔔 New order '+o.orderId+' — '+(o.customer?.name||''));
+        beep();
+      }
+    });
+  }
+  rows.forEach(o=>seenIds.add(o.orderId));
+  allOrders = rows;
+}
+
+function beep(){
+  try{ const a=new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain();
+    o.connect(g); g.connect(a.destination); o.type='sine'; o.frequency.value=880; g.gain.value=0.05;
+    o.start(); setTimeout(()=>{o.stop();a.close();},180); }catch(e){}
 }
 
 // ─────────────────────────────────────────────
 //  RENDER
 // ─────────────────────────────────────────────
-function init(){
-  allOrders = loadAllOrders();
+async function init(){
+  await loadOrders(false);
   renderStats();
   renderTable();
+  // Live updates across devices
+  if (sb){
+    sb.channel('orders-admin')
+      .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => {
+        await loadOrders(true); renderStats(); renderTable();
+        if (document.getElementById('detailPanel').classList.contains('open') && currentDetailId) openDetail(currentDetailId);
+      }).subscribe();
+  }
+  // Polling fallback (in case realtime isn't enabled)
+  setInterval(async ()=>{ await loadOrders(true); renderStats(); renderTable(); }, 20000);
 }
-function refreshOrders(){ init(); showToast('Orders refreshed'); }
+async function refreshOrders(){ await loadOrders(false); renderStats(); renderTable(); showToast('Orders refreshed'); }
 
 function renderStats(){
   const total     = allOrders.length;
   const today     = allOrders.filter(o=>{const d=new Date(o.placedAt);return d.toDateString()===new Date().toDateString();});
-  const pending   = allOrders.filter(o=>['confirmed','processing','out_for_delivery'].includes(normaliseStatus(o.status)));
+  const pending   = allOrders.filter(o=>['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery'].includes(normaliseStatus(o.status)));
   const revenue   = allOrders.reduce((s,o)=>s+(o.total||0),0);
   document.getElementById('statsRow').innerHTML=`
     <div class="mini-stat"><span class="mini-stat-icon">📦</span><div><div class="mini-stat-val">${total}</div><div class="mini-stat-label">Total Orders</div></div></div>
@@ -336,12 +411,16 @@ function renderStats(){
   // Counts
   const counts={};
   allOrders.forEach(o=>{ const s=normaliseStatus(o.status); counts[s]=(counts[s]||0)+1; });
-  document.getElementById('cnt-all').textContent=total;
-  document.getElementById('cnt-confirmed').textContent=counts.confirmed||0;
-  document.getElementById('cnt-processing').textContent=counts.processing||0;
-  document.getElementById('cnt-ofd').textContent=counts.out_for_delivery||0;
-  document.getElementById('cnt-delivered').textContent=counts.delivered||0;
-  document.getElementById('cnt-cancelled').textContent=counts.cancelled||0;
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v||0;};
+  set('cnt-all',total);
+  set('cnt-pending',counts.pending);
+  set('cnt-confirmed',counts.confirmed);
+  set('cnt-preparing',counts.preparing);
+  set('cnt-ready',counts.ready);
+  set('cnt-assigned',(counts.assigned||0)+(counts.picked_up||0));
+  set('cnt-ofd',counts.out_for_delivery);
+  set('cnt-delivered',(counts.delivered||0)+(counts.completed||0));
+  set('cnt-cancelled',counts.cancelled);
 }
 
 function renderTable(){
@@ -374,14 +453,7 @@ function renderTable(){
         <td style="font-size:0.75rem;white-space:nowrap;">${formatDate(o.placedAt)}</td>
         <td><span class="status-pill ${s}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
         <td onclick="event.stopPropagation()">
-          <select class="status-select" onchange="updateStatus('${o.orderId}',this.value)">
-            <option value="">Update…</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="processing">Processing</option>
-            <option value="out_for_delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          ${actionButtons(o)}
         </td>
         <td onclick="event.stopPropagation()">
           <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+o.customer?.name+'! Your Angadi order '+o.orderId+' is '+statusLabel(o.status)+'.')}" target="_blank" class="btn-sm">💬</a>
@@ -394,9 +466,11 @@ function renderTable(){
 // ─────────────────────────────────────────────
 //  ORDER DETAIL PANEL
 // ─────────────────────────────────────────────
+let currentDetailId = null;
 function openDetail(orderId){
   const o = allOrders.find(x=>x.orderId===orderId);
   if(!o) return;
+  currentDetailId = orderId;
   const s=normaliseStatus(o.status);
   const a=o.customer?.address||{};
   document.getElementById('detailContent').innerHTML=`
@@ -410,14 +484,13 @@ function openDetail(orderId){
       <span class="payment-badge ${o.payment==='cod'?'cod':'online'}">${o.payment==='cod'?'💵 COD':'💳 Online'}</span>
     </div>
     <div class="detail-section">
-      <div class="detail-label">Update Status</div>
-      <select class="status-select" style="width:100%;padding:0.6rem 1rem;" onchange="updateStatus('${o.orderId}',this.value)">
-        <option value="">Select new status…</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="processing">Processing</option>
-        <option value="out_for_delivery">Out for Delivery</option>
-        <option value="delivered">Delivered ✓</option>
-        <option value="cancelled">Cancelled</option>
+      <div class="detail-label">Order Actions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${actionButtons(o, true)}</div>
+      ${s==='ready' ? `<div style="margin-top:0.7rem;font-size:0.76rem;color:var(--clay-l);">📣 Broadcasting to available delivery partners… <a href="delivery.html" style="color:var(--gold);">Open delivery board →</a></div>` : ''}
+      ${o.acceptedBy ? `<div style="margin-top:0.7rem;font-size:0.78rem;color:rgba(246,237,216,0.6);">🛵 Partner: <strong style="color:var(--cream);">${o.acceptedBy}</strong></div>` : ''}
+      <select class="status-select" style="width:100%;padding:0.55rem 1rem;margin-top:0.7rem;" onchange="if(this.value){setOrderStatus('${o.orderId}',this.value);this.value='';}">
+        <option value="">⚙ Manual override…</option>
+        ${[...STATUS_FLOW,'cancelled'].map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('')}
       </select>
     </div>
     <div class="detail-section">
@@ -458,16 +531,47 @@ function closeDetail(){
 // ─────────────────────────────────────────────
 //  ACTIONS
 // ─────────────────────────────────────────────
-function updateStatus(orderId, newStatus){
+// Contextual next-step buttons for the admin's part of the pipeline
+function actionButtons(o, big){
+  const s = normaliseStatus(o.status);
+  const cls = big ? 'act-btn' : 'act-btn';
+  const b = (label, st, kind='') => `<button class="${cls} ${kind}" onclick="event.stopPropagation();setOrderStatus('${o.orderId}','${st}')">${label}</button>`;
+  const cancel = b('✕ Cancel','cancelled','danger');
+  switch(s){
+    case 'pending':   return b('✓ Confirm Order','confirmed','primary') + cancel;
+    case 'confirmed': return b('👨‍🍳 Start Preparing','preparing','primary') + cancel;
+    case 'preparing': return b('📣 Mark Ready','ready','primary') + cancel;
+    case 'ready':     return `<span class="act-btn" style="cursor:default;opacity:0.7;">⏳ Finding partner…</span>` + cancel;
+    case 'assigned':  return `<span class="act-btn" style="cursor:default;opacity:0.7;">🛵 ${o.acceptedBy||'Partner'} assigned</span>`;
+    case 'picked_up': return `<span class="act-btn" style="cursor:default;opacity:0.7;">📦 Picked up</span>`;
+    case 'out_for_delivery': return `<span class="act-btn" style="cursor:default;opacity:0.7;">🚚 Out for delivery</span>`;
+    case 'delivered': return b('🏁 Mark Completed','completed','success');
+    case 'completed': return `<span class="act-btn" style="cursor:default;opacity:0.7;">✅ Completed</span>`;
+    case 'cancelled': return `<span class="act-btn danger" style="cursor:default;">Cancelled</span>`;
+    default: return '';
+  }
+}
+
+async function setOrderStatus(orderId, newStatus){
   if(!newStatus) return;
   const idx=allOrders.findIndex(o=>o.orderId===orderId);
-  if(idx!==-1){
-    allOrders[idx].status=newStatus;
-    localStorage.setItem('angadi_all_orders',JSON.stringify(allOrders));
-    renderStats(); renderTable();
-    showToast(`✓ ${orderId} → ${statusLabel(newStatus)}`);
-    // Re-open panel if open
-    if(document.getElementById('detailPanel').classList.contains('open')) openDetail(orderId);
+  if(idx===-1) return;
+  const now = new Date().toISOString();
+  const patch = { status:newStatus };
+  if (newStatus==='ready')     patch.ready_at = now;
+  if (newStatus==='delivered') patch.delivered_at = now;
+  // optimistic local update
+  allOrders[idx].status = newStatus;
+  if (newStatus==='ready') allOrders[idx].readyAt = now;
+  renderStats(); renderTable();
+  if(document.getElementById('detailPanel').classList.contains('open') && currentDetailId===orderId) openDetail(orderId);
+  showToast(`✓ ${orderId} → ${statusLabel(newStatus)}`);
+  // persist
+  if (sb){
+    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
+    if (error){ console.warn('update failed', error); showToast('⚠ Save failed — check connection'); }
+  } else {
+    localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
   }
 }
 
@@ -502,6 +606,9 @@ function showToast(msg){
   if(!document.getElementById('tStyle')){const s=document.createElement('style');s.id='tStyle';s.textContent=`@keyframes fadeToast{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}`;document.head.appendChild(s);}
   document.body.appendChild(toast); setTimeout(()=>toast.remove(),2600);
 }
+
+// ── INIT (after all definitions; `sb` is initialised) ──
+if (IS_ADMIN) init();
 </script>
 </body>
 </html>

@@ -704,6 +704,8 @@ async function placeOrder(){
     discount: promoDiscount,
     total:    total(),
     payment:  selectedMethod,
+    orderId:  genOrderId(),
+    status:   'pending',
     placedAt: new Date().toISOString(),
   };
 
@@ -723,7 +725,7 @@ async function placeOrder(){
 }
 
 async function placeCOD(order){
-  await saveOrder({ ...order, status:'confirmed_cod' });
+  await saveOrder({ ...order, status:'pending' });
   localStorage.setItem('angadi_last_order', JSON.stringify(order));
   localStorage.removeItem('angadi_cart');
   window.location.href = 'order-confirm.html?method=cod';
@@ -732,7 +734,7 @@ async function placeCOD(order){
 async function placeRazorpay(order){
   // DEV MODE — Razorpay key not set yet
   if (RAZORPAY_KEY === 'YOUR_RAZORPAY_KEY_ID') {
-    await saveOrder({ ...order, status:'paid_dev', paymentId:'DEV' });
+    await saveOrder({ ...order, status:'pending', paymentId:'DEV' });
     localStorage.setItem('angadi_last_order', JSON.stringify({ ...order, paymentId:'DEV' }));
     localStorage.removeItem('angadi_cart');
     window.location.href = 'order-confirm.html?method=online';
@@ -748,7 +750,7 @@ async function placeRazorpay(order){
     prefill:     { name: order.customer.name, contact: order.customer.phone },
     theme:       { color: '#C4622D' },
     handler: async (response) => {
-      const finalOrder = { ...order, paymentId: response.razorpay_payment_id, status:'paid' };
+      const finalOrder = { ...order, paymentId: response.razorpay_payment_id, status:'pending' };
       await saveOrder(finalOrder);
       localStorage.setItem('angadi_last_order', JSON.stringify(finalOrder));
       localStorage.removeItem('angadi_cart');
@@ -759,10 +761,35 @@ async function placeRazorpay(order){
   rzp.open();
 }
 
+function genOrderId(){
+  const r = Math.random().toString(36).slice(2,7).toUpperCase();
+  const s = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `ANG-${r}-${s}`;
+}
+
+// Map UI (camelCase) order → DB (snake_case) columns
+function toDb(o){
+  return {
+    order_id:   o.orderId,
+    customer:   o.customer,
+    items:      o.items,
+    subtotal:   o.subtotal,
+    delivery:   o.delivery,
+    discount:   o.discount,
+    total:      o.total,
+    payment:    o.payment,
+    payment_id: o.paymentId || null,
+    status:     o.status || 'pending',
+    placed_at:  o.placedAt,
+  };
+}
+
 async function saveOrder(order){
   if (!supabaseClient) return;
-  try { await supabaseClient.from('orders').insert([order]); }
-  catch(e){ console.warn('Supabase save failed', e); }
+  try {
+    const { error } = await supabaseClient.from('orders').insert([toDb(order)]);
+    if (error) console.warn('Supabase save failed', error);
+  } catch(e){ console.warn('Supabase save failed', e); }
 }
 
 // ─────────────────────────────────────────────
