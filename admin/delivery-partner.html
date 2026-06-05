@@ -375,7 +375,39 @@ async function advance(orderId, newStatus){
   await refresh();
 }
 
-async function refresh(){ await loadOrders(); renderStats(); renderOffers(); renderOrders(); }
+// ── NEW-OFFER ALERTS ──
+let seenOffers = new Set();
+let offersPrimed = false;       // skip alerts on the very first load
+function beep(){
+  try{ const a=new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain();
+    o.connect(g); g.connect(a.destination); o.type='sine';
+    o.frequency.setValueAtTime(880,a.currentTime); o.frequency.setValueAtTime(1175,a.currentTime+0.12);
+    g.gain.setValueAtTime(0.18,a.currentTime); g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.45);
+    o.start(); o.stop(a.currentTime+0.45); setTimeout(()=>a.close(),600);
+  }catch(e){}
+}
+function notifyNewOffers(){
+  // Only alert when the partner is Available (they can actually take it)
+  const open = allOrders.filter(o => o.status==='ready' && !o.assignedTo);
+  const fresh = open.filter(o => !seenOffers.has(o.orderId));
+  open.forEach(o => seenOffers.add(o.orderId));
+  if (!offersPrimed){ offersPrimed = true; return; }      // don't alert for orders already there on load
+  if (currentStatus !== 'available') return;
+  if (!fresh.length) return;
+  const o = fresh[0];
+  showToast(`🔔 New order available — ${o.customer?.name||''} · ${fmt(o.total||0)}`);
+  beep();
+  try {
+    if ('Notification' in window && Notification.permission === 'granted'){
+      new Notification('🛵 New Angadi delivery!', {
+        body: `${o.customer?.name||'Customer'} · ${addrStr(o.customer?.address)} · ${fmt(o.total||0)}`,
+        icon: '../angadi/Andadi logo .png'
+      });
+    }
+  } catch(e){}
+}
+
+async function refresh(){ await loadOrders(); notifyNewOffers(); renderStats(); renderOffers(); renderOrders(); }
 
 // ── MAP ──
 function openMap(name, addr, addrEnc){
@@ -410,8 +442,10 @@ async function init(){
   const nameEl = document.getElementById('partnerNameDisplay');
   if (nameEl) nameEl.textContent = partner.name.split(' ')[0];
   await loadOrders();
+  notifyNewOffers();               // prime: record current offers without alerting
   setStatus(currentStatus);        // also persists status + renders offers
   renderStats(); renderOrders();
+  try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch(e){}
   if (sb){
     sb.channel('orders-partner')
       .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => { await refresh(); })
