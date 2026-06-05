@@ -51,6 +51,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 .back-link:hover{color:var(--clay-l);gap:0.7rem;}
 
 /* ── AUTH METHOD TABS ── */
+/* ── AUTH MODE TABS (Sign In / Create Account) ── */
+.auth-mode-tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border);}
+.auth-mode-tab{flex:1;padding:0.9rem;text-align:center;font-size:0.95rem;font-weight:600;color:rgba(246,237,216,0.35);cursor:pointer;transition:all 0.3s;border-bottom:2px solid transparent;margin-bottom:-2px;letter-spacing:0.04em;}
+.auth-mode-tab:hover{color:rgba(246,237,216,0.65);}
+.auth-mode-tab.active{color:var(--cream);border-bottom-color:var(--clay);}
+
 .method-tabs{display:flex;gap:0;margin-bottom:2rem;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:4px;}
 .method-tab{flex:1;padding:0.7rem;text-align:center;border-radius:9px;cursor:pointer;font-size:0.83rem;font-weight:500;color:rgba(246,237,216,0.4);transition:all 0.25s;display:flex;align-items:center;justify-content:center;gap:0.4rem;border:1px solid transparent;}
 .method-tab:hover{color:rgba(246,237,216,0.7);}
@@ -190,7 +196,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 
       <a href="index.html" class="back-link">← Back to Home</a>
 
-      <!-- METHOD TABS -->
+      <!-- SIGN IN / CREATE ACCOUNT TABS -->
+      <div class="auth-mode-tabs" id="authModeTabs">
+        <div class="auth-mode-tab active" id="tabSignin" onclick="switchAuthMode('signin')">Sign In</div>
+        <div class="auth-mode-tab" id="tabSignup" onclick="switchAuthMode('signup')">Create Account</div>
+      </div>
+
+      <!-- METHOD TABS (shown only in sign-in mode) -->
       <div class="method-tabs" id="methodTabs">
         <div class="method-tab active" data-method="email" onclick="switchMethod('email')">✉️ Email</div>
         <div class="method-tab" data-method="phone" onclick="switchMethod('phone')">📱 Phone OTP</div>
@@ -211,7 +223,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
         <form id="signinForm" novalidate>
           <div class="form-group">
             <label class="form-label">Email Address</label>
-            <input class="form-input" id="siEmail" type="email" placeholder="you@email.com" autocomplete="email">
+            <input class="form-input" id="siEmail" type="text" placeholder="Email or username" autocomplete="username" autocapitalize="off" inputmode="email">
             <span class="field-error" id="siEmailErr">Enter a valid email address</span>
           </div>
           <div class="form-group">
@@ -507,6 +519,19 @@ function showView(id) {
   document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById('view-' + id);
   if (el) el.classList.add('active');
+}
+
+function switchAuthMode(mode) {
+  document.querySelectorAll('.auth-mode-tab').forEach(t => t.classList.remove('active'));
+  if (mode === 'signin') {
+    document.getElementById('tabSignin').classList.add('active');
+    document.getElementById('methodTabs').style.display = 'flex';
+    showView('email-signin');
+  } else {
+    document.getElementById('tabSignup').classList.add('active');
+    document.getElementById('methodTabs').style.display = 'none';
+    showView('email-signup');
+  }
 }
 
 function switchMethod(method) {
