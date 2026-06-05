@@ -186,33 +186,32 @@ nav.scrolled{
 }
 .hero-bg{
   position:absolute;inset:0;
-  background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') 65% center/cover no-repeat;
+  /* Full image, centered — farmer silhouette fully visible */
+  background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center center/cover no-repeat;
 }
-/* Goat herd layer — blended naturally over the scene */
 .hero-bg::before{
-  content:'';position:absolute;inset:0;
-  background:url('ux ui design/goat_herd_upscaled_4x.png') right bottom/60% auto no-repeat;
-  mix-blend-mode:luminosity;
-  opacity:0.55;
-  z-index:1;
+  /* Cinematic left vignette — keeps text readable, right side reveals the full image */
+  content:'';position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(90deg,
+      rgba(8,5,3,0.95) 0%,
+      rgba(8,5,3,0.75) 35%,
+      rgba(8,5,3,0.35) 65%,
+      rgba(8,5,3,0.10) 100%);
 }
 .hero-bg::after{
+  /* Bottom + top subtle fade for depth */
   content:'';position:absolute;inset:0;z-index:2;
   background:
-    linear-gradient(105deg,
-      rgba(8,5,3,0.92) 0%,
-      rgba(8,5,3,0.70) 45%,
-      rgba(8,5,3,0.15) 100%),
-    linear-gradient(to top,
-      rgba(8,5,3,0.7) 0%,
-      transparent 35%);
+    linear-gradient(to top,   rgba(8,5,3,0.65) 0%, transparent 30%),
+    linear-gradient(to bottom, rgba(8,5,3,0.4)  0%, transparent 20%);
 }
-/* Premium warm dust particles effect */
+/* Golden hour glow — warm cinematic light on right */
 .hero-dust{
   position:absolute;inset:0;z-index:3;pointer-events:none;
   background:
-    radial-gradient(ellipse 40% 30% at 75% 80%, rgba(212,160,23,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 30% 20% at 60% 70%, rgba(196,98,45,0.06) 0%, transparent 60%);
+    radial-gradient(ellipse 55% 60% at 75% 55%, rgba(212,160,23,0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 85% 70%, rgba(196,98,45,0.10) 0%, transparent 55%);
 }
 .hero-content{
   position:relative;z-index:2;
@@ -1018,22 +1017,20 @@ footer{
   /* ── HERO MOBILE ── */
   .hero{height:100svh;min-height:600px;}
   .hero-bg{
-    background-position:55% center;
+    background-position:50% center;
+    background-size:cover;
   }
   .hero-bg::before{
-    background-size:90% auto;
-    background-position:right 85%;
-    opacity:0.45;
+    background:
+      linear-gradient(160deg,
+        rgba(8,5,3,0.95) 0%,
+        rgba(8,5,3,0.80) 40%,
+        rgba(8,5,3,0.40) 100%);
   }
   .hero-bg::after{
     background:
-      linear-gradient(160deg,
-        rgba(8,5,3,0.93) 0%,
-        rgba(8,5,3,0.78) 50%,
-        rgba(8,5,3,0.45) 100%),
-      linear-gradient(to top,
-        rgba(8,5,3,0.75) 0%,
-        transparent 40%);
+      linear-gradient(to top,   rgba(8,5,3,0.7) 0%, transparent 35%),
+      linear-gradient(to bottom, rgba(8,5,3,0.5) 0%, transparent 15%);
   }
   .hero-content{
     padding:0 1.2rem;
@@ -1344,9 +1341,9 @@ footer{
   <div class="why-grid">
     <div class="why-image-wrap">
       <div class="why-mosaic">
-        <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-mosaic-img main">
-        <img src="ux ui design/64bd2336e5c9ec0ac42a19c9e5861d6c.jpg" alt="Village goats" class="why-mosaic-img left">
-        <img src="ux ui design/774faf00ec39721760fbff902faa1367.jpg" alt="Farm fresh" class="why-mosaic-img right">
+        <img src="ux ui design/774faf00ec39721760fbff902faa1367.jpg" alt="Village goats" class="why-mosaic-img main">
+        <img src="ux ui design/64bd2336e5c9ec0ac42a19c9e5861d6c.jpg" alt="Village farmer" class="why-mosaic-img left">
+        <img src="ux ui design/64bf796660087b2db300f0a7ae93f4e9.jpg" alt="Farm fresh" class="why-mosaic-img right">
         <div class="why-mosaic-badge">
           <span class="why-mosaic-badge-num">100%</span>
           <span class="why-mosaic-badge-text">Village<br>Sourced</span>
