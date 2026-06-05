@@ -553,11 +553,13 @@ section{padding:6rem 4rem;}
   gap:0.75rem;
 }
 .why-mosaic-img{
-  object-fit:cover;border-radius:16px;
+  object-fit:cover;object-position:center 22%;border-radius:16px;
   filter:brightness(0.88) saturate(1.15);
   width:100%;display:block;
   transition:filter 0.4s, transform 0.4s;
 }
+/* keep people's heads in frame */
+.why-mosaic-img.left,.why-mosaic-img.right{object-position:center 18%;}
 .why-mosaic-img:hover{filter:brightness(0.95) saturate(1.2);transform:scale(1.01);}
 .why-mosaic-img.main{
   grid-column:1 / -1;
@@ -1217,7 +1219,7 @@ footer{
   </div>
   <div class="products-grid">
 
-    <!-- Card 1 — Featured with Goat Farmer Video -->
+    <!-- 1 · Village Goat Meat (featured, video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
         <video autoplay muted loop playsinline>
@@ -1241,7 +1243,7 @@ footer{
       </div>
     </div>
 
-    <!-- Card 2 with Country Chicken Farmer Video -->
+    <!-- 2 · Country Chicken (video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
         <video autoplay muted loop playsinline>
@@ -1264,48 +1266,7 @@ footer{
       </div>
     </div>
 
-    <!-- Card 3 -->
-    <div class="product-card fade-up">
-      <div class="product-img-wrap">
-        <img src="product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png" alt="Baby Goat Legs">
-        <div class="product-badge">🏆 Premium</div>
-        <div class="product-fresh">LIMITED</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Pilla Meka Kalu</div>
-        <div class="product-name">Baby Goat Legs</div>
-        <div class="product-desc">Tender baby goat legs, perfect for slow-roast or biryani. Rare, seasonal, extraordinary.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹980</span>
-            <span class="product-price-unit">per kilogram</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Baby Goat Legs',980,this)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 4 -->
-    <div class="product-card fade-up">
-      <div class="product-img-wrap">
-        <img src="product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png" alt="Country Eggs">
-        <div class="product-badge">🥚 Farm Fresh</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Nati Kodi Gudlu</div>
-        <div class="product-name">Country Eggs</div>
-        <div class="product-desc">Deep golden yolk, rich flavour. Free-range hens from Telangana farms. Packed in 6s and 12s.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹12</span>
-            <span class="product-price-unit">per egg</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Country Eggs',12,this)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 5 with Fisherman Video -->
+    <!-- 3 · Fresh River Fish (video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
         <video autoplay muted loop playsinline>
@@ -1328,23 +1289,22 @@ footer{
       </div>
     </div>
 
-    <!-- Card 6 -->
+    <!-- 4 · Country Eggs -->
     <div class="product-card fade-up">
       <div class="product-img-wrap">
-        <img src="product/mutton.png" alt="Full Goat">
-        <div class="product-badge">👑 Whole</div>
-        <div class="product-fresh">ORDER<br>AHEAD</div>
+        <img src="product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png" alt="Country Eggs">
+        <div class="product-badge">🥚 Farm Fresh</div>
       </div>
       <div class="product-body">
-        <div class="product-name-te">Poora Meka</div>
-        <div class="product-name">Full Goat</div>
-        <div class="product-desc">Whole farm goat, cleaned and cut to your preference. Ideal for events, functions & large families.</div>
+        <div class="product-name-te">Nati Kodi Gudlu</div>
+        <div class="product-name">Country Eggs</div>
+        <div class="product-desc">Deep golden yolk, rich flavour. Free-range hens from Telangana farms. Packed in 6s and 12s.</div>
         <div class="product-footer">
           <div class="product-price">
-            <span class="product-price-main">₹8,500</span>
-            <span class="product-price-unit">per goat</span>
+            <span class="product-price-main">₹12</span>
+            <span class="product-price-unit">per egg</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Full Goat',8500,this)">+</button>
+          <button class="btn-add" onclick="addToCart('Country Eggs',12,this)">+</button>
         </div>
       </div>
     </div>
