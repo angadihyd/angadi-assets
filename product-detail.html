@@ -656,6 +656,24 @@ footer{
     </div>
   </div>
 
+  <!-- REVIEWS -->
+  <div class="reviews-section" id="reviewsSection" style="max-width:900px;margin:0 auto;padding:1.5rem clamp(1.2rem,5vw,4rem);">
+    <div class="section-eyebrow">Reviews</div>
+    <h2 class="section-title">What customers <em>say</em></h2>
+    <div id="reviewsSummary" style="margin:1rem 0 1.4rem;"></div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1.5rem;">
+      <div style="font-weight:700;color:var(--cream);margin-bottom:0.6rem;">Rate this product</div>
+      <div id="starPick" style="font-size:1.7rem;color:#555;cursor:pointer;user-select:none;margin-bottom:0.7rem;letter-spacing:0.25rem;">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+      <input id="rvName" placeholder="Your name" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:10px;padding:0.7rem 0.9rem;font-family:inherit;font-size:0.9rem;margin-bottom:0.6rem;">
+      <textarea id="rvComment" rows="3" placeholder="Share your experience…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:10px;padding:0.7rem 0.9rem;font-family:inherit;font-size:0.9rem;resize:vertical;margin-bottom:0.7rem;"></textarea>
+      <button id="rvSubmit" class="btn-primary" type="button" style="padding:0.7rem 1.6rem;">Submit review</button>
+      <span id="rvMsg" style="margin-left:0.6rem;font-size:0.82rem;"></span>
+    </div>
+    <div id="reviewsList"></div>
+  </div>
+
   <!-- RELATED PRODUCTS -->
   <div class="related-section" id="relatedSection">
     <div class="section-eyebrow">You May Also Like</div>
@@ -1357,9 +1375,9 @@ function renderProduct(p) {
       <div class="product-eyebrow">${p.category.charAt(0).toUpperCase()+p.category.slice(1)}</div>
       <div class="product-name-te">${p.nameTE}</div>
       <h1 class="product-name-main">${p.name}</h1>
-      <div class="product-rating">
-        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <span class="rating-text">4.9 · <a href="#">128 reviews</a></span>
+      <div class="product-rating" id="ratingSummary">
+        <div class="stars" id="ratingStars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <span class="rating-text" id="ratingText"><a href="#reviewsSection">No reviews yet — be the first</a></span>
       </div>
 
       <div class="product-pricing">
@@ -1600,6 +1618,60 @@ function showNotFound(){
   document.getElementById('relatedSection').style.display = 'none';
 }
 
+// ── REVIEWS ──
+const RV_URL = 'https://www.angadi.farm/api/supabase';
+const RV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+let _rvRating = 0;
+function rEsc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function starHTML(r){ r=Math.round(r||0); let s=''; for(let i=1;i<=5;i++) s+= (i<=r?'★':'☆'); return s; }
+async function loadReviews(slug){
+  let list=[];
+  try{
+    const r=await fetch(RV_URL+'/rest/v1/reviews?select=*&product_slug=eq.'+encodeURIComponent(slug)+'&status=eq.approved&order=created_at.desc',{headers:{apikey:RV_KEY,Authorization:'Bearer '+RV_KEY}});
+    if(r.ok) list=await r.json();
+  }catch(e){}
+  const n=list.length, avg=n?list.reduce((s,x)=>s+(x.rating||0),0)/n:0;
+  const txt=document.getElementById('ratingText'), stars=document.getElementById('ratingStars');
+  if(n){
+    if(txt) txt.innerHTML=avg.toFixed(1)+' · <a href="#reviewsSection">'+n+' review'+(n>1?'s':'')+'</a>';
+    if(stars) stars.innerHTML=starHTML(avg).split('').map(c=>'<span>'+c+'</span>').join('');
+  } else if(txt){ txt.innerHTML='<a href="#reviewsSection">No reviews yet — be the first</a>'; }
+  const sum=document.getElementById('reviewsSummary');
+  if(sum) sum.innerHTML = n
+    ? `<div style="display:flex;align-items:center;gap:0.9rem;"><span style="font-size:2.4rem;font-weight:800;color:var(--gold);font-family:'Bebas Neue',sans-serif;line-height:1;">${avg.toFixed(1)}</span><div><div style="color:var(--gold);font-size:1.1rem;letter-spacing:0.1rem;">${starHTML(avg)}</div><div style="font-size:0.8rem;color:rgba(246,237,216,0.5);">${n} review${n>1?'s':''}</div></div></div>`
+    : `<div style="color:rgba(246,237,216,0.5);font-size:0.9rem;">No reviews yet. Share your experience below 👇</div>`;
+  const listEl=document.getElementById('reviewsList');
+  if(listEl) listEl.innerHTML=list.map(rv=>`
+    <div style="border-top:1px solid var(--border);padding:1rem 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;">
+        <strong style="color:var(--cream);">${rEsc(rv.name||'Customer')}</strong>
+        <span style="color:var(--gold);letter-spacing:0.08rem;">${starHTML(rv.rating)}</span>
+      </div>
+      ${rv.comment?`<div style="color:rgba(246,237,216,0.7);font-size:0.9rem;margin-top:0.3rem;">${rEsc(rv.comment)}</div>`:''}
+      <div style="color:rgba(246,237,216,0.3);font-size:0.72rem;margin-top:0.3rem;">${new Date(rv.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+    </div>`).join('');
+}
+function initReviewForm(slug){
+  const pick=document.getElementById('starPick'); if(!pick) return;
+  function paint(){ pick.querySelectorAll('span').forEach(sp=>{ sp.style.color=(+sp.dataset.v<=_rvRating)?'#D4A017':'#555'; }); }
+  pick.querySelectorAll('span').forEach(sp=>sp.addEventListener('click',()=>{ _rvRating=+sp.dataset.v; paint(); }));
+  try{ const u=JSON.parse(localStorage.getItem('angadi_user')||'{}'); if(u.name){ const n=document.getElementById('rvName'); if(n) n.value=u.name; } }catch(e){}
+  const btn=document.getElementById('rvSubmit'); if(!btn) return;
+  btn.addEventListener('click', async ()=>{
+    const msg=document.getElementById('rvMsg');
+    if(!_rvRating){ msg.textContent='Pick a star rating'; msg.style.color='#E57373'; return; }
+    const name=document.getElementById('rvName').value.trim()||'Customer';
+    const comment=document.getElementById('rvComment').value.trim();
+    btn.disabled=true; msg.textContent='Submitting…'; msg.style.color='';
+    try{
+      const r=await fetch(RV_URL+'/rest/v1/reviews',{method:'POST',headers:{apikey:RV_KEY,Authorization:'Bearer '+RV_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({product_slug:slug,name,rating:_rvRating,comment,status:'approved'})});
+      if(r.ok){ msg.textContent='✓ Thanks for your review!'; msg.style.color='#7BC67E'; document.getElementById('rvComment').value=''; _rvRating=0; paint(); loadReviews(slug); }
+      else { msg.textContent='Could not submit'; msg.style.color='#E57373'; }
+    }catch(e){ msg.textContent='Could not submit'; msg.style.color='#E57373'; }
+    btn.disabled=false;
+  });
+}
+
 async function initDetail(){
   let product = PRODUCTS[productId] ? { ...PRODUCTS[productId] } : null;
   let inStock = true;
@@ -1625,6 +1697,8 @@ async function initDetail(){
 
   if (!product){ showNotFound(); return; }
   renderProduct(product);
+  loadReviews(productId);
+  initReviewForm(productId);
 
   // Sold-out handling
   if (!inStock){

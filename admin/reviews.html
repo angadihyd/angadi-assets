@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reviews — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--ink:#080503;--ink-2:#100804;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.2rem;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
+.filters{display:flex;gap:0.5rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.fb{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:rgba(246,237,216,0.6);border-radius:100px;padding:0.4rem 1rem;font-size:0.82rem;cursor:pointer;font-family:inherit;}
+.fb.active{background:var(--clay);border-color:var(--clay);color:#fff;}
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.9rem;}
+.row1{display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:0.4rem;}
+.slug{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--gold);background:rgba(212,160,23,0.08);padding:0.15rem 0.6rem;border-radius:100px;}
+.stars{color:var(--gold);letter-spacing:0.06rem;}
+.pill{font-size:0.68rem;font-weight:700;border-radius:100px;padding:0.15rem 0.6rem;}
+.pill.approved{background:rgba(76,175,80,0.12);color:var(--green);}
+.pill.hidden{background:rgba(229,115,115,0.12);color:var(--red);}
+.cmt{color:rgba(246,237,216,0.75);font-size:0.9rem;margin:0.3rem 0;}
+.meta{font-size:0.72rem;color:rgba(246,237,216,0.35);}
+.acts{display:flex;gap:0.5rem;margin-top:0.7rem;flex-wrap:wrap;}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--cream);border-radius:8px;padding:0.4rem 0.9rem;font-size:0.76rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff;}
+.btn.red{color:var(--red);border-color:rgba(229,115,115,0.3);}
+.empty{text-align:center;color:rgba(246,237,216,0.4);padding:3rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden">
+  <h1 style="font-family:'Playfair Display',serif;">Admin only</h1>
+  <p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p>
+</div>
+<div id="app" style="display:none;">
+  <div class="top">
+    <h1>⭐ Product Reviews</h1>
+    <a class="back" href="dashboard.html">← Dashboard</a>
+  </div>
+  <div class="filters" id="filters">
+    <button class="fb active" data-f="all">All <span id="c-all">0</span></button>
+    <button class="fb" data-f="approved">Approved <span id="c-approved">0</span></button>
+    <button class="fb" data-f="hidden">Hidden <span id="c-hidden">0</span></button>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+const URL='https://www.angadi.farm/api/supabase';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+let all=[], filter='all';
+if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+function stars(r){ r=Math.round(r||0); let s=''; for(let i=1;i<=5;i++) s+=(i<=r?'★':'☆'); return s; }
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function load(){
+  try{ const r=await fetch(URL+'/rest/v1/reviews?select=*&order=created_at.desc',{headers:H}); all=r.ok?await r.json():[]; }catch(e){ all=[]; }
+  render();
+}
+function render(){
+  const counts={all:all.length,approved:0,hidden:0};
+  all.forEach(r=>{ counts[r.status]=(counts[r.status]||0)+1; });
+  ['all','approved','hidden'].forEach(k=>{ const el=document.getElementById('c-'+k); if(el) el.textContent=counts[k]||0; });
+  const rows=all.filter(r=> filter==='all'||r.status===filter);
+  const list=document.getElementById('list');
+  if(!rows.length){ list.innerHTML='<div class="empty">No reviews here yet.</div>'; return; }
+  list.innerHTML=rows.map(r=>`
+    <div class="card">
+      <div class="row1">
+        <span class="slug">${esc(r.product_slug)}</span>
+        <span class="stars">${stars(r.rating)}</span>
+        <strong>${esc(r.name||'Customer')}</strong>
+        <span class="pill ${r.status}">${r.status}</span>
+      </div>
+      ${r.comment?`<div class="cmt">${esc(r.comment)}</div>`:''}
+      <div class="meta">${new Date(r.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="acts">
+        ${r.status!=='approved'?`<button class="btn green" onclick="setStatus('${r.id}','approved')">✓ Approve</button>`:''}
+        ${r.status!=='hidden'?`<button class="btn" onclick="setStatus('${r.id}','hidden')">🚫 Hide</button>`:''}
+        <button class="btn red" onclick="del('${r.id}')">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+async function setStatus(id,status){
+  await fetch(URL+'/rest/v1/reviews?id=eq.'+id,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify({status})});
+  const r=all.find(x=>x.id===id); if(r) r.status=status; render();
+}
+async function del(id){
+  if(!confirm('Delete this review permanently?')) return;
+  await fetch(URL+'/rest/v1/reviews?id=eq.'+id,{method:'DELETE',headers:H});
+  all=all.filter(x=>x.id!==id); render();
+}
+document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.fb').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); filter=b.dataset.f; render();
+}));
+</script>
+</body>
+</html>
