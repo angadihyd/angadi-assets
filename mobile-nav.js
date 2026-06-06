@@ -137,12 +137,68 @@
     }, function () {}, { timeout: 8000, maximumAge: 600000 });
   }
 
+  // ── TELUGU TOGGLE (EN ⇄ తెలుగు) ──
+  var I18N = {
+    'Village Goat Meat':'గ్రామ మేక మాంసం','Country Chicken':'నాటు కోడి','Fresh River Fish':'తాజా నది చేప',
+    'Country Eggs':'నాటు కోడి గుడ్లు','Goat Liver':'మేక కాలేయం','Goat Legs':'మేక కాళ్లు','Goat Head':'మేక తల',
+    'Baby Goat Legs':'పిల్ల మేక కాళ్లు','Full Goat':'పూర్తి మేక',
+    'All Products':'అన్ని ఉత్పత్తులు','Proceed to Checkout':'చెక్‌అవుట్‌కు వెళ్లండి','Continue to Payment':'చెల్లింపుకు కొనసాగండి',
+    'Order via WhatsApp':'వాట్సాప్ ద్వారా ఆర్డర్','Add to Cart':'కార్ట్‌లో చేర్చు','View All Products':'అన్ని ఉత్పత్తులు చూడండి',
+    'Shop Now':'ఇప్పుడే కొనండి','WhatsApp Order':'వాట్సాప్ ఆర్డర్','Submit review':'సమీక్ష ఇవ్వండి','Rate this product':'ఈ ఉత్పత్తిని రేట్ చేయండి',
+    'Order again':'మళ్లీ ఆర్డర్','Add to cart':'కార్ట్‌లో చేర్చు','Use my location':'నా లొకేషన్ వాడండి','Place Order':'ఆర్డర్ చేయండి',
+    'Delivery Address':'డెలివరీ చిరునామా','Full Name':'పూర్తి పేరు','Phone Number':'ఫోన్ నంబర్','Landmark':'ల్యాండ్‌మార్క్',
+    'Cash on Delivery':'డెలివరీ సమయంలో నగదు','Pay Online':'ఆన్‌లైన్ చెల్లింపు','Subtotal':'ఉప మొత్తం','Total':'మొత్తం',
+    'Delivery':'డెలివరీ','Discount':'తగ్గింపు','Quantity':'పరిమాణం','Promo code':'ప్రోమో కోడ్','Apply':'వర్తించు',
+    'Reviews':'సమీక్షలు','What customers':'కస్టమర్లు ఏమి','Why Angadi':'ఎందుకు అంగడి','Our Handpicked Selection':'మా ఎంపిక',
+    'per kilogram':'కిలోకు','per egg':'గుడ్డుకు','SOLD OUT':'అయిపోయింది','Home':'హోమ్','Shop':'షాప్','Cart':'కార్ట్',
+    'Orders':'ఆర్డర్లు','Account':'ఖాతా','Login':'లాగిన్','My Orders':'నా ఆర్డర్లు','My Profile':'నా ప్రొఫైల్',
+    'Goat':'మేక','Chicken':'కోడి','Fish':'చేప','Eggs':'గుడ్లు','Free':'ఉచితం','Delivered':'డెలివరీ అయింది'
+  };
+  var I18N_KEYS = Object.keys(I18N).sort(function (a, b) { return b.length - a.length; });
+  var origText = new WeakMap();
+  function translateStr(s) { var out = s; for (var i = 0; i < I18N_KEYS.length; i++) { var k = I18N_KEYS[i]; if (out.indexOf(k) !== -1) out = out.split(k).join(I18N[k]); } return out; }
+  function walkLang(root, toTE) {
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = w.nextNode())) {
+      var p = n.parentNode; if (!p) continue;
+      var t = p.nodeName; if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEXTAREA') continue;
+      if (p.closest && p.closest('.ang-lang')) continue;
+      var orig = origText.has(n) ? origText.get(n) : n.nodeValue;
+      if (toTE) { if (!origText.has(n)) origText.set(n, orig); var tr = translateStr(orig); if (tr !== n.nodeValue) n.nodeValue = tr; }
+      else { if (origText.has(n)) n.nodeValue = orig; }
+    }
+  }
+  var langObserver = null;
+  function applyLang(lang) {
+    var toTE = lang === 'te';
+    walkLang(document.body, toTE);
+    var lbl = document.getElementById('angLangLbl'); if (lbl) lbl.textContent = toTE ? 'English' : 'తెలుగు';
+    try { localStorage.setItem('angadi_lang', lang); } catch (e) {}
+    if (toTE && !langObserver) {
+      langObserver = new MutationObserver(function (muts) {
+        muts.forEach(function (m) { m.addedNodes && m.addedNodes.forEach(function (node) { if (node.nodeType === 1) walkLang(node, true); else if (node.nodeType === 3 && node.parentNode) walkLang(node.parentNode, true); }); });
+      });
+      langObserver.observe(document.body, { childList: true, subtree: true });
+    } else if (!toTE && langObserver) { langObserver.disconnect(); langObserver = null; }
+  }
+  function setupLang() {
+    var cur = 'en'; try { cur = localStorage.getItem('angadi_lang') || 'en'; } catch (e) {}
+    var b = document.createElement('button');
+    b.className = 'ang-lang';
+    b.innerHTML = '🌐 <span id="angLangLbl">' + (cur === 'te' ? 'English' : 'తెలుగు') + '</span>';
+    b.style.cssText = 'position:fixed;right:1rem;top:74px;z-index:99999;background:rgba(16,8,4,0.92);color:#F6EDD8;border:1px solid rgba(212,160,23,0.4);border-radius:100px;padding:0.4rem 0.8rem;font-size:0.74rem;font-weight:700;cursor:pointer;font-family:inherit;backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,0.4);';
+    b.onclick = function () { var next = (localStorage.getItem('angadi_lang') === 'te') ? 'en' : 'te'; applyLang(next); };
+    document.body.appendChild(b);
+    if (cur === 'te') setTimeout(function () { applyLang('te'); }, 150);
+  }
+
   function mount() {
     if (!document.body) return;
     upgradeBrand();
     document.body.appendChild(nav);
     refreshBadge();
     showLocation();
+    setupLang();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
