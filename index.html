@@ -17,8 +17,14 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Angadi — Village Meat Delivery Hyderabad">
 <meta name="twitter:description" content="Premium free-range goat, country chicken & fresh fish from Telangana villages.">
+<!-- Performance: resource hints -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://ijvkvgmzjjhwvrwtladj.supabase.co">
+<link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+<!-- Fonts: load asynchronously, swap immediately so text shows without waiting -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@400;500;600&family=Bebas+Neue&display=swap&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@400;500;600&family=Bebas+Neue&display=swap"></noscript>
 <style>
 /* ── RESET & ROOT ── */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -1229,8 +1235,8 @@ footer{
     <!-- 1 · Village Goat Meat (featured, video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline>
-          <source src="product/gaot farmer animated video.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline class="lazy-video">
+          <source data-src="product/gaot farmer animated video.mp4" type="video/mp4">
         </video>
         <img src="product/mutton.png" alt="Village Goat Meat" class="pip-product-img">
         <div class="product-badge">⭐ Bestseller</div>
@@ -1253,8 +1259,8 @@ footer{
     <!-- 2 · Country Chicken (video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline>
-          <source src="product/country chiken animated video.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline class="lazy-video">
+          <source data-src="product/country chiken animated video.mp4" type="video/mp4">
         </video>
         <img src="product/country chiken.png" alt="Country Chicken" class="pip-product-img">
         <div class="product-badge">🌿 Nati</div>
@@ -1276,8 +1282,8 @@ footer{
     <!-- 3 · Fresh River Fish (video) -->
     <div class="product-card fade-up">
       <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline>
-          <source src="product/fisher man animated video.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline class="lazy-video">
+          <source data-src="product/fisher man animated video.mp4" type="video/mp4">
         </video>
         <img src="product/fish.png" alt="Fresh River Fish" class="pip-product-img">
         <div class="product-badge">🐟 River Fresh</div>
@@ -1685,12 +1691,36 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// LAZY LOAD IMAGES below the fold
+const imgObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    if (el.dataset.src) { el.src = el.dataset.src; delete el.dataset.src; }
+    imgObserver.unobserve(el);
+  });
+}, { rootMargin: '200px' });
+document.querySelectorAll('img[data-src]').forEach(el => imgObserver.observe(el));
+
+// LAZY LOAD VIDEOS — only fetch when they scroll into view (saves 43MB on initial load)
+const videoObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const video = e.target;
+    video.querySelectorAll('source[data-src]').forEach(s => { s.src = s.dataset.src; delete s.dataset.src; });
+    video.load();
+    video.play().catch(() => {});
+    videoObserver.unobserve(video);
+  });
+}, { rootMargin: '150px' });
+document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe(v));
 </script>
 <script>
-/* Live prices/stock on the homepage featured cards (matches by product name) */
+/* Live prices/stock — deferred until page is idle so it doesn't block first paint */
 (function(){
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-  fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=name,price,unit,in_stock',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=name,price,unit,in_stock',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
     .then(function(r){return r.ok?r.json():[];})
     .then(function(list){
       if(!Array.isArray(list)||!list.length) return;
@@ -1706,7 +1736,10 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
           else { btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); addToCart(p.name, Number(p.price), btn); }; }
         }
       });
-    }).catch(function(){});
+    }).catch(function(){});}
+  // Run after page is interactive — doesn't block first paint
+  if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 3000 });
+  else setTimeout(run, 800);
 })();
 </script>
 <script>
