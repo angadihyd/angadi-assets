@@ -123,8 +123,8 @@
     try { saved = localStorage.getItem('angadi_location'); } catch (e) {}
     if (saved) setLoc(saved);
     if (!('geolocation' in navigator)) return;
-    // silent if permission already granted (e.g. from checkout); prompts once otherwise
-    navigator.geolocation.getCurrentPosition(function (p) {
+
+    function onPos(p) {
       fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + p.coords.latitude + '&lon=' + p.coords.longitude + '&addressdetails=1')
         .then(function (r) { return r.json(); })
         .then(function (d) {
@@ -134,7 +134,18 @@
           var label = area ? (area + (city ? ', ' + city : '')) : (city || '');
           if (label) { try { localStorage.setItem('angadi_location', label); } catch (e) {} setLoc(label); }
         }).catch(function () {});
-    }, function () {}, { timeout: 8000, maximumAge: 600000 });
+    }
+    function detect() { navigator.geolocation.getCurrentPosition(onPos, function () {}, { timeout: 8000, maximumAge: 600000 }); }
+    function askedBefore() { try { return localStorage.getItem('angadi_loc_asked') === '1'; } catch (e) { return false; } }
+    function markAsked() { try { localStorage.setItem('angadi_loc_asked', '1'); } catch (e) {} }
+
+    // Granted → detect silently (no prompt). Prompt state → ask only once, ever. Denied → never.
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
+        if (st.state === 'granted') detect();
+        else if (st.state === 'prompt' && !askedBefore()) { markAsked(); detect(); }
+      }).catch(function () { if (!askedBefore()) { markAsked(); detect(); } });
+    } else if (!askedBefore()) { markAsked(); detect(); }
   }
 
   // ── TELUGU TOGGLE (EN ⇄ తెలుగు) ──

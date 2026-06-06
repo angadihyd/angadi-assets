@@ -795,9 +795,15 @@ footer{
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-.card-opts{display:flex;gap:0.4rem;margin:0.55rem 0 0.1rem;}
+.card-opts{display:flex;gap:0.4rem;margin:0.55rem 0 0.1rem;flex-wrap:wrap;}
 .card-sel{flex:1;min-width:0;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.4rem 0.5rem;font-size:0.74rem;font-family:'DM Sans',sans-serif;cursor:pointer;}
 .card-sel:focus{outline:none;border-color:var(--clay-l);}
+.card-qty{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.04);flex:1;min-width:120px;}
+.card-qty button{width:30px;flex-shrink:0;background:rgba(196,98,45,0.14);border:none;color:var(--cream);font-size:1rem;line-height:1;cursor:pointer;padding:0.4rem 0;font-family:inherit;}
+.card-qty button:active{background:var(--clay);}
+.card-qty input{flex:1;min-width:0;width:100%;background:none;border:none;color:var(--cream);text-align:center;font-size:0.8rem;font-family:inherit;padding:0.4rem 0.2rem;-moz-appearance:textfield;}
+.card-qty input::-webkit-outer-spin-button,.card-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.card-qty-unit{font-size:0.7rem;color:rgba(246,237,216,0.45);padding:0 0.45rem;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -1338,57 +1344,80 @@ try { _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
 function unitLabel(u){ return u === 'kg' ? 'kilogram' : u; }
 function esc(s){ return (s||'').replace(/'/g,"\\'"); }
 
-// Selection options
-const WEIGHTS_KG = [{label:'250 g',f:0.25},{label:'500 g',f:0.5},{label:'1 kg',f:1},{label:'2 kg',f:2}];
-const PACKS_EGG  = [{label:'12 pack',n:12},{label:'24 pack',n:24},{label:'30 pack',n:30}];
+// Cut options + fully-custom quantity (grams / egg count)
 const CUTS = { goat:['Curry Cut','Biryani Cut','Boneless','Keema'], chicken:['Curry Cut','Biryani Cut','Boneless'], fish:['Whole','Cleaned & Cut'] };
 const PRODUCTS_BY_SLUG = {};
 
+function qtyConf(p){
+  if (p.unit === 'kg')  return { unit:'g',    def:1000, step:250, min:50,  max:50000 };
+  if (p.unit === 'egg') return { unit:'eggs', def:12,   step:6,   min:1,   max:200   };
+  return null;  // head / goat / 4 pcs → whole unit
+}
+function priceFor(p, q){
+  if (p.unit === 'kg')  return Number(p.price) * (q/1000);
+  if (p.unit === 'egg') return Number(p.price) * q;
+  return Number(p.price);
+}
+function qtyLabel(p, q){
+  if (p.unit === 'kg')  return (q % 1000 === 0) ? (q/1000)+' kg' : (q>=1000 ? (q/1000)+' kg' : q+' g');
+  if (p.unit === 'egg') return q + ' eggs';
+  return p.unit;
+}
+function getQty(p){
+  var conf = qtyConf(p); if(!conf) return null;
+  var el = document.getElementById('q-'+p.slug);
+  var v = el ? parseInt(el.value,10) : conf.def;
+  if (isNaN(v) || v < conf.min) v = conf.min;
+  if (conf.max && v > conf.max) v = conf.max;
+  return v;
+}
 function optsHTML(p){
   var stop = "event.preventDefault();event.stopPropagation();";
-  var w = '';
-  if (p.unit === 'kg') {
-    w = `<select class="card-sel" id="w-${p.slug}" onclick="${stop}" onchange="${stop}updateCardPrice('${p.slug}')">`
-      + WEIGHTS_KG.map(o=>`<option value="${o.f}" ${o.f===1?'selected':''}>${o.label}</option>`).join('') + `</select>`;
-  } else if (p.unit === 'egg') {
-    w = `<select class="card-sel" id="w-${p.slug}" onclick="${stop}" onchange="${stop}updateCardPrice('${p.slug}')">`
-      + PACKS_EGG.map(o=>`<option value="${o.n}" ${o.n===12?'selected':''}>${o.label}</option>`).join('') + `</select>`;
+  var conf = qtyConf(p), q = '';
+  if (conf){
+    q = `<div class="card-qty" onclick="${stop}">`
+      + `<button type="button" onclick="${stop}cardStep('${p.slug}',-1)">−</button>`
+      + `<input id="q-${p.slug}" type="number" inputmode="numeric" value="${conf.def}" min="${conf.min}" step="${conf.step}" onclick="${stop}" oninput="${stop}updateCardPrice('${p.slug}')">`
+      + `<span class="card-qty-unit">${conf.unit}</span>`
+      + `<button type="button" onclick="${stop}cardStep('${p.slug}',1)">+</button></div>`;
   }
   var c = '';
   if (CUTS[p.category]) {
     c = `<select class="card-sel" id="c-${p.slug}" onclick="${stop}" onchange="${stop}">`
       + CUTS[p.category].map((x,i)=>`<option ${i===0?'selected':''}>${x}</option>`).join('') + `</select>`;
   }
-  return (w||c) ? `<div class="card-opts" onclick="${stop}">${w}${c}</div>` : '';
+  return (q||c) ? `<div class="card-opts" onclick="${stop}">${q}${c}</div>` : '';
 }
-function basePriceFor(p){
-  if (p.unit === 'kg')  return Number(p.price);            // shown per 1kg default
-  if (p.unit === 'egg') return Number(p.price) * 12;       // shown per 12 default
-  return Number(p.price);
+function cardStep(slug, dir){
+  var p = PRODUCTS_BY_SLUG[slug]; if(!p) return;
+  var conf = qtyConf(p), el = document.getElementById('q-'+slug); if(!conf||!el) return;
+  var v = parseInt(el.value,10); if(isNaN(v)) v = conf.def;
+  v += dir*conf.step; if(v<conf.min) v=conf.min; if(conf.max&&v>conf.max) v=conf.max;
+  el.value = v; updateCardPrice(slug);
 }
 function updateCardPrice(slug){
   var p = PRODUCTS_BY_SLUG[slug]; if(!p) return;
-  var sel = document.getElementById('w-'+slug);
-  var price = Number(p.price);
-  if (p.unit === 'kg'  && sel) price = Number(p.price) * parseFloat(sel.value);
-  else if (p.unit === 'egg' && sel) price = Number(p.price) * parseInt(sel.value,10);
-  var el = document.getElementById('price-'+slug);
-  if (el) el.textContent = '₹' + Math.round(price).toLocaleString('en-IN');
+  var conf = qtyConf(p);
+  var q = conf ? getQty(p) : 1;
+  var pe = document.getElementById('price-'+slug);
+  if (pe) pe.textContent = '₹' + Math.round(priceFor(p,q)).toLocaleString('en-IN');
+  var ue = document.getElementById('punit-'+slug);
+  if (ue && conf) ue.textContent = 'for ' + qtyLabel(p,q);
 }
 function addCardToCart(slug, btn){
   var p = PRODUCTS_BY_SLUG[slug]; if(!p) return;
-  var wsel = document.getElementById('w-'+slug), csel = document.getElementById('c-'+slug);
-  var price = Number(p.price), label = '';
-  if (p.unit === 'kg' && wsel){ price = Number(p.price)*parseFloat(wsel.value); label = wsel.options[wsel.selectedIndex].text; }
-  else if (p.unit === 'egg' && wsel){ price = Number(p.price)*parseInt(wsel.value,10); label = wsel.options[wsel.selectedIndex].text; }
-  var cut = csel ? csel.value : '';
+  var conf = qtyConf(p), q = conf ? getQty(p) : 1;
+  var csel = document.getElementById('c-'+slug), cut = csel ? csel.value : '';
+  var label = conf ? qtyLabel(p,q) : '';
   var name = p.name + (label?' · '+label:'') + (cut?' · '+cut:'');
-  addToCart(name, Math.round(price), btn);
+  addToCart(name, Math.round(priceFor(p,q)), btn);
 }
 
 function productCardHTML(p){
   const sold = !p.in_stock;
-  const baseLabel = p.unit==='kg' ? 'per kilogram' : p.unit==='egg' ? 'per 12 pack' : 'per '+p.unit;
+  const _conf = qtyConf(p);
+  const _initQ = _conf ? _conf.def : 1;
+  const baseLabel = _conf ? ('for '+qtyLabel(p,_initQ)) : ('per '+p.unit);
   return `
   <a href="product-detail.html?id=${p.slug}" class="product-card fade-up visible" data-category="${p.category}" data-price="${p.price}" data-name="${p.name}" data-order="${p.sort_order||100}">
     <div class="product-img-wrap${p.video?' has-video':''}">
@@ -1405,8 +1434,8 @@ function productCardHTML(p){
       ${sold ? '' : optsHTML(p)}
       <div class="product-footer">
         <div class="product-price">
-          <span class="product-price-main" id="price-${p.slug}">₹${Math.round(basePriceFor(p)).toLocaleString('en-IN')}</span>
-          <span class="product-price-unit">${baseLabel}</span>
+          <span class="product-price-main" id="price-${p.slug}">₹${Math.round(priceFor(p,_initQ)).toLocaleString('en-IN')}</span>
+          <span class="product-price-unit" id="punit-${p.slug}">${baseLabel}</span>
         </div>
         ${sold
           ? `<button class="btn-add" disabled style="opacity:0.35;cursor:not-allowed;">+</button>`
