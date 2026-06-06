@@ -685,7 +685,18 @@ const DELIVERY_OPTIONS = [
 let cart        = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
 let promoCode   = null;
 let promoDiscount = 0;
+let appliedCoupon = null;   // {code,type,value,min_order,label} from DB or PROMOS
 let selectedDelivery = 'standard';
+
+const COUPON_URL = 'https://www.angadi.farm/api/supabase';
+const COUPON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+async function fetchCoupon(code){
+  try{
+    const r = await fetch(COUPON_URL+'/rest/v1/coupons?select=*&active=eq.true&code=eq.'+encodeURIComponent(code),{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
+    if(r.ok){ const a = await r.json(); if(a && a.length) return a[0]; }
+  }catch(e){}
+  return null;
+}
 
 function saveCart() {
   localStorage.setItem('angadi_cart', JSON.stringify(cart));
@@ -704,10 +715,10 @@ function deliveryCost() {
   return opt.price;
 }
 function discountAmount() {
-  if (!promoCode) return 0;
-  const p = PROMOS[promoCode];
+  const p = appliedCoupon || (promoCode ? PROMOS[promoCode] : null);
   if (!p) return 0;
-  return p.type === 'percent' ? Math.round(subtotal() * p.value / 100) : p.value;
+  if (p.min_order && subtotal() < p.min_order) return 0;
+  return p.type === 'percent' ? Math.round(subtotal() * p.value / 100) : Number(p.value);
 }
 function total() {
   return subtotal() - discountAmount() + deliveryCost();
@@ -728,6 +739,7 @@ function getItemMeta(name) {
 // ─────────────────────────────────────────────
 function render() {
   updateNavBadge();
+  if (appliedCoupon || promoCode) saveCoupon();   // keep discount in sync if items change
 
   const sub = subtotal();
   const itemCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -881,6 +893,13 @@ function renderCartBody() {
           <div class="trust-mini-item">❄️ Cold Chain</div>
           <div class="trust-mini-item">✅ FSSAI Certified</div>
         </div>
+
+        <!-- REFER & EARN -->
+        <div style="margin-top:1.2rem;background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(196,98,45,0.08));border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:14px;padding:1rem;">
+          <div style="font-weight:700;color:var(--cream);font-size:0.95rem;">🎁 Refer &amp; Earn</div>
+          <div style="font-size:0.82rem;color:rgba(246,237,216,0.55);margin:0.3rem 0 0.7rem;">Invite friends — they get <strong style="color:var(--gold);">₹100 off</strong> their first order with code <strong style="color:var(--gold);">FIRST100</strong>.</div>
+          <a href="https://wa.me/?text=${encodeURIComponent('Try Angadi — fresh village goat, country chicken & farm eggs delivered in Hyderabad! 🐐 Use code FIRST100 for ₹100 off your first order: https://www.angadi.farm')}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#25D366;color:#fff;border-radius:100px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;text-decoration:none;">💬 Share on WhatsApp</a>
+        </div>
       </div>
 
     </div>
@@ -954,27 +973,36 @@ function selectDelivery(id) {
   render();
 }
 
-function applyPromo() {
+async function applyPromo() {
   const code = (document.getElementById('promoInput')?.value || '').trim().toUpperCase();
   const msg = document.getElementById('promoMsg');
   if (!code) { msg.textContent = 'Please enter a promo code.'; msg.className = 'promo-msg error'; return; }
-  if (PROMOS[code]) {
-    promoCode = code;
-    promoDiscount = discountAmount();
-    msg.textContent = `✓ "${code}" applied — ${PROMOS[code].label}`;
-    msg.className = 'promo-msg success';
-    render();
-  } else {
-    promoCode = null;
-    msg.textContent = 'Invalid promo code.';
-    msg.className = 'promo-msg error';
-    render();
+  msg.textContent = 'Checking…'; msg.className = 'promo-msg';
+  // DB coupon first, then fall back to the built-in codes
+  let c = await fetchCoupon(code);
+  if (!c && PROMOS[code]) c = { code, ...PROMOS[code] };
+  if (!c) { appliedCoupon=null; promoCode=null; saveCoupon(); msg.textContent='Invalid or expired code.'; msg.className='promo-msg error'; render(); return; }
+  if (c.expires_at && new Date(c.expires_at) < new Date(new Date().toDateString())) {
+    appliedCoupon=null; promoCode=null; saveCoupon(); msg.textContent='This code has expired.'; msg.className='promo-msg error'; render(); return;
   }
+  if (c.min_order && subtotal() < c.min_order) {
+    msg.textContent = `Add ₹${(c.min_order - subtotal()).toLocaleString('en-IN')} more to use ${code} (min ₹${c.min_order}).`;
+    msg.className = 'promo-msg error'; return;
+  }
+  appliedCoupon = c; promoCode = code; promoDiscount = discountAmount(); saveCoupon();
+  msg.textContent = `✓ "${code}" applied${c.label ? ' — '+c.label : ''}`;
+  msg.className = 'promo-msg success';
+  render();
+}
+function saveCoupon(){
+  // pass to checkout
+  localStorage.setItem('angadi_promo_discount', String(discountAmount()));
+  localStorage.setItem('angadi_promo_code', promoCode || '');
 }
 
 document.getElementById('clearCartBtn').addEventListener('click', () => {
   if (confirm('Clear your entire cart?')) {
-    cart = []; saveCart(); promoCode = null; render();
+    cart = []; saveCart(); promoCode = null; appliedCoupon = null; saveCoupon(); render();
   }
 });
 

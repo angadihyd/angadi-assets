@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupons — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.2rem;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--cream);border-radius:8px;padding:0.45rem 0.95rem;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff;}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff;}
+.btn.red{color:var(--red);border-color:rgba(229,115,115,0.3);}
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.9rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.code{font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);font-size:1rem;letter-spacing:0.05em;}
+.desc{flex:1;min-width:140px;font-size:0.85rem;color:rgba(246,237,216,0.7);}
+.pill{font-size:0.66rem;font-weight:700;border-radius:100px;padding:0.15rem 0.6rem;}
+.pill.on{background:rgba(76,175,80,0.12);color:var(--green);}
+.pill.off{background:rgba(229,115,115,0.12);color:var(--red);}
+.form{background:rgba(212,160,23,0.05);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1.4rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.7rem;align-items:end;}
+.form label{font-size:0.72rem;color:rgba(246,237,216,0.5);display:block;margin-bottom:0.25rem;}
+.in{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.55rem 0.7rem;font-family:inherit;font-size:0.85rem;}
+.empty{text-align:center;color:rgba(246,237,216,0.4);padding:2.5rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
+<div id="app" style="display:none;">
+  <div class="top"><h1>🎟 Coupons</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="form">
+    <div><label>Code</label><input class="in" id="f-code" placeholder="FIRST100"></div>
+    <div><label>Type</label><select class="in" id="f-type"><option value="percent">Percent %</option><option value="flat">Flat ₹</option></select></div>
+    <div><label>Value</label><input class="in" id="f-value" type="number" placeholder="100"></div>
+    <div><label>Min order ₹</label><input class="in" id="f-min" type="number" placeholder="0"></div>
+    <div><label>Label</label><input class="in" id="f-label" placeholder="₹100 off"></div>
+    <div><label>Expires (optional)</label><input class="in" id="f-exp" type="date"></div>
+    <div><button class="btn primary" onclick="saveCoupon()" id="saveBtn">＋ Add coupon</button></div>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+const URL='https://www.angadi.farm/api/supabase';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+let all=[], editId=null;
+if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,"\\'"); }
+async function load(){ try{ const r=await fetch(URL+'/rest/v1/coupons?select=*&order=created_at.desc',{headers:H}); all=r.ok?await r.json():[]; }catch(e){ all=[]; } render(); }
+function descOf(c){ return (c.type==='percent'?c.value+'% off':'₹'+c.value+' off') + (c.min_order?` · min ₹${c.min_order}`:'') + (c.expires_at?` · till ${c.expires_at}`:''); }
+function render(){
+  const list=document.getElementById('list');
+  if(!all.length){ list.innerHTML='<div class="empty">No coupons yet. Add one above.</div>'; return; }
+  list.innerHTML=all.map(c=>`
+    <div class="card">
+      <span class="code">${esc(c.code)}</span>
+      <span class="desc">${esc(c.label||'')}<br><span style="color:rgba(246,237,216,0.4);font-size:0.78rem;">${descOf(c)}</span></span>
+      <span class="pill ${c.active?'on':'off'}">${c.active?'Active':'Off'}</span>
+      <button class="btn" onclick="toggle('${c.id}',${!c.active})">${c.active?'Disable':'Enable'}</button>
+      <button class="btn" onclick="edit('${c.id}')">✎ Edit</button>
+      <button class="btn red" onclick="del('${c.id}')">🗑</button>
+    </div>`).join('');
+}
+function val(id){ return document.getElementById(id).value.trim(); }
+async function saveCoupon(){
+  const code=val('f-code').toUpperCase();
+  if(!code || !val('f-value')){ alert('Code and value are required'); return; }
+  const row={ code, type:val('f-type'), value:Number(val('f-value')), min_order:Number(val('f-min')||0), label:val('f-label'), expires_at: val('f-exp')||null, active:true };
+  let r;
+  if(editId){ r=await fetch(URL+'/rest/v1/coupons?id=eq.'+editId,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify(row)}); }
+  else { r=await fetch(URL+'/rest/v1/coupons?on_conflict=code',{method:'POST',headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)}); }
+  if(!r.ok){ alert('Save failed: '+(await r.text())); return; }
+  editId=null; document.getElementById('saveBtn').textContent='＋ Add coupon';
+  ['f-code','f-value','f-min','f-label','f-exp'].forEach(i=>document.getElementById(i).value='');
+  load();
+}
+function edit(id){ const c=all.find(x=>x.id===id); if(!c) return; editId=id;
+  document.getElementById('f-code').value=c.code; document.getElementById('f-type').value=c.type;
+  document.getElementById('f-value').value=c.value; document.getElementById('f-min').value=c.min_order||'';
+  document.getElementById('f-label').value=c.label||''; document.getElementById('f-exp').value=c.expires_at||'';
+  document.getElementById('saveBtn').textContent='✓ Save changes'; window.scrollTo({top:0,behavior:'smooth'});
+}
+async function toggle(id,active){ await fetch(URL+'/rest/v1/coupons?id=eq.'+id,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify({active})}); const c=all.find(x=>x.id===id); if(c)c.active=active; render(); }
+async function del(id){ if(!confirm('Delete this coupon?'))return; await fetch(URL+'/rest/v1/coupons?id=eq.'+id,{method:'DELETE',headers:H}); all=all.filter(x=>x.id!==id); render(); }
+</script>
+</body>
+</html>
