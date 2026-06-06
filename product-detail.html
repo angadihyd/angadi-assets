@@ -1340,6 +1340,20 @@ function renderProduct(p) {
   const weightsHTML = p.weights.map((w,i) => `
     <button class="weight-btn ${i===_defW?'active':''}" data-weight="${w}">${w}</button>
   `).join('');
+  const _isCustomQ = (p.unit === 'kg' || p.unit === 'egg');
+  const _qBtn = 'width:44px;flex-shrink:0;background:rgba(196,98,45,0.14);border:none;color:var(--cream);font-size:1.2rem;line-height:1;cursor:pointer;padding:0.65rem 0;font-family:inherit;';
+  const customQHTML = _isCustomQ ? `
+      <div class="option-label" id="weightLabel">Choose quantity</div>
+      <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);max-width:260px;">
+        <button type="button" id="wMinus" style="${_qBtn}">−</button>
+        <input id="wQty" type="number" inputmode="numeric" value="${p.unit==='egg'?12:1000}" min="${p.unit==='egg'?1:50}" step="${p.unit==='egg'?6:250}" style="flex:1;min-width:0;background:none;border:none;color:var(--cream);text-align:center;font-size:1rem;font-family:inherit;padding:0.65rem 0.2rem;">
+        <span style="font-size:0.82rem;color:rgba(246,237,216,0.5);padding:0 0.6rem;flex-shrink:0;">${p.unit==='egg'?'eggs':'grams'}</span>
+        <button type="button" id="wPlus" style="${_qBtn}">+</button>
+      </div>
+      <div style="font-size:0.74rem;color:rgba(246,237,216,0.4);margin-top:0.35rem;">Type any amount${p.unit==='egg'?'':' — e.g. 750 g, 1250 g'}</div>`
+    : `
+      <div class="option-label" id="weightLabel">Weight: <span>${p.weights[0]||''}</span></div>
+      <div class="weight-options">${weightsHTML}</div>`;
 
   const cutsHTML = p.cuts.length ? `
     <div class="option-label" id="cutLabel">Cut: <span>${p.cuts[0]}</span></div>
@@ -1388,8 +1402,7 @@ function renderProduct(p) {
 
       <div class="info-divider"></div>
 
-      <div class="option-label" id="weightLabel">Weight: <span>${p.weights[0]}</span></div>
-      <div class="weight-options">${weightsHTML}</div>
+      ${customQHTML}
 
       ${cutsHTML}
 
@@ -1507,39 +1520,46 @@ function weightMultiplier(label, unit) {
 
 function bindInteractions(p) {
   let qty = 1;
-  let mult = 1;
-
   const qtyVal = document.getElementById('qtyVal');
   const qtyTotal = document.getElementById('qtyTotal');
   const displayPrice = document.getElementById('displayPrice');
-  const unitPrice = () => Math.round(p.price * mult);
+  const wInput = document.getElementById('wQty');
+  const isCustom = !!wInput;          // kg / eggs use a custom amount input
+  function curMult(){
+    if (isCustom){ let v = parseInt(wInput.value,10); if(isNaN(v)||v<1) v=1; return p.unit==='egg' ? v : (v/1000); }
+    const a = document.querySelector('.weight-btn.active');
+    return a ? weightMultiplier(a.dataset.weight, p.unit) : 1;
+  }
+  function curLabel(){
+    if (isCustom){ let v=parseInt(wInput.value,10)||0; return p.unit==='egg' ? (v+' eggs') : (v%1000===0 ? (v/1000)+' kg' : v+' g'); }
+    return document.querySelector('.weight-btn.active')?.dataset.weight || '';
+  }
+  window.__pdLabel = curLabel;        // used by the Add-to-Cart handler
+  const unitPrice = () => Math.round(p.price * curMult());
   const updateTotal = () => {
     if (displayPrice) displayPrice.textContent = '₹' + unitPrice().toLocaleString('en-IN');
     qtyTotal.innerHTML = `₹${(unitPrice() * qty).toLocaleString('en-IN')}`;
   };
-  document.getElementById('qtyMinus')?.addEventListener('click', () => {
-    if (qty > 1) { qty--; qtyVal.textContent = qty; updateTotal(); }
-  });
-  document.getElementById('qtyPlus')?.addEventListener('click', () => {
-    qty++; qtyVal.textContent = qty; updateTotal();
-  });
+  window.__pdUnitPrice = unitPrice;
+  document.getElementById('qtyMinus')?.addEventListener('click', () => { if (qty>1){ qty--; qtyVal.textContent=qty; updateTotal(); } });
+  document.getElementById('qtyPlus')?.addEventListener('click', () => { qty++; qtyVal.textContent=qty; updateTotal(); });
 
-  // Set initial multiplier from the default-active weight, then refresh totals
-  const activeW = document.querySelector('.weight-btn.active');
-  if (activeW) mult = weightMultiplier(activeW.dataset.weight, p.unit);
-  updateTotal();
-
-  // WEIGHT BUTTONS
-  document.querySelectorAll('.weight-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.weight-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      mult = weightMultiplier(btn.dataset.weight, p.unit);
-      updateTotal();
-      const label = document.getElementById('weightLabel');
-      if (label) label.innerHTML = `Weight: <span>${btn.dataset.weight}</span>`;
+  if (isCustom){
+    const step = p.unit==='egg'?6:250, min = p.unit==='egg'?1:50;
+    document.getElementById('wMinus')?.addEventListener('click', ()=>{ let v=parseInt(wInput.value,10)||0; v-=step; if(v<min)v=min; wInput.value=v; updateTotal(); });
+    document.getElementById('wPlus')?.addEventListener('click', ()=>{ let v=parseInt(wInput.value,10)||0; v+=step; wInput.value=v; updateTotal(); });
+    wInput.addEventListener('input', updateTotal);
+  } else {
+    document.querySelectorAll('.weight-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.weight-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); updateTotal();
+        const label = document.getElementById('weightLabel');
+        if (label) label.innerHTML = `Weight: <span>${btn.dataset.weight}</span>`;
+      });
     });
-  });
+  }
+  updateTotal();
 
   // CUT BUTTONS
   document.querySelectorAll('.cut-btn').forEach(btn => {
@@ -1553,7 +1573,7 @@ function bindInteractions(p) {
 
   // ADD TO CART
   document.getElementById('addCartBtn')?.addEventListener('click', () => {
-    const weight = document.querySelector('.weight-btn.active')?.dataset.weight || '';
+    const weight = curLabel();
     const cut = document.querySelector('.cut-btn.active')?.dataset.cut || '';
     const label = [p.name, weight, cut].filter(Boolean).join(' · ');
     addToCart(label, unitPrice(), qty);
