@@ -1309,7 +1309,7 @@ function addToCart(name, price, btnEl) {
     setTimeout(() => fl.remove(), 950);
   }
 
-  showToast(`<span style="font-size:1rem">✓</span> <strong>${name.split(' ').slice(0,2).join(' ')}</strong> added to cart`);
+  showToast('✓  ' + name.split(' · ')[0] + '  added to cart');
 }
 
 function showToast(msg) {
@@ -1324,7 +1324,7 @@ function showToast(msg) {
     z-index:9999;white-space:nowrap;
     animation:fadeToast 2.5s forwards;
   `;
-  toast.textContent = msg;
+  toast.innerHTML = msg;
   if (!document.getElementById('toastStyle')) {
     const s = document.createElement('style');
     s.id = 'toastStyle';

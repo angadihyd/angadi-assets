@@ -40,6 +40,9 @@
     '.angadi-brand-tag{font-family:"Space Mono",monospace;font-size:0.5rem;letter-spacing:0.22em;',
     '  text-transform:uppercase;color:#D4A017;margin-top:2px;}',
     '.angadi-brand-tag.loc{display:block !important;color:#E8956A;letter-spacing:0.04em;text-transform:none;font-family:inherit;font-size:0.66rem;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+    /* ── Premium Login button ── */
+    '#navLoginBtn:not([data-upgraded]){background:linear-gradient(135deg,#C4622D,#7A3318) !important;color:#F6EDD8 !important;border:1px solid rgba(246,237,216,0.15) !important;border-radius:100px !important;padding:0.45rem 1.1rem !important;font-size:0.8rem !important;font-weight:700 !important;letter-spacing:0.04em !important;text-decoration:none !important;display:inline-flex !important;align-items:center !important;gap:0.35rem !important;box-shadow:0 3px 12px rgba(196,98,45,0.35) !important;transition:all 0.2s !important;white-space:nowrap !important;}',
+    '#navLoginBtn:not([data-upgraded]):hover{box-shadow:0 5px 18px rgba(196,98,45,0.5) !important;transform:translateY(-1px) !important;}',
     /* inside the big fullscreen mobile menu, scale up */
     '.mobile-menu .angadi-brand-mark{width:54px;height:54px;}',
     '.mobile-menu .angadi-brand-name{font-size:2rem;}',
@@ -74,7 +77,17 @@
   document.head.appendChild(css);
 
   // ── upgrade every .nav-logo into the premium brand lockup ──
+  function upgradeLoginBtn() {
+    var btn = document.getElementById('navLoginBtn');
+    if (!btn || btn.dataset.upgraded) return;
+    if (btn.textContent.trim() === 'Login') {
+      btn.innerHTML = '<span style="font-size:0.9rem;">👤</span> Login';
+    }
+    btn.dataset.upgraded = '1';
+  }
+
   function upgradeBrand() {
+    upgradeLoginBtn();
     document.querySelectorAll('.nav-logo').forEach(function (el) {
       if (el.dataset.angadiBranded) return;
       el.dataset.angadiBranded = '1';
