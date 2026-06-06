@@ -245,6 +245,24 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
   .order-steps{overflow-x:auto;padding-bottom:0.5rem;}
 }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+.loc-card{border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:14px;padding:1rem;margin-bottom:1.5rem;background:rgba(212,160,23,0.04);}
+.loc-head{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-bottom:0.7rem;flex-wrap:wrap;}
+.loc-detect{background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:none;border-radius:100px;padding:0.5rem 1rem;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.loc-search-wrap{position:relative;margin-bottom:0.7rem;}
+.loc-suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#1A0E06;border:1px solid var(--border,rgba(196,98,45,0.2));border-radius:10px;overflow:hidden;z-index:1000;display:none;max-height:230px;overflow-y:auto;}
+.loc-suggest.open{display:block;}
+.loc-suggest button{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(196,98,45,0.12);color:#F6EDD8;padding:0.6rem 0.8rem;font-size:0.8rem;cursor:pointer;font-family:inherit;}
+.loc-suggest button:hover{background:rgba(196,98,45,0.12);}
+.loc-map{height:240px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(196,98,45,0.2));}
+.loc-status{font-size:0.8rem;margin-top:0.6rem;color:rgba(246,237,216,0.6);font-weight:500;}
+.loc-status.ok{color:#7BC67E;}
+.loc-status.bad{color:#E57373;}
+.loc-eta{display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.6rem;font-size:0.78rem;color:var(--gold,#D4A017);background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:100px;padding:0.3rem 0.8rem;}
+.leaflet-container{background:#0d0502;}
+</style>
 </head>
 <body>
 
@@ -327,6 +345,21 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
           <p class="panel-sub">Where should we deliver your fresh village meat?</p>
 
           <form id="addressForm" novalidate>
+            <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
+            <div class="loc-card" id="locCard">
+              <div class="loc-head">
+                <div class="form-label" style="margin:0;">📍 Pin your delivery location *</div>
+                <button type="button" class="loc-detect" id="locDetect">🎯 Use my location</button>
+              </div>
+              <div class="loc-search-wrap">
+                <input class="form-input" id="locSearch" type="text" placeholder="Search area, colony or landmark…" autocomplete="off">
+                <div class="loc-suggest" id="locSuggest"></div>
+              </div>
+              <div id="locMap" class="loc-map"></div>
+              <div class="loc-status" id="locStatus">Tap “Use my location”, search, or drag the pin to your exact spot.</div>
+              <div class="loc-eta" id="locEta">🛵 Delivered in ~60–90 min · Hyderabad only</div>
+            </div>
+
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Full Name *</label>
@@ -351,9 +384,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 
             <div class="form-row full">
               <div class="form-group">
-                <label class="form-label">Street / Area *</label>
-                <input class="form-input" id="farea" type="text" placeholder="e.g. Road No. 12, Banjara Hills" autocomplete="address-line2">
-                <span class="form-error" id="farea-err">Please enter your area</span>
+                <label class="form-label">Area / Locality *</label>
+                <input class="form-input" id="farea" type="text" placeholder="Auto-filled from the map — edit if needed" autocomplete="address-line2">
+                <span class="form-error" id="farea-err">Pick your location on the map above</span>
               </div>
             </div>
 
@@ -361,21 +394,6 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
               <div class="form-group">
                 <label class="form-label">Landmark (optional)</label>
                 <input class="form-input" id="flandmark" type="text" placeholder="e.g. Near Apollo Hospital">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Pincode *</label>
-                <input class="form-input" id="fpincode" type="text" placeholder="500034" maxlength="6">
-                <span class="form-error" id="fpincode-err">Enter a valid 6-digit pincode</span>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">City</label>
-                <select class="form-select" id="fcity">
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Secunderabad">Secunderabad</option>
-                </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Address Type</label>
@@ -386,6 +404,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 </select>
               </div>
             </div>
+            <!-- auto-filled from the map -->
+            <input type="hidden" id="fpincode" value="">
+            <input type="hidden" id="fcity" value="Hyderabad">
 
             <!-- DELIVERY SLOT -->
             <div style="margin-top:1.5rem;margin-bottom:0.8rem;">
@@ -629,17 +650,22 @@ function goToStep(n){
 function validateAddress(){
   let ok = true;
   [
-    { id:'fname',    errId:'fname-err',    test: v => v.trim().length >= 2 },
-    { id:'fphone',   errId:'fphone-err',   test: v => v.replace(/\D/g,'').length >= 10 },
-    { id:'fflat',    errId:'fflat-err',    test: v => v.trim().length >= 3 },
-    { id:'farea',    errId:'farea-err',    test: v => v.trim().length >= 3 },
-    { id:'fpincode', errId:'fpincode-err', test: v => /^\d{6}$/.test(v.trim()) },
+    { id:'fname',  errId:'fname-err',  test: v => v.trim().length >= 2 },
+    { id:'fphone', errId:'fphone-err', test: v => v.replace(/\D/g,'').length >= 10 },
+    { id:'fflat',  errId:'fflat-err',  test: v => v.trim().length >= 3 },
+    { id:'farea',  errId:'farea-err',  test: v => v.trim().length >= 3 },
   ].forEach(f => {
     const el = document.getElementById(f.id);
     const err = document.getElementById(f.errId);
     if (!f.test(el.value)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
     else { el.classList.remove('error'); err.classList.remove('visible'); }
   });
+  // Require a picked, serviceable location
+  if (!window.deliveryGeo || !window.deliveryGeo.lat){
+    setLocStatus('Please pin your delivery location above.', 'bad'); ok = false;
+  } else if (!window.deliveryGeo.serviceable){
+    setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
+  }
   return ok;
 }
 
@@ -652,7 +678,7 @@ document.getElementById('addressForm').addEventListener('submit', (e) => {
   const area    = document.getElementById('farea').value;
   const pincode = document.getElementById('fpincode').value;
   document.getElementById('addressChipText').innerHTML =
-    `<strong>Delivering to ${name}:</strong> ${flat}, ${area} – ${pincode}`;
+    `<strong>Delivering to ${name}:</strong> ${flat}, ${area}${pincode ? ' – ' + pincode : ''}`;
   goToStep(2);
 });
 
@@ -694,6 +720,9 @@ async function placeOrder(){
         pincode:  document.getElementById('fpincode').value,
         city:     document.getElementById('fcity').value,
         type:     document.getElementById('ftype').value,
+        lat:      window.deliveryGeo ? window.deliveryGeo.lat : null,
+        lng:      window.deliveryGeo ? window.deliveryGeo.lng : null,
+        mapsUrl:  window.deliveryGeo ? ('https://www.google.com/maps/search/?api=1&query=' + window.deliveryGeo.lat + ',' + window.deliveryGeo.lng) : null,
       },
       slot:  selectedSlot,
       notes: document.getElementById('fnotes').value,
@@ -813,6 +842,82 @@ function autoFillFromProfile() {
 }
 
 // ─────────────────────────────────────────────
+//  LIVE LOCATION PICKER (free OpenStreetMap / Nominatim)
+// ─────────────────────────────────────────────
+window.deliveryGeo = null;
+let _locMap, _locMarker, _locSearchT;
+function setLocStatus(msg, cls){
+  const el = document.getElementById('locStatus'); if(!el) return;
+  el.textContent = msg; el.classList.remove('ok','bad'); if(cls) el.classList.add(cls);
+}
+function isHyderabad(lat,lng){ return lat>17.10 && lat<17.75 && lng>78.05 && lng<78.85; }
+function pickAddr(a){
+  a = a || {};
+  const area = [a.neighbourhood,a.suburb,a.quarter,a.road,a.village].filter(Boolean).slice(0,2).join(', ')
+             || a.city_district || a.county || '';
+  return { area, pincode:a.postcode||'', city:a.city||a.town||a.county||'Hyderabad' };
+}
+async function reverseGeocode(lat,lng){
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`);
+    const d = await r.json(); return pickAddr(d.address);
+  }catch(e){ return { area:'', pincode:'', city:'Hyderabad' }; }
+}
+async function applyPlace(lat,lng, presetArea){
+  const serviceable = isHyderabad(lat,lng);
+  window.deliveryGeo = { lat:+(+lat).toFixed(6), lng:+(+lng).toFixed(6), serviceable };
+  if(_locMap){ _locMap.setView([lat,lng],16); _locMarker.setLatLng([lat,lng]); }
+  const info = await reverseGeocode(lat,lng);
+  window.deliveryGeo.area = info.area; window.deliveryGeo.pincode = info.pincode;
+  const farea=document.getElementById('farea'), fpin=document.getElementById('fpincode'), fcity=document.getElementById('fcity');
+  if(farea && (presetArea || !farea.value)) farea.value = presetArea || info.area;
+  if(fpin) fpin.value = info.pincode;
+  if(fcity) fcity.value = info.city || 'Hyderabad';
+  if(serviceable) setLocStatus('✓ '+(info.area||'Location set')+(info.pincode?' · '+info.pincode:''),'ok');
+  else setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵','bad');
+}
+function detectLocation(){
+  if(!navigator.geolocation){ setLocStatus('Search or drag the pin to set your location.'); return; }
+  setLocStatus('Detecting your location…');
+  navigator.geolocation.getCurrentPosition(
+    p => applyPlace(p.coords.latitude, p.coords.longitude),
+    () => setLocStatus('Could not auto-detect. Search or drag the pin.'),
+    { enableHighAccuracy:true, timeout:8000 }
+  );
+}
+async function searchPlaces(q){
+  const box = document.getElementById('locSuggest');
+  if(q.trim().length < 3){ box.classList.remove('open'); box.innerHTML=''; return; }
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q+' Hyderabad')}&addressdetails=1&limit=6&viewbox=78.05,17.75,78.85,17.10&bounded=1`);
+    const list = await r.json();
+    if(!list.length){ box.innerHTML='<button type="button" disabled style="opacity:.5;">No results — drag the pin instead</button>'; box.classList.add('open'); return; }
+    box.innerHTML = list.map(p=>`<button type="button" data-lat="${p.lat}" data-lng="${p.lon}" data-label="${(p.display_name||'').replace(/"/g,'&quot;')}">${p.display_name}</button>`).join('');
+    box.classList.add('open');
+    box.querySelectorAll('button[data-lat]').forEach(b=>b.addEventListener('click',()=>{
+      box.classList.remove('open');
+      const label = b.dataset.label.split(',').slice(0,2).join(',');
+      document.getElementById('locSearch').value = label;
+      applyPlace(parseFloat(b.dataset.lat), parseFloat(b.dataset.lng), label);
+    }));
+  }catch(e){ box.classList.remove('open'); }
+}
+function initLocationPicker(){
+  const mapEl = document.getElementById('locMap'); if(!mapEl || typeof L === 'undefined') return;
+  _locMap = L.map('locMap',{zoomControl:true}).setView([17.385,78.4867],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(_locMap);
+  _locMarker = L.marker([17.385,78.4867],{draggable:true}).addTo(_locMap);
+  _locMarker.on('dragend', e => { const ll=e.target.getLatLng(); applyPlace(ll.lat,ll.lng); });
+  _locMap.on('click', e => { _locMarker.setLatLng(e.latlng); applyPlace(e.latlng.lat,e.latlng.lng); });
+  document.getElementById('locDetect').addEventListener('click', detectLocation);
+  const search = document.getElementById('locSearch');
+  search.addEventListener('input', ()=>{ clearTimeout(_locSearchT); _locSearchT=setTimeout(()=>searchPlaces(search.value),450); });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.loc-search-wrap')){ const s=document.getElementById('locSuggest'); if(s) s.classList.remove('open'); } });
+  setTimeout(()=>_locMap.invalidateSize(), 300);
+  detectLocation();   // auto-detect on load (silent fail)
+}
+
+// ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
 if (cart.length === 0) window.location.href = 'cart.html';
@@ -824,6 +929,7 @@ if (true) { // Supabase connected
 
 autoFillFromProfile();
 renderSummary();
+initLocationPicker();
 
 window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
 document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));

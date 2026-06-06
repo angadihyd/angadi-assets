@@ -396,12 +396,12 @@ function statusLabel(s){
 }
 function buildMapsUrl(address){
   const a = address||{};
-  const q = [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
+  const q = (a.lat && a.lng) ? `${a.lat},${a.lng}` : [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 function buildMapsNavUrl(address){
   const a = address||{};
-  const q = [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
+  const q = (a.lat && a.lng) ? `${a.lat},${a.lng}` : [a.flat, a.area, a.city||'Hyderabad', 'Telangana'].filter(Boolean).join(', ');
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
 }
 

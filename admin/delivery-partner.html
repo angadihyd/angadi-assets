@@ -321,7 +321,7 @@ function renderOrders(){
   container.innerHTML = sorted.map(o => {
     const a = o.customer?.address||{};
     const addr = addrStr(a);
-    const addrEnc = encodeURIComponent([a.flat, a.area, a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '));
+    const addrEnc = (a.lat && a.lng) ? `${a.lat},${a.lng}` : encodeURIComponent([a.flat, a.area, a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '));
     const waText = encodeURIComponent(`Hi ${o.customer?.name||''}! Your Angadi order ${o.orderId} is on the way. 🚚`);
     const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' · ');
 
