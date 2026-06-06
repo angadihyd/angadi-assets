@@ -869,6 +869,7 @@ async function applyPlace(lat,lng, presetArea){
   if(_locMap){ _locMap.setView([lat,lng],16); _locMarker.setLatLng([lat,lng]); }
   const info = await reverseGeocode(lat,lng);
   window.deliveryGeo.area = info.area; window.deliveryGeo.pincode = info.pincode;
+  if (serviceable && info.area) { try { localStorage.setItem('angadi_location', info.area + ', ' + (info.city||'Hyderabad')); } catch(e){} }
   const farea=document.getElementById('farea'), fpin=document.getElementById('fpincode'), fcity=document.getElementById('fcity');
   if(farea && (presetArea || !farea.value)) farea.value = presetArea || info.area;
   if(fpin) fpin.value = info.pincode;

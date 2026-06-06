@@ -39,6 +39,7 @@
     '.angadi-brand-name{font-family:"Bebas Neue",sans-serif;font-size:1.4rem;letter-spacing:0.13em;color:#F6EDD8;}',
     '.angadi-brand-tag{font-family:"Space Mono",monospace;font-size:0.5rem;letter-spacing:0.22em;',
     '  text-transform:uppercase;color:#D4A017;margin-top:2px;}',
+    '.angadi-brand-tag.loc{display:block !important;color:#E8956A;letter-spacing:0.04em;text-transform:none;font-family:inherit;font-size:0.66rem;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
     /* inside the big fullscreen mobile menu, scale up */
     '.mobile-menu .angadi-brand-mark{width:54px;height:54px;}',
     '.mobile-menu .angadi-brand-name{font-size:2rem;}',
@@ -109,11 +110,39 @@
     b.classList.toggle('hidden', n === 0);
   }
 
+  // ── show the customer's current location under the ANGADI wordmark ──
+  function setLoc(text) {
+    if (!text) return;
+    document.querySelectorAll('.angadi-brand-tag').forEach(function (el) {
+      el.textContent = '📍 ' + text;
+      el.classList.add('loc');
+    });
+  }
+  function showLocation() {
+    var saved = null;
+    try { saved = localStorage.getItem('angadi_location'); } catch (e) {}
+    if (saved) setLoc(saved);
+    if (!('geolocation' in navigator)) return;
+    // silent if permission already granted (e.g. from checkout); prompts once otherwise
+    navigator.geolocation.getCurrentPosition(function (p) {
+      fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + p.coords.latitude + '&lon=' + p.coords.longitude + '&addressdetails=1')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var a = d.address || {};
+          var area = [a.neighbourhood, a.suburb, a.quarter, a.road, a.village].filter(Boolean)[0] || a.city_district || a.county || '';
+          var city = a.city || a.town || a.county || '';
+          var label = area ? (area + (city ? ', ' + city : '')) : (city || '');
+          if (label) { try { localStorage.setItem('angadi_location', label); } catch (e) {} setLoc(label); }
+        }).catch(function () {});
+    }, function () {}, { timeout: 8000, maximumAge: 600000 });
+  }
+
   function mount() {
     if (!document.body) return;
     upgradeBrand();
     document.body.appendChild(nav);
     refreshBadge();
+    showLocation();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
