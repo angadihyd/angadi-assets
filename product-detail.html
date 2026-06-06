@@ -971,7 +971,7 @@ const PRODUCTS = {
     thumbs: [
       { src: 'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', label: 'Tray of 12' },
     ],
-    weights: ['6 eggs', '12 eggs', '30 eggs'],
+    weights: ['12 pack', '24 pack', '30 pack'],
     cuts: [],
     shortDesc: 'Deep golden yolk, rich flavour. Free-range hens, Telangana farms. The difference is visible from the first crack.',
     deliveryNote: 'Order before 11 AM · Delivered within 4–6 hours',
@@ -1318,8 +1318,9 @@ function renderProduct(p) {
     </div>
   `).join('');
 
+  const _defW = (() => { const j = p.weights.findIndex(w => /^1\s*kg$/i.test((w||'').trim())); return j < 0 ? 0 : j; })();
   const weightsHTML = p.weights.map((w,i) => `
-    <button class="weight-btn ${i===0?'active':''}" data-weight="${w}">${w}</button>
+    <button class="weight-btn ${i===_defW?'active':''}" data-weight="${w}">${w}</button>
   `).join('');
 
   const cutsHTML = p.cuts.length ? `
@@ -1476,14 +1477,27 @@ function renderProduct(p) {
   }, 100);
 }
 
+// Convert a weight/pack label into a price multiplier relative to the base unit price
+function weightMultiplier(label, unit) {
+  if (!label) return 1;
+  const l = label.toLowerCase();
+  if (unit === 'egg') { const m = l.match(/(\d+)/); return m ? parseInt(m[1], 10) : 1; } // pack count × per-egg
+  if (l.includes('kg')) return parseFloat(l) || 1;                  // "1.5 kg" → 1.5
+  if (l.includes('g'))  return (parseFloat(l) || 1000) / 1000;      // "500 g" → 0.5
+  return 1;                                                          // pieces/head/whole → base
+}
+
 function bindInteractions(p) {
   let qty = 1;
+  let mult = 1;
 
-  // QTY
   const qtyVal = document.getElementById('qtyVal');
   const qtyTotal = document.getElementById('qtyTotal');
+  const displayPrice = document.getElementById('displayPrice');
+  const unitPrice = () => Math.round(p.price * mult);
   const updateTotal = () => {
-    qtyTotal.innerHTML = `₹${(p.price * qty).toLocaleString('en-IN')}`;
+    if (displayPrice) displayPrice.textContent = '₹' + unitPrice().toLocaleString('en-IN');
+    qtyTotal.innerHTML = `₹${(unitPrice() * qty).toLocaleString('en-IN')}`;
   };
   document.getElementById('qtyMinus')?.addEventListener('click', () => {
     if (qty > 1) { qty--; qtyVal.textContent = qty; updateTotal(); }
@@ -1492,11 +1506,18 @@ function bindInteractions(p) {
     qty++; qtyVal.textContent = qty; updateTotal();
   });
 
+  // Set initial multiplier from the default-active weight, then refresh totals
+  const activeW = document.querySelector('.weight-btn.active');
+  if (activeW) mult = weightMultiplier(activeW.dataset.weight, p.unit);
+  updateTotal();
+
   // WEIGHT BUTTONS
   document.querySelectorAll('.weight-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.weight-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      mult = weightMultiplier(btn.dataset.weight, p.unit);
+      updateTotal();
       const label = document.getElementById('weightLabel');
       if (label) label.innerHTML = `Weight: <span>${btn.dataset.weight}</span>`;
     });
@@ -1517,7 +1538,7 @@ function bindInteractions(p) {
     const weight = document.querySelector('.weight-btn.active')?.dataset.weight || '';
     const cut = document.querySelector('.cut-btn.active')?.dataset.cut || '';
     const label = [p.name, weight, cut].filter(Boolean).join(' · ');
-    addToCart(label, p.price, qty);
+    addToCart(label, unitPrice(), qty);
     const btn = document.getElementById('addCartBtn');
     btn.textContent = '✓ Added!';
     btn.style.background = 'linear-gradient(135deg,#4CAF50,#388E3C)';

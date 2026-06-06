@@ -794,6 +794,11 @@ footer{
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+.card-opts{display:flex;gap:0.4rem;margin:0.55rem 0 0.1rem;}
+.card-sel{flex:1;min-width:0;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.4rem 0.5rem;font-size:0.74rem;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.card-sel:focus{outline:none;border-color:var(--clay-l);}
+</style>
 </head>
 <body>
 
@@ -1333,8 +1338,57 @@ try { _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
 function unitLabel(u){ return u === 'kg' ? 'kilogram' : u; }
 function esc(s){ return (s||'').replace(/'/g,"\\'"); }
 
+// Selection options
+const WEIGHTS_KG = [{label:'250 g',f:0.25},{label:'500 g',f:0.5},{label:'1 kg',f:1},{label:'2 kg',f:2}];
+const PACKS_EGG  = [{label:'12 pack',n:12},{label:'24 pack',n:24},{label:'30 pack',n:30}];
+const CUTS = { goat:['Curry Cut','Biryani Cut','Boneless','Keema'], chicken:['Curry Cut','Biryani Cut','Boneless'], fish:['Whole','Cleaned & Cut'] };
+const PRODUCTS_BY_SLUG = {};
+
+function optsHTML(p){
+  var stop = "event.preventDefault();event.stopPropagation();";
+  var w = '';
+  if (p.unit === 'kg') {
+    w = `<select class="card-sel" id="w-${p.slug}" onclick="${stop}" onchange="${stop}updateCardPrice('${p.slug}')">`
+      + WEIGHTS_KG.map(o=>`<option value="${o.f}" ${o.f===1?'selected':''}>${o.label}</option>`).join('') + `</select>`;
+  } else if (p.unit === 'egg') {
+    w = `<select class="card-sel" id="w-${p.slug}" onclick="${stop}" onchange="${stop}updateCardPrice('${p.slug}')">`
+      + PACKS_EGG.map(o=>`<option value="${o.n}" ${o.n===12?'selected':''}>${o.label}</option>`).join('') + `</select>`;
+  }
+  var c = '';
+  if (CUTS[p.category]) {
+    c = `<select class="card-sel" id="c-${p.slug}" onclick="${stop}" onchange="${stop}">`
+      + CUTS[p.category].map((x,i)=>`<option ${i===0?'selected':''}>${x}</option>`).join('') + `</select>`;
+  }
+  return (w||c) ? `<div class="card-opts" onclick="${stop}">${w}${c}</div>` : '';
+}
+function basePriceFor(p){
+  if (p.unit === 'kg')  return Number(p.price);            // shown per 1kg default
+  if (p.unit === 'egg') return Number(p.price) * 12;       // shown per 12 default
+  return Number(p.price);
+}
+function updateCardPrice(slug){
+  var p = PRODUCTS_BY_SLUG[slug]; if(!p) return;
+  var sel = document.getElementById('w-'+slug);
+  var price = Number(p.price);
+  if (p.unit === 'kg'  && sel) price = Number(p.price) * parseFloat(sel.value);
+  else if (p.unit === 'egg' && sel) price = Number(p.price) * parseInt(sel.value,10);
+  var el = document.getElementById('price-'+slug);
+  if (el) el.textContent = '₹' + Math.round(price).toLocaleString('en-IN');
+}
+function addCardToCart(slug, btn){
+  var p = PRODUCTS_BY_SLUG[slug]; if(!p) return;
+  var wsel = document.getElementById('w-'+slug), csel = document.getElementById('c-'+slug);
+  var price = Number(p.price), label = '';
+  if (p.unit === 'kg' && wsel){ price = Number(p.price)*parseFloat(wsel.value); label = wsel.options[wsel.selectedIndex].text; }
+  else if (p.unit === 'egg' && wsel){ price = Number(p.price)*parseInt(wsel.value,10); label = wsel.options[wsel.selectedIndex].text; }
+  var cut = csel ? csel.value : '';
+  var name = p.name + (label?' · '+label:'') + (cut?' · '+cut:'');
+  addToCart(name, Math.round(price), btn);
+}
+
 function productCardHTML(p){
   const sold = !p.in_stock;
+  const baseLabel = p.unit==='kg' ? 'per kilogram' : p.unit==='egg' ? 'per 12 pack' : 'per '+p.unit;
   return `
   <a href="product-detail.html?id=${p.slug}" class="product-card fade-up visible" data-category="${p.category}" data-price="${p.price}" data-name="${p.name}" data-order="${p.sort_order||100}">
     <div class="product-img-wrap${p.video?' has-video':''}">
@@ -1348,20 +1402,22 @@ function productCardHTML(p){
       <div class="product-name-te">${p.name_te||''}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-desc">${p.short_desc||''}</div>
+      ${sold ? '' : optsHTML(p)}
       <div class="product-footer">
         <div class="product-price">
-          <span class="product-price-main">₹${Number(p.price).toLocaleString('en-IN')}</span>
-          <span class="product-price-unit">per ${unitLabel(p.unit)}</span>
+          <span class="product-price-main" id="price-${p.slug}">₹${Math.round(basePriceFor(p)).toLocaleString('en-IN')}</span>
+          <span class="product-price-unit">${baseLabel}</span>
         </div>
         ${sold
           ? `<button class="btn-add" disabled style="opacity:0.35;cursor:not-allowed;">+</button>`
-          : `<button class="btn-add" onclick="event.preventDefault();event.stopPropagation();addToCart('${esc(p.name)}',${p.price},this)">+</button>`}
+          : `<button class="btn-add" onclick="event.preventDefault();event.stopPropagation();addCardToCart('${p.slug}',this)">+</button>`}
       </div>
     </div>
   </a>`;
 }
 
 function renderProductCards(list){
+  list.forEach(p => { PRODUCTS_BY_SLUG[p.slug] = p; });
   const grid = document.getElementById('shopGrid');
   const cards = list.map(productCardHTML).join('');
   grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon">🔍</div><p>No products in this category yet.</p></div>`;

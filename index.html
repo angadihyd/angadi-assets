@@ -1710,6 +1710,30 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
     }).catch(function(){});
 })();
 </script>
+<script>
+/* One-tap "Order again" on the homepage (uses the last order) */
+(function(){
+  var last=null; try{ last=JSON.parse(localStorage.getItem('angadi_last_order')||'null'); }catch(e){}
+  if(!last||!last.items||!last.items.length) return;
+  var sec=document.getElementById('products'); if(!sec) return;
+  var items=last.items;
+  var first=(items[0].name||'').split(' · ')[0];
+  var more=items.length>1?' +'+(items.length-1)+' more':'';
+  var total=items.reduce(function(s,i){return s+(i.price||0)*(i.qty||1);},0);
+  var bar=document.createElement('div');
+  bar.style.cssText='margin:0 0 1.6rem;';
+  bar.innerHTML='<div style="background:rgba(196,98,45,0.1);border:1px solid rgba(196,98,45,0.25);border-radius:14px;padding:0.9rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">'
+    +'<div style="flex:1;min-width:150px;"><div style="font-weight:700;color:#F6EDD8;font-size:0.95rem;">🔄 Order again</div><div style="font-size:0.8rem;color:rgba(246,237,216,0.5);">'+first+more+' · ₹'+total+'</div></div>'
+    +'<button id="reorderBtn" style="background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:none;border-radius:100px;padding:0.6rem 1.4rem;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Add to cart →</button></div>';
+  sec.insertBefore(bar, sec.firstChild);
+  document.getElementById('reorderBtn').addEventListener('click', function(){
+    var cart=[]; try{cart=JSON.parse(localStorage.getItem('angadi_cart')||'[]');}catch(e){}
+    items.forEach(function(it){ var ex=cart.find(function(c){return c.name===it.name;}); if(ex) ex.qty+=(it.qty||1); else cart.push({name:it.name,price:it.price,qty:it.qty||1}); });
+    localStorage.setItem('angadi_cart', JSON.stringify(cart));
+    window.location.href='cart.html';
+  });
+})();
+</script>
 <script src="mobile-nav.js?v=5" defer></script>
 </body>
 </html>
