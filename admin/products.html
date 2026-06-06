@@ -130,6 +130,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
   .admin-content{padding:1rem;}
   .edit-panel{width:100%;right:-100%;}
 }
+.img-upload-wrap{position:relative;margin-bottom:0.5rem;}
+.img-upload-btn{width:100%;background:rgba(196,98,45,0.08);border:2px dashed rgba(196,98,45,0.35);border-radius:10px;color:var(--clay-l);padding:0.9rem;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;text-align:center;transition:all 0.2s;}
+.img-upload-btn:hover{background:rgba(196,98,45,0.14);border-color:var(--clay-l);}
+.img-upload-btn.uploading{opacity:0.6;cursor:wait;}
+.img-preview{width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:0.5rem;display:none;border:1px solid var(--border);}
+.img-preview.visible{display:block;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -221,6 +227,65 @@ function productToRow(p){
     image:(p.img||'').replace(/^\.\.\//,''), category:p.category, badge:p.badge,
     in_stock:p.inStock, featured:p.featured, active:true };
 }
+// ── IMAGE UPLOAD TO SUPABASE STORAGE ──
+const STORAGE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co/storage/v1';
+async function uploadProductImage(file, statusEl, previewEl, pathInputEl){
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('⚠ Please pick an image file'); return; }
+  if (file.size > 5*1024*1024) { showToast('⚠ Image must be under 5MB'); return; }
+  const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const name = 'product-' + Date.now() + '.' + ext;
+  if (statusEl) { statusEl.textContent = '⏳ Uploading…'; statusEl.classList.add('uploading'); }
+  try {
+    const res = await fetch(STORAGE_URL + '/object/product-images/' + name, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+    if (!res.ok){ const t=await res.text(); throw new Error(t); }
+    const publicUrl = STORAGE_URL + '/object/public/product-images/' + name;
+    if (pathInputEl) pathInputEl.value = publicUrl;
+    if (previewEl){ previewEl.src = publicUrl; previewEl.classList.add('visible'); }
+    if (statusEl){ statusEl.textContent = '✓ Uploaded'; statusEl.classList.remove('uploading'); }
+    showToast('✓ Image uploaded');
+  } catch(e){
+    console.error('upload failed', e);
+    showToast('⚠ Upload failed: ' + (e.message||e));
+    if (statusEl){ statusEl.textContent = '✗ Failed'; statusEl.classList.remove('uploading'); }
+  }
+}
+function imgUploadHTML(currentImg){
+  const preview = currentImg
+    ? `<img class="img-preview visible" id="ef-img-preview" src="${currentImg.startsWith('http')?currentImg:'../'+currentImg}" onerror="this.style.display='none'">`
+    : `<img class="img-preview" id="ef-img-preview">`;
+  return `
+    <div class="img-upload-wrap">
+      <button type="button" class="img-upload-btn" id="ef-img-btn" onclick="document.getElementById('ef-img-file').click()">
+        📷 Tap to upload product image
+      </button>
+      <input type="file" id="ef-img-file" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
+      ${preview}
+    </div>
+    <input class="form-input" id="ef-img" type="text" placeholder="Auto-filled after upload — or paste a URL" value="${currentImg||''}">
+    <span style="font-size:0.7rem;color:rgba(246,237,216,0.3);margin-top:0.2rem;display:block;">${currentImg?'Current: '+currentImg.split('/').pop():''}</span>`;
+}
+function handleImgUpload(input){
+  const file = input.files && input.files[0]; if(!file) return;
+  const btn = document.getElementById('ef-img-btn');
+  const prev = document.getElementById('ef-img-preview');
+  const pathIn = document.getElementById('ef-img');
+  uploadProductImage(file, btn, prev, pathIn);
+  // show local preview instantly
+  const reader = new FileReader();
+  reader.onload = e => { if(prev){ prev.src=e.target.result; prev.classList.add('visible'); } };
+  reader.readAsDataURL(file);
+}
+
 async function persistProduct(p){
   if(!sb) return;
   const { error } = await sb.from('products').upsert(productToRow(p), { onConflict:'slug' });
@@ -422,9 +487,8 @@ function openEditProduct(idx){
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Image Path (relative to admin/)</label>
-        <input class="form-input" id="ef-img" type="text" value="${p.img}">
-        <span style="font-size:0.7rem;color:rgba(246,237,216,0.25);margin-top:0.2rem;">Current: ${p.img.split('/').pop()}</span>
+        <label class="form-label">Product Image</label>
+        ${imgUploadHTML(p.img)}
       </div>
       <button type="submit" class="btn-primary" id="editSaveBtn">Save Changes</button>
       <span class="save-status" id="editStatus"></span>
@@ -481,8 +545,8 @@ function openAddProduct(){
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Image Path *</label>
-        <input class="form-input" id="ef-img" type="text" placeholder="../product/filename.png" required>
+        <label class="form-label">Product Image</label>
+        ${imgUploadHTML('')}
       </div>
       <button type="submit" class="btn-primary">Add Product</button>
     </form>
