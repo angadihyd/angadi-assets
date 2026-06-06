@@ -1411,7 +1411,7 @@ function addCardToCart(slug, btn){
   var label = conf ? qtyLabel(p,q) : '';
   var name = p.name + (label?' · '+label:'') + (cut?' · '+cut:'');
   addToCart(name, Math.round(priceFor(p,q)), btn);
-  try { if (navigator.vibrate) navigator.vibrate([40, 20, 40]); } catch(e) {}
+  if (window.angadiBounce) angadiBounce(btn);
 }
 
 function productCardHTML(p){

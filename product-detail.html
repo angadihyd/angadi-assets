@@ -1578,8 +1578,9 @@ function bindInteractions(p) {
     const cut = document.querySelector('.cut-btn.active')?.dataset.cut || '';
     const label = [productName, weight, cut].filter(Boolean).join(' · ');
     addToCart(label, unitPrice(), qty);
-    // Haptic vibration
-    try { if (navigator.vibrate) navigator.vibrate([40, 20, 40]); } catch(e) {}
+    // Haptic: Android vibration + iOS tick sound + scale bounce
+    const addBtn = document.getElementById('addCartBtn');
+    if (window.angadiBounce) angadiBounce(addBtn);
     const btn = document.getElementById('addCartBtn');
     btn.textContent = '✓ Added!';
     btn.style.background = 'linear-gradient(135deg,#4CAF50,#388E3C)';

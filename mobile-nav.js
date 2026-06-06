@@ -225,6 +225,35 @@
     setupLang();
   }
 
+  // ── HAPTIC FEEDBACK (iOS-compatible) ──
+  // Android: real vibration. iOS: short tick sound (AudioContext) + scale-bounce.
+  window.angadiBounce = function (el) {
+    // Scale-bounce animation on the button
+    if (el && el.style) {
+      el.style.transition = 'transform 0.12s cubic-bezier(.36,.07,.19,.97)';
+      el.style.transform = 'scale(0.88)';
+      setTimeout(function () { el.style.transform = 'scale(1.08)'; }, 80);
+      setTimeout(function () { el.style.transform = 'scale(1)'; el.style.transition = ''; }, 180);
+    }
+    // Android vibration
+    try { if (navigator.vibrate) { navigator.vibrate([30, 15, 30]); return; } } catch (e) {}
+    // iOS: very short tick via AudioContext (sounds like a system tap)
+    try {
+      var ac = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ac.createOscillator();
+      var gain = ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(600, ac.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.045);
+      osc.start(ac.currentTime);
+      osc.stop(ac.currentTime + 0.05);
+      setTimeout(function () { ac.close(); }, 200);
+    } catch (e) {}
+  };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
 
