@@ -475,7 +475,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
 }
 @media(max-width:768px){
   nav{padding:0 1.5rem;}
-  .nav-links,.nav-right .btn-nav{display:none;}
+  .nav-links,.nav-right .btn-nav{display:none !important;}
+  .nav-hamburger{display:flex !important;flex-shrink:0;}
   .nav-hamburger{display:flex;}
   .breadcrumb-bar{padding:0.8rem 1.5rem;}
   .cart-header{padding:2rem 1.5rem 1.8rem;}

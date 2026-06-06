@@ -1025,10 +1025,9 @@ footer{
 }
 @media(max-width:768px){
   nav{padding:0 1.2rem;height:60px;}
-  .nav-links,.nav-right .btn-order{display:none;}
-  .nav-hamburger{display:flex;}
-  .nav-right{gap:0.8rem;}
-  .nav-right .btn-nav{font-size:0.75rem;padding:0.4rem 0.8rem;}
+  .nav-links,.nav-right .btn-order,.nav-right .btn-nav{display:none !important;}
+  .nav-hamburger{display:flex !important;flex-shrink:0;}
+  .nav-right{gap:0.7rem;}
   section{padding:2.6rem 1.2rem;}   /* tighter vertical rhythm between sections on mobile */
 
   /* ── HERO MOBILE ── */

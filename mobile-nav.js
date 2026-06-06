@@ -72,7 +72,12 @@
     '  /* hide tagline on the smallest screens to keep header tidy */',
     '}',
     '@media (max-width:380px){ .angadi-brand-tag{display:none;} }',
-    '@media (min-width:721px){ .ang-mnav{display:none;} }'
+    '@media (min-width:721px){ .ang-mnav{display:none;} }',
+    /* ── Hamburger always visible on mobile, Login text hidden (bottom nav handles it) ── */
+    '@media (max-width:720px){',
+    '  .nav-hamburger{display:flex !important;flex-shrink:0 !important;visibility:visible !important;opacity:1 !important;}',
+    '  #navLoginBtn:not([data-loggedin]){display:none !important;}',  /* hide Login text on mobile — Account tab covers it */
+    '}'
   ].join('');
   document.head.appendChild(css);
 
