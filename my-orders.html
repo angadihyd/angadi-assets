@@ -496,61 +496,17 @@ async function loadOrders(){
     } catch(e){ console.warn('Supabase fetch failed', e); }
   }
 
-  // DEV / fallback: use localStorage orders
-  let stored = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
-
-  // Merge last order into stored list (avoid duplicates)
+  // Fallback: only show the last real order from localStorage (no fake demo data)
+  let stored = [];
   if (lastOrder) {
     if (!lastOrder.orderId) lastOrder.orderId = 'ANG-' + Date.now().toString(36).toUpperCase();
-    const exists = stored.find(o => o.orderId === lastOrder.orderId);
-    if (!exists) stored.unshift(lastOrder);
+    stored = [lastOrder];
   }
-
-  // DEV: always pad with demo orders so the page looks meaningful
-  if (DEV_MODE) {
-    const demoIds = getDemoOrders().map(o => o.orderId);
-    const demos   = getDemoOrders().filter(d => !stored.find(s => s.orderId === d.orderId));
-    stored = [...stored, ...demos];
-  }
-
-  // Save merged list
-  localStorage.setItem('angadi_all_orders', JSON.stringify(stored));
   allOrders = stored;
   renderOrders();
 }
 
-// ─────────────────────────────────────────────
-//  DEMO ORDERS (dev mode only)
-// ─────────────────────────────────────────────
-function getDemoOrders(){
-  const now = new Date();
-  const daysAgo = (n) => new Date(now - n*86400000).toISOString();
-  return [
-    {
-      orderId:'ANG-M5K2X-DEMO1',
-      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Morning (7 AM – 12 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
-      items:[{ name:'Village Goat Meat · 1 kg · Curry Cut', price:680, qty:2 },{ name:'Country Chicken · 500g', price:520, qty:1 }],
-      subtotal:1880, delivery:0, discount:0, total:1880,
-      payment:'razorpay', paymentId:'pay_DEMO123',
-      status:'delivered', placedAt: daysAgo(5),
-    },
-    {
-      orderId:'ANG-K9P3Y-DEMO2',
-      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Evening (5 PM – 8 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
-      items:[{ name:'Goat Liver · 500g · Thin Sliced', price:1000, qty:1 },{ name:'Country Eggs', price:12, qty:12 }],
-      subtotal:1144, delivery:0, discount:0, total:1144,
-      payment:'cod', status:'out_for_delivery', placedAt: daysAgo(1),
-    },
-    {
-      orderId:'ANG-T7R1Q-DEMO3',
-      customer:{ name:'Ravi Shankar', phone:'+91 9876543210', slot:'Morning (7 AM – 12 PM)', address:{ flat:'Flat 4B', area:'Banjara Hills', pincode:'500034', city:'Hyderabad' } },
-      items:[{ name:'Village Goat Meat · 2 kg · Biryani Cut', price:680, qty:3 },{ name:'Full Goat', price:8500, qty:1 }],
-      subtotal:10540, delivery:0, discount:500, total:10040,
-      payment:'razorpay', paymentId:'pay_DEMO456',
-      status:'processing', placedAt: daysAgo(0.3),
-    },
-  ];
-}
+// Demo orders removed — customers only see real orders from their account
 
 // ─────────────────────────────────────────────
 //  RENDER
