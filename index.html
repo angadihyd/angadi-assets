@@ -1241,6 +1241,24 @@ footer{
 </div>
 
 <!-- PRODUCTS -->
+<!-- TODAY'S MARKET BOARD -->
+<section id="marketBoard" style="padding:1.8rem clamp(1.2rem,5vw,4rem) 0;display:none;">
+  <div style="background:linear-gradient(135deg,rgba(17,7,3,0.95),rgba(26,12,4,0.98));border:1px solid rgba(212,160,23,0.3);border-radius:18px;padding:1.4rem 1.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.45);position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,160,23,0.06),transparent);pointer-events:none;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.1rem;">
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.3rem;">Today's Fresh Stock</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:0.06em;color:var(--cream);line-height:1;" id="boardDateLabel">Saturday, Jun 7</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.72rem;color:rgba(246,237,216,0.35);">Hyderabad delivery</div>
+        <div style="font-size:0.78rem;color:#7BC67E;font-weight:600;">🟢 Market Open</div>
+      </div>
+    </div>
+    <div id="boardItems" style="display:flex;flex-direction:column;gap:0.55rem;"></div>
+  </div>
+</section>
+
 <section class="products-section" id="products">
   <div class="products-header">
     <div>
@@ -1737,7 +1755,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
 /* Live prices/stock — deferred until page is idle so it doesn't block first paint */
 (function(){
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=name,price,unit,in_stock',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=slug,name,price,unit,in_stock,category,cut_time,stock_qty,board_date,sort_order&order=sort_order.asc',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
     .then(function(r){return r.ok?r.json():[];})
     .then(function(list){
       if(!Array.isArray(list)||!list.length) return;
@@ -1753,7 +1771,43 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
           else { btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); addToCart(p.name, Number(p.price), btn); }; }
         }
       });
+      renderMarketBoard(list);
     }).catch(function(){});}
+
+  function renderMarketBoard(list){
+    var today = new Date().toISOString().slice(0,10);
+    // only items published today with stock info
+    var board = list.filter(function(p){ return p.board_date === today && (p.cut_time || p.stock_qty); });
+    if(!board.length) return;  // board hidden until admin publishes today
+    var sec = document.getElementById('marketBoard');
+    var wrap = document.getElementById('boardItems');
+    if(!sec || !wrap) return;
+    var maxQ = Math.max.apply(null, board.map(function(p){ return p.stock_qty||0; }).concat([1]));
+    var icon = function(c){ return c==='goat'?'🐐':c==='chicken'?'🐓':c==='fish'?'🐟':c==='eggs'?'🥚':'🥩'; };
+    var unitTxt = function(p){ return p.unit==='egg'?' left':(p.unit==='kg'?' kg left':' left'); };
+    wrap.innerHTML = board.map(function(p){
+      var q = p.stock_qty||0;
+      var pct = Math.max(6, Math.round((q/maxQ)*100));
+      var low = q>0 && q<=3;
+      var sold = q<=0 || !p.in_stock;
+      var barColor = sold?'#555':(low?'#E57373':'linear-gradient(90deg,#C4622D,#D4A017)');
+      var stockTxt = sold?'Sold out today':(q + unitTxt(p) + (low?' ⚠️':''));
+      return '<a href="product-detail.html?id='+p.slug+'" style="text-decoration:none;display:grid;grid-template-columns:auto 1fr auto;gap:0.8rem;align-items:center;padding:0.5rem 0.2rem;border-bottom:1px solid rgba(212,160,23,0.1);">'
+        +'<span style="font-size:1.4rem;">'+icon(p.category)+'</span>'
+        +'<div style="min-width:0;">'
+          +'<div style="display:flex;justify-content:space-between;gap:0.6rem;margin-bottom:0.3rem;">'
+            +'<span style="color:#F6EDD8;font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</span>'
+            +'<span style="color:'+(low?'#E57373':'rgba(246,237,216,0.55)')+';font-size:0.78rem;font-weight:600;white-space:nowrap;">'+stockTxt+'</span>'
+          +'</div>'
+          +'<div style="height:6px;border-radius:6px;background:rgba(255,255,255,0.08);overflow:hidden;"><div style="height:100%;width:'+(sold?100:pct)+'%;background:'+barColor+';border-radius:6px;"></div></div>'
+        +'</div>'
+        +'<span style="color:var(--gold);font-size:0.72rem;font-family:\'Space Mono\',monospace;white-space:nowrap;">'+(p.cut_time?('🕐 '+p.cut_time):'')+'</span>'
+      +'</a>';
+    }).join('');
+    var dl = document.getElementById('boardDateLabel');
+    if(dl) dl.textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
+    sec.style.display = 'block';
+  }
   // Run after page is interactive — doesn't block first paint
   if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 3000 });
   else setTimeout(run, 800);

@@ -130,6 +130,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
   .admin-content{padding:1rem;}
   .edit-panel{width:100%;right:-100%;}
 }
+.board-row{display:grid;grid-template-columns:1fr 120px 90px;gap:0.6rem;align-items:center;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:0.65rem 0.8rem;}
+.board-row label{font-size:0.85rem;font-weight:600;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.board-in{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);border-radius:7px;padding:0.4rem 0.6rem;font-family:inherit;font-size:0.8rem;width:100%;}
+.board-in:focus{outline:none;border-color:var(--gold);}
 .img-upload-wrap{position:relative;margin-bottom:0.5rem;}
 .img-upload-btn{width:100%;background:rgba(196,98,45,0.08);border:2px dashed rgba(196,98,45,0.35);border-radius:10px;color:var(--clay-l);padding:0.9rem;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;text-align:center;transition:all 0.2s;}
 .img-upload-btn:hover{background:rgba(196,98,45,0.14);border-color:var(--clay-l);}
@@ -178,6 +182,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
     </div>
 
     <div class="admin-content">
+
+      <!-- ══ TODAY'S MARKET BOARD ══ -->
+      <div id="boardSection" style="margin-bottom:2rem;background:rgba(212,160,23,0.06);border:1px solid rgba(212,160,23,0.25);border-radius:16px;padding:1.2rem 1.3rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;margin-bottom:1rem;">
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.08em;color:#F6EDD8;">🌅 Today's Market Board</div>
+            <div style="font-size:0.78rem;color:rgba(246,237,216,0.45);margin-top:0.2rem;">Set today's cut time and stock for each product, then publish. Customers see this live.</div>
+          </div>
+          <button onclick="publishBoard()" id="publishBtn" style="background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:none;border-radius:10px;padding:0.65rem 1.4rem;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;">📣 Publish Board</button>
+        </div>
+        <div id="boardRows" style="display:flex;flex-direction:column;gap:0.5rem;">
+          <div style="color:rgba(246,237,216,0.35);font-size:0.82rem;">Loading products…</div>
+        </div>
+        <div id="boardStatus" style="margin-top:0.7rem;font-size:0.78rem;font-weight:600;"></div>
+      </div>
+
       <div class="page-header">
         <div class="page-title-section">
           <div class="page-title-main">All <span>Products</span></div>
@@ -219,7 +239,8 @@ try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ consol
 function rowToProduct(r){
   return { id:r.slug, name:r.name, nameTE:r.name_te, price:Number(r.price), unit:r.unit,
     img:(r.image||'').startsWith('../')?r.image:'../'+(r.image||''), category:r.category,
-    badge:r.badge, inStock:r.in_stock, featured:r.featured, sortOrder:r.sort_order };
+    badge:r.badge, inStock:r.in_stock, featured:r.featured, sortOrder:r.sort_order,
+    cutTime:r.cut_time, stockQty:r.stock_qty, boardDate:r.board_date };
 }
 // UI product → DB row
 function productToRow(p){
@@ -334,6 +355,7 @@ async function init(){
     products = JSON.parse(localStorage.getItem('angadi_products')||JSON.stringify(DEFAULT_PRODUCTS));
   }
   renderProducts();
+  renderBoardRows();
 }
 if (IS_ADMIN) init();
 
@@ -598,6 +620,51 @@ function showPanel(html){
 function closePanel(){
   document.getElementById('editPanel').classList.remove('open');
   document.getElementById('panelOverlay').classList.remove('open');
+}
+
+// ── TODAY'S MARKET BOARD ──
+function renderBoardRows(){
+  const rows = document.getElementById('boardRows'); if(!rows) return;
+  const active = products.filter(p => p.inStock !== false);
+  if(!active.length){ rows.innerHTML='<div style="color:rgba(246,237,216,0.35);font-size:0.82rem;">No products found.</div>'; return; }
+  const today = new Date().toISOString().slice(0,10);
+  rows.innerHTML = active.map(p => {
+    const isToday = p.boardDate === today;
+    return `<div class="board-row">
+      <label title="${p.name}">${p.category==='goat'?'🐐':p.category==='chicken'?'🐓':p.category==='fish'?'🐟':p.category==='eggs'?'🥚':'🥩'} ${p.name}</label>
+      <input class="board-in" type="text" id="bt-${p.id}" placeholder="5:30 AM" value="${isToday&&p.cutTime?p.cutTime:''}" title="Cut / arrival time">
+      <input class="board-in" type="number" id="bq-${p.id}" placeholder="kg / qty" value="${isToday&&p.stockQty?p.stockQty:''}" min="0" title="Stock qty today">
+    </div>`;
+  }).join('');
+}
+async function publishBoard(){
+  const btn = document.getElementById('publishBtn');
+  const status = document.getElementById('boardStatus');
+  btn.textContent = '⏳ Publishing…'; btn.disabled = true;
+  const today = new Date().toISOString().slice(0,10);
+  const active = products.filter(p => p.inStock !== false);
+  const updates = active.map(p => {
+    const ct = (document.getElementById('bt-'+p.id)?.value||'').trim();
+    const sq = parseInt(document.getElementById('bq-'+p.id)?.value||'0',10)||0;
+    return { slug:p.id, cut_time:ct||null, stock_qty:sq, board_date:today };
+  });
+  try {
+    for (const u of updates){
+      await sb.from('products').update({ cut_time:u.cut_time, stock_qty:u.stock_qty, board_date:u.board_date }).eq('slug', u.slug);
+    }
+    status.textContent = '✓ Board published! Customers can see today\'s stock live.';
+    status.style.color = '#7BC67E';
+    // Update local cache
+    products.forEach(p => {
+      const u = updates.find(x => x.slug === p.id);
+      if(u){ p.cutTime = u.cut_time; p.stockQty = u.stock_qty; p.boardDate = u.board_date; }
+    });
+    showToast('✓ Today\'s market board published');
+  } catch(e){
+    status.textContent = '⚠ Failed to publish. Check connection.'; status.style.color = '#E57373';
+  }
+  btn.textContent = '📣 Publish Board'; btn.disabled = false;
+  setTimeout(() => { status.textContent = ''; }, 4000);
 }
 
 function showToast(msg){
