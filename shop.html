@@ -324,6 +324,17 @@ nav.scrolled{height:60px;}
   object-fit:cover;
   z-index:1;
 }
+/* Mask AI/watermark branding from video corners */
+.product-img-wrap.has-video::after{
+  content:'';
+  position:absolute;
+  bottom:0;right:0;
+  width:55%;height:45%;
+  background:linear-gradient(135deg,transparent 35%,rgba(12,6,2,0.88) 100%);
+  pointer-events:none;
+  z-index:5;
+  border-radius:0 0 16px 0;
+}
 .product-img-wrap.has-video .pip-product-img{
   position:absolute;
   bottom:12px;right:12px;
