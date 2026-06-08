@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#4CAF50;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.2rem;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.3rem;margin-bottom:1.2rem;max-width:640px;}
+.card h2{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.05em;margin-bottom:0.9rem;color:var(--gold);}
+label{display:block;font-size:0.75rem;color:rgba(246,237,216,0.5);margin:0.6rem 0 0.25rem;}
+.in{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.55rem 0.7rem;font-family:inherit;font-size:0.88rem;}
+.in:focus{outline:none;border-color:var(--gold);}
+textarea.in{resize:vertical;min-height:60px;}
+.row{display:flex;gap:0.8rem;flex-wrap:wrap;}
+.row>div{flex:1;min-width:120px;}
+.toggle{display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0;font-size:0.88rem;}
+.btn{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:#fff;border:none;border-radius:10px;padding:0.7rem 1.5rem;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+#status{margin-left:0.8rem;font-weight:600;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
+<div id="app" style="display:none;">
+  <div class="top"><h1>⚙ Site Settings</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+
+  <div class="card">
+    <h2>👨‍🌾 Farmer Spotlight</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Shown on the homepage to build trust. Update weekly.</p>
+    <div class="row">
+      <div><label>Farmer name</label><input class="in" id="f-name" placeholder="Rafi Bhai"></div>
+      <div><label>Village / location</label><input class="in" id="f-loc" placeholder="Nalgonda"></div>
+    </div>
+    <label>Short story</label>
+    <textarea class="in" id="f-story" placeholder="12 years rearing native country goats…"></textarea>
+    <label>Photo URL (optional)</label>
+    <input class="in" id="f-photo" placeholder="https://… or product/farmer.jpg">
+  </div>
+
+  <div class="card">
+    <h2>⏰ Order Cut-off</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Homepage shows a live countdown to this time for same-day delivery.</p>
+    <div class="row">
+      <div><label>Cut-off hour (24h, e.g. 16 = 4 PM)</label><input class="in" id="c-hour" type="number" min="0" max="23" placeholder="16"></div>
+      <div><label>Label</label><input class="in" id="c-label" placeholder="same-day delivery"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📣 Occasion Banner</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Top banner for functions, Sundays, festivals. Turn on when needed.</p>
+    <div class="toggle"><input type="checkbox" id="b-active"> <span>Show banner</span></div>
+    <label>Banner text</label>
+    <input class="in" id="b-text" placeholder="🎉 Pre-book whole goats for your function — order 1 day ahead">
+  </div>
+
+  <div class="card">
+    <h2>✨ Experience toggles</h2>
+    <div class="toggle"><input type="checkbox" id="x-ticker"> <span>"Just ordered near you" live ticker</span></div>
+    <div class="toggle"><input type="checkbox" id="x-sound"> <span>Village ambient sound button</span></div>
+    <div class="toggle"><input type="checkbox" id="x-golden"> <span>Golden-hour time-of-day theming</span></div>
+    <div class="toggle"><input type="checkbox" id="x-bulk"> <span>Bulk / function pre-order section</span></div>
+  </div>
+
+  <button class="btn" onclick="saveAll()">💾 Save All Settings</button>
+  <span id="status"></span>
+</div>
+<script>
+const URL='https://www.angadi.farm/api/supabase';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+function g(id){return document.getElementById(id);}
+async function load(){
+  try{
+    const r=await fetch(URL+'/rest/v1/site_settings?select=*',{headers:H});
+    const rows=r.ok?await r.json():[];
+    const map={}; rows.forEach(x=>map[x.key]=x.value||{});
+    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{};
+    g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
+    g('c-hour').value=c.hour!=null?c.hour:16; g('c-label').value=c.label||'same-day delivery';
+    g('b-active').checked=!!b.active; g('b-text').value=b.text||'';
+    g('x-ticker').checked=x.ticker!==false; g('x-sound').checked=x.sound!==false; g('x-golden').checked=x.goldenHour!==false; g('x-bulk').checked=x.bulkOrder!==false;
+  }catch(e){}
+}
+async function put(key,value){
+  return fetch(URL+'/rest/v1/site_settings?on_conflict=key',{method:'POST',headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key,value,updated_at:new Date().toISOString()})});
+}
+async function saveAll(){
+  const st=g('status'); st.textContent='Saving…'; st.style.color='';
+  try{
+    await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
+    await put('cutoff',{hour:parseInt(g('c-hour').value,10)||16,label:g('c-label').value.trim()||'same-day delivery'});
+    await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});
+    await put('features',{ticker:g('x-ticker').checked,sound:g('x-sound').checked,goldenHour:g('x-golden').checked,bulkOrder:g('x-bulk').checked});
+    st.textContent='✓ Saved! Changes are live on the site.'; st.style.color='#7BC67E';
+  }catch(e){ st.textContent='⚠ Save failed'; st.style.color='#E57373'; }
+  setTimeout(()=>{st.textContent='';},4000);
+}
+</script>
+</body>
+</html>

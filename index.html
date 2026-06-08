@@ -1241,6 +1241,17 @@ footer{
 </div>
 
 <!-- PRODUCTS -->
+<!-- OCCASION BANNER (admin-controlled) -->
+<div id="occasionBanner" style="display:none;"></div>
+
+<!-- CUT-OFF COUNTDOWN -->
+<div id="cutoffBar" style="display:none;padding:1rem clamp(1.2rem,5vw,4rem) 0;">
+  <div style="max-width:1200px;margin:0 auto;background:rgba(229,115,115,0.08);border:1px solid rgba(229,115,115,0.25);border-radius:12px;padding:0.7rem 1.1rem;display:flex;align-items:center;justify-content:center;gap:0.6rem;flex-wrap:wrap;text-align:center;">
+    <span style="font-size:1.1rem;">⏰</span>
+    <span style="color:#F6EDD8;font-size:0.92rem;font-weight:600;">Order within <strong id="cutoffTime" style="color:#FF8A80;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:0.04em;">--</strong> <span id="cutoffLabel" style="color:rgba(246,237,216,0.6);font-weight:400;">for same-day delivery</span></span>
+  </div>
+</div>
+
 <!-- TODAY'S MARKET BOARD -->
 <style>@keyframes boardPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,115,115,0.4);}50%{box-shadow:0 0 0 5px rgba(229,115,115,0);}}</style>
 <section id="marketBoard" style="padding:1.8rem clamp(1.2rem,5vw,4rem) 0;display:none;">
@@ -1364,6 +1375,19 @@ footer{
 </section>
 
 <!-- WHY ANGADI -->
+<!-- FARMER SPOTLIGHT -->
+<section id="farmerSpotlight" style="display:none;padding:2rem clamp(1.2rem,5vw,4rem);">
+  <div style="max-width:1000px;margin:0 auto;background:linear-gradient(135deg,rgba(26,12,4,0.95),rgba(17,7,3,0.98));border:1px solid rgba(212,160,23,0.25);border-radius:18px;padding:1.6rem;display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;">
+    <div id="farmerPhoto" style="width:90px;height:90px;border-radius:50%;background:rgba(212,160,23,0.12);border:2px solid rgba(212,160,23,0.4);display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0;overflow:hidden;">👨‍🌾</div>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.4rem;">This week's farmer</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:#F6EDD8;" id="farmerName">—</div>
+      <div style="font-size:0.8rem;color:var(--clay-l);margin-bottom:0.5rem;" id="farmerLoc">—</div>
+      <div style="font-size:0.9rem;color:rgba(246,237,216,0.6);line-height:1.5;" id="farmerStory">—</div>
+    </div>
+  </div>
+</section>
+
 <section class="why-section" id="why">
   <div class="why-grid">
     <div class="why-image-wrap">
@@ -1572,6 +1596,16 @@ footer{
 </section>
 
 <!-- CTA -->
+<!-- BULK / FUNCTION PRE-ORDER -->
+<section id="bulkOrder" style="display:none;padding:2rem clamp(1.2rem,5vw,4rem);">
+  <div style="max-width:1000px;margin:0 auto;background:radial-gradient(ellipse 80% 100% at 0% 0%,rgba(196,98,45,0.15),transparent),linear-gradient(135deg,rgba(26,12,4,0.95),rgba(17,7,3,0.98));border:1px solid rgba(212,160,23,0.3);border-radius:18px;padding:1.8rem;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:0.5rem;">🐐🍖</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#F6EDD8;margin-bottom:0.5rem;">Functions, Parties & Bulk Orders</div>
+    <div style="font-size:0.92rem;color:rgba(246,237,216,0.6);max-width:520px;margin:0 auto 1.2rem;line-height:1.5;">Hosting a function or a big Sunday feast? Pre-book whole goats, bulk chicken or custom cuts — delivered fresh on your date. Order a day ahead and we'll handpick it for you.</div>
+    <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20a%20bulk%2Ffunction%20order.%20Details%3A%20" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#25D366;color:#fff;border-radius:100px;padding:0.8rem 1.8rem;font-weight:700;font-size:0.95rem;text-decoration:none;">💬 Pre-book on WhatsApp</a>
+  </div>
+</section>
+
 <section class="cta-section" id="contact">
   <div class="cta-inner">
     <div class="section-eyebrow">Ready to Order?</div>
@@ -1845,6 +1879,116 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     localStorage.setItem('angadi_cart', JSON.stringify(cart));
     window.location.href='cart.html';
   });
+})();
+</script>
+<script>
+/* Village experience: settings-driven banner, countdown, farmer, bulk, ticker, golden hour */
+(function(){
+  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+  var H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var DEFAULTS={ farmer:{name:'',location:'',story:'',photo:''}, cutoff:{hour:16,label:'same-day delivery'}, banner:{active:false,text:''}, features:{ticker:true,sound:true,goldenHour:true,bulkOrder:true} };
+
+  function goldenHour(){
+    var h=new Date().getHours(), tint;
+    if(h>=5&&h<10) tint='rgba(255,170,70,0.05)';
+    else if(h>=10&&h<17) tint='rgba(255,215,150,0.025)';
+    else if(h>=17&&h<20) tint='rgba(255,110,50,0.06)';
+    else tint='rgba(70,90,170,0.05)';
+    var o=document.createElement('div');
+    o.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:1;background:'+tint+';mix-blend-mode:overlay;';
+    document.body.appendChild(o);
+  }
+
+  function startCountdown(cut){
+    var bar=document.getElementById('cutoffBar'), tEl=document.getElementById('cutoffTime'), lEl=document.getElementById('cutoffLabel');
+    if(!bar) return;
+    document.getElementById('cutoffLabel').textContent='for '+(cut.label||'same-day delivery');
+    function tick(){
+      var now=new Date(), cutTime=new Date(); cutTime.setHours(cut.hour||16,0,0,0);
+      var diff=cutTime-now;
+      if(diff<=0){ bar.style.display='none'; return; }
+      var hrs=Math.floor(diff/3600000), mins=Math.floor((diff%3600000)/60000), secs=Math.floor((diff%60000)/1000);
+      tEl.textContent=(hrs>0?hrs+'h ':'')+mins+'m '+secs+'s';
+      bar.style.display='block';
+    }
+    tick(); setInterval(tick,1000);
+  }
+
+  function farmer(f){
+    if(!f.name) return;
+    var sec=document.getElementById('farmerSpotlight'); if(!sec) return;
+    document.getElementById('farmerName').textContent=f.name;
+    document.getElementById('farmerLoc').textContent='📍 '+(f.location||'Telangana');
+    document.getElementById('farmerStory').textContent=f.story||'';
+    if(f.photo){ var ph=document.getElementById('farmerPhoto'); ph.innerHTML='<img src="'+f.photo+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'👨‍🌾\'">'; }
+    sec.style.display='block';
+  }
+
+  function banner(b){
+    if(!b.active||!b.text) return;
+    var el=document.getElementById('occasionBanner');
+    el.innerHTML='<div style="background:linear-gradient(90deg,#C4622D,#D4A017);color:#fff;text-align:center;padding:0.7rem 1rem;font-size:0.9rem;font-weight:600;">'+b.text+'</div>';
+    el.style.display='block';
+  }
+
+  function bulk(on){ if(on){ var s=document.getElementById('bulkOrder'); if(s) s.style.display='block'; } }
+
+  function villageSound(on){
+    if(!on) return;
+    var audio=new Audio('audio/village-morning.mp3');
+    audio.loop=true; audio.volume=0.35;
+    audio.addEventListener('canplaythrough',function(){
+      var btn=document.createElement('button');
+      var playing=false;
+      btn.innerHTML='🔊'; btn.title='Village ambience';
+      btn.style.cssText='position:fixed;left:1rem;bottom:5.2rem;z-index:1100;width:42px;height:42px;border-radius:50%;background:rgba(16,8,4,0.9);border:1px solid rgba(212,160,23,0.4);color:#F6EDD8;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(6px);';
+      btn.onclick=function(){ if(playing){audio.pause();btn.innerHTML='🔇';}else{audio.play().catch(function(){});btn.innerHTML='🔊';} playing=!playing; };
+      document.body.appendChild(btn);
+    }, {once:true});
+    audio.addEventListener('error',function(){}); // no file yet → no button
+  }
+
+  function ticker(on){
+    if(!on) return;
+    fetch('https://www.angadi.farm/api/supabase/rest/v1/orders?select=customer,items,placed_at&order=placed_at.desc&limit=12',{headers:H})
+      .then(function(r){return r.ok?r.json():[];})
+      .then(function(list){
+        var ev=list.map(function(o){
+          var area=(o.customer&&o.customer.address&&o.customer.address.area)||'Hyderabad';
+          var item=(o.items&&o.items[0]&&o.items[0].name||'').split(' · ')[0]||'an order';
+          return {area:area, item:item};
+        }).filter(function(e){return e.item;});
+        if(!ev.length) return;
+        var i=0;
+        function show(){
+          var e=ev[i%ev.length]; i++;
+          var t=document.createElement('div');
+          t.innerHTML='🛍️ Someone in <strong>'+e.area+'</strong> just ordered '+e.item;
+          t.style.cssText='position:fixed;left:1rem;bottom:5.2rem;z-index:1090;max-width:78vw;background:rgba(16,8,4,0.94);border:1px solid rgba(212,160,23,0.3);color:#F6EDD8;border-radius:12px;padding:0.6rem 0.9rem;font-size:0.78rem;box-shadow:0 6px 20px rgba(0,0,0,0.4);opacity:0;transform:translateY(10px);transition:all 0.4s;';
+          document.body.appendChild(t);
+          requestAnimationFrame(function(){ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+          setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateY(10px)'; setTimeout(function(){t.remove();},500); },5000);
+        }
+        setTimeout(function(){ show(); setInterval(show, 22000); }, 6000);
+      }).catch(function(){});
+  }
+
+  function run(){
+    fetch('https://www.angadi.farm/api/supabase/rest/v1/site_settings?select=*',{headers:H})
+      .then(function(r){return r.ok?r.json():[];})
+      .then(function(rows){
+        var m=Object.assign({},DEFAULTS);
+        (rows||[]).forEach(function(x){ m[x.key]=Object.assign({},DEFAULTS[x.key]||{},x.value||{}); });
+        if(m.features.goldenHour) goldenHour();
+        startCountdown(m.cutoff);
+        farmer(m.farmer);
+        banner(m.banner);
+        bulk(m.features.bulkOrder);
+        villageSound(m.features.sound);
+        ticker(m.features.ticker);
+      }).catch(function(){ startCountdown(DEFAULTS.cutoff); });
+  }
+  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:2500}); else setTimeout(run,600);
 })();
 </script>
 <script src="mobile-nav.js?v=5" defer></script>
