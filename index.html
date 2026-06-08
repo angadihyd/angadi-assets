@@ -1242,6 +1242,7 @@ footer{
 
 <!-- PRODUCTS -->
 <!-- TODAY'S MARKET BOARD -->
+<style>@keyframes boardPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,115,115,0.4);}50%{box-shadow:0 0 0 5px rgba(229,115,115,0);}}</style>
 <section id="marketBoard" style="padding:1.8rem clamp(1.2rem,5vw,4rem) 0;display:none;">
   <div style="background:linear-gradient(135deg,rgba(17,7,3,0.95),rgba(26,12,4,0.98));border:1px solid rgba(212,160,23,0.3);border-radius:18px;padding:1.4rem 1.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.45);position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(212,160,23,0.06),transparent);pointer-events:none;"></div>
@@ -1784,24 +1785,33 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     if(!sec || !wrap) return;
     var maxQ = Math.max.apply(null, board.map(function(p){ return p.stock_qty||0; }).concat([1]));
     var icon = function(c){ return c==='goat'?'🐐':c==='chicken'?'🐓':c==='fish'?'🐟':c==='eggs'?'🥚':'🥩'; };
-    var unitTxt = function(p){ return p.unit==='egg'?' left':(p.unit==='kg'?' kg left':' left'); };
+    var unitWord = function(p){ return p.unit==='egg'?'eggs':(p.unit==='kg'?'kg':'left'); };
     wrap.innerHTML = board.map(function(p){
       var q = p.stock_qty||0;
       var pct = Math.max(6, Math.round((q/maxQ)*100));
       var low = q>0 && q<=3;
       var sold = q<=0 || !p.in_stock;
-      var barColor = sold?'#555':(low?'#E57373':'linear-gradient(90deg,#C4622D,#D4A017)');
-      var stockTxt = sold?'Sold out today':(q + unitTxt(p) + (low?' ⚠️':''));
-      return '<a href="product-detail.html?id='+p.slug+'" style="text-decoration:none;display:grid;grid-template-columns:auto 1fr auto;gap:0.8rem;align-items:center;padding:0.5rem 0.2rem;border-bottom:1px solid rgba(212,160,23,0.1);">'
-        +'<span style="font-size:1.4rem;">'+icon(p.category)+'</span>'
+      var barColor = sold?'#555':(low?'linear-gradient(90deg,#E57373,#C4622D)':'linear-gradient(90deg,#C4622D,#D4A017)');
+      var uw = unitWord(p);
+
+      // Prominent stock badge on the right
+      var badge;
+      if (sold){
+        badge = '<div style="text-align:center;background:rgba(120,120,120,0.18);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:0.35rem 0.6rem;min-width:74px;"><div style="font-size:0.72rem;font-weight:700;color:rgba(246,237,216,0.5);letter-spacing:0.02em;">SOLD OUT</div></div>';
+      } else if (low){
+        badge = '<div style="text-align:center;background:rgba(229,115,115,0.18);border:1px solid rgba(229,115,115,0.5);border-radius:10px;padding:0.3rem 0.6rem;min-width:78px;animation:boardPulse 1.6s ease-in-out infinite;"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.55rem;line-height:1;color:#FF8A80;">'+q+'</div><div style="font-size:0.6rem;font-weight:700;color:#FF8A80;letter-spacing:0.06em;text-transform:uppercase;">'+uw+' left ⚠</div></div>';
+      } else {
+        badge = '<div style="text-align:center;background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.35);border-radius:10px;padding:0.3rem 0.6rem;min-width:78px;"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.55rem;line-height:1;color:#F5C842;">'+q+'</div><div style="font-size:0.6rem;font-weight:700;color:var(--gold);letter-spacing:0.06em;text-transform:uppercase;">'+uw+' left</div></div>';
+      }
+
+      return '<a href="product-detail.html?id='+p.slug+'" style="text-decoration:none;display:grid;grid-template-columns:auto 1fr auto;gap:0.85rem;align-items:center;padding:0.6rem 0.2rem;border-bottom:1px solid rgba(212,160,23,0.1);">'
+        +'<span style="font-size:1.7rem;line-height:1;">'+icon(p.category)+'</span>'
         +'<div style="min-width:0;">'
-          +'<div style="display:flex;justify-content:space-between;gap:0.6rem;margin-bottom:0.3rem;">'
-            +'<span style="color:#F6EDD8;font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</span>'
-            +'<span style="color:'+(low?'#E57373':'rgba(246,237,216,0.55)')+';font-size:0.78rem;font-weight:600;white-space:nowrap;">'+stockTxt+'</span>'
-          +'</div>'
+          +'<div style="color:#F6EDD8;font-weight:600;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</div>'
+          +(p.cut_time?'<div style="color:var(--gold);font-size:0.68rem;font-family:\'Space Mono\',monospace;margin:0.15rem 0 0.4rem;">🕐 Cut at '+p.cut_time+'</div>':'<div style="height:0.4rem;"></div>')
           +'<div style="height:6px;border-radius:6px;background:rgba(255,255,255,0.08);overflow:hidden;"><div style="height:100%;width:'+(sold?100:pct)+'%;background:'+barColor+';border-radius:6px;"></div></div>'
         +'</div>'
-        +'<span style="color:var(--gold);font-size:0.72rem;font-family:\'Space Mono\',monospace;white-space:nowrap;">'+(p.cut_time?('🕐 '+p.cut_time):'')+'</span>'
+        + badge
       +'</a>';
     }).join('');
     var dl = document.getElementById('boardDateLabel');
