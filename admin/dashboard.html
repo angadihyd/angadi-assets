@@ -766,17 +766,7 @@ function showNewOrderAlert(order) {
   // Auto-dismiss after 15 seconds
   setTimeout(() => { if (document.getElementById('newOrderAlert')) document.getElementById('newOrderAlert').remove(); }, 15000);
   // Sound alert
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(660, ctx.currentTime+0.1);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
-    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.4);
-  } catch(e) {}
+  try { const a=new Audio('../audio/notify.mp3'); a.volume=0.85; a.play().catch(()=>{}); } catch(e) {}
 }
 
 async function pollNewOrders() {

@@ -1889,14 +1889,18 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
   var DEFAULTS={ farmer:{name:'',location:'',story:'',photo:''}, cutoff:{hour:16,label:'same-day delivery'}, banner:{active:false,text:''}, features:{ticker:true,sound:true,goldenHour:true,bulkOrder:true} };
 
   function goldenHour(){
-    var h=new Date().getHours(), tint;
-    if(h>=5&&h<10) tint='rgba(255,170,70,0.05)';
-    else if(h>=10&&h<17) tint='rgba(255,215,150,0.025)';
-    else if(h>=17&&h<20) tint='rgba(255,110,50,0.06)';
-    else tint='rgba(70,90,170,0.05)';
-    var o=document.createElement('div');
-    o.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:1;background:'+tint+';mix-blend-mode:overlay;';
-    document.body.appendChild(o);
+    var h=new Date().getHours(), phase;
+    if(h>=5&&h<11)       phase={emoji:'🌅',greet:'Good Morning',note:'Fresh cut at dawn',glow:'rgba(255,170,70,0.16)'};
+    else if(h>=11&&h<16) phase={emoji:'☀️',greet:'Good Afternoon',note:'Handpicked & hygienic',glow:'rgba(255,210,130,0.12)'};
+    else if(h>=16&&h<19) phase={emoji:'🌇',greet:'Good Evening',note:'Order before we close',glow:'rgba(255,120,50,0.18)'};
+    else                 phase={emoji:'🌙',greet:'Fresh for Tomorrow',note:'Cut fresh at sunrise',glow:'rgba(90,110,190,0.14)'};
+    // top sky-glow (visible)
+    var glow=document.createElement('div');
+    glow.style.cssText='position:fixed;top:0;left:0;right:0;height:38vh;pointer-events:none;z-index:1;background:radial-gradient(ellipse 80% 100% at 50% 0%,'+phase.glow+',transparent 70%);';
+    document.body.appendChild(glow);
+    // greeting in the hero eyebrow
+    var eb=document.querySelector('.hero-eyebrow');
+    if(eb) eb.innerHTML=phase.emoji+' '+phase.greet+' · <span style="opacity:0.8;">'+phase.note+'</span>';
   }
 
   function startCountdown(cut){

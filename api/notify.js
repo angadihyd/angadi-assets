@@ -8,12 +8,11 @@ const webpush = require('web-push');
 const SUPABASE_URL = 'https://ijvkvgmzjjhwvrwtladj.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
 
-if (process.env.VAPID_PUBLIC && process.env.VAPID_PRIVATE) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:angadihyd@gmail.com',
-    process.env.VAPID_PUBLIC,
-    process.env.VAPID_PRIVATE
-  );
+// Public key is safe to ship; private key MUST come from a Vercel env var (secret).
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC  || 'BPiQcgEVyRxp96djwa3O-eX7XSOvp5lN4PTpP9V1QN2EKBZ9kOINNdK-bppKo4qGOgYrzO3HPaasuBdWjMTVTuQ';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
+if (VAPID_PRIVATE) {
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:angadihyd@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE);
 }
 
 async function subsFor(role) {
@@ -30,7 +29,7 @@ async function deleteSub(endpoint) {
 
 module.exports = async (req, res) => {
   try {
-    if (!process.env.VAPID_PRIVATE) { res.status(200).json({ error: 'VAPID env not set' }); return; }
+    if (!VAPID_PRIVATE) { res.status(200).json({ error: 'VAPID_PRIVATE env not set on Vercel' }); return; }
     const payload = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const type = payload.type;
     const rec  = payload.record || {};

@@ -375,9 +375,7 @@ async function loadOrders(notifyNew){
 }
 
 function beep(){
-  try{ const a=new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain();
-    o.connect(g); g.connect(a.destination); o.type='sine'; o.frequency.value=880; g.gain.value=0.05;
-    o.start(); setTimeout(()=>{o.stop();a.close();},180); }catch(e){}
+  try{ const a=new Audio('../audio/notify.mp3'); a.volume=0.8; a.play().catch(()=>{}); }catch(e){}
 }
 
 // ─────────────────────────────────────────────
