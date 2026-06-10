@@ -668,16 +668,22 @@ function renderAlerts(orders) {
 // ─────────────────────────────────────────────
 //  ACTIONS
 // ─────────────────────────────────────────────
-function updateOrderStatus(orderId, newStatus) {
+async function updateOrderStatus(orderId, newStatus) {
   if (!newStatus) return;
-  const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
-  const idx = orders.findIndex(o => o.orderId === orderId);
-  if (idx !== -1) {
-    orders[idx].status = newStatus;
-    localStorage.setItem('angadi_all_orders', JSON.stringify(orders));
-    showToast(`Order ${orderId} → ${statusLabel(newStatus)}`);
-    setTimeout(() => initDashboard(), 300);
+  const now = new Date().toISOString();
+  const patch = { status: newStatus };
+  if (newStatus === 'ready')     patch.ready_at = now;
+  if (newStatus === 'delivered') patch.delivered_at = now;
+  if (sb) {
+    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
+    if (error) { showToast('⚠ Save failed — ' + error.message); return; }
+  } else {
+    const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+    const idx = orders.findIndex(o => o.orderId === orderId);
+    if (idx !== -1) { orders[idx].status = newStatus; localStorage.setItem('angadi_all_orders', JSON.stringify(orders)); }
   }
+  showToast(`Order ${orderId} → ${statusLabel(newStatus)}`);
+  setTimeout(() => initDashboard(), 300);
 }
 
 function toggleStock(idx, val) {

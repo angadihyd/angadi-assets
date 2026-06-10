@@ -817,8 +817,19 @@ async function saveOrder(order){
   if (!supabaseClient) return;
   try {
     const { error } = await supabaseClient.from('orders').insert([toDb(order)]);
-    if (error) console.warn('Supabase save failed', error);
-  } catch(e){ console.warn('Supabase save failed', e); }
+    if (error){
+      console.warn('Supabase save failed', error);
+      // Keep a local backup so the admin can recover the order
+      const pending = JSON.parse(localStorage.getItem('angadi_pending_orders') || '[]');
+      pending.push(toDb(order));
+      localStorage.setItem('angadi_pending_orders', JSON.stringify(pending));
+    }
+  } catch(e){
+    console.warn('Supabase save failed', e);
+    const pending = JSON.parse(localStorage.getItem('angadi_pending_orders') || '[]');
+    pending.push(toDb(order));
+    localStorage.setItem('angadi_pending_orders', JSON.stringify(pending));
+  }
 }
 
 // ─────────────────────────────────────────────

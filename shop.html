@@ -1336,7 +1336,7 @@ function showToast(msg) {
     z-index:9999;white-space:nowrap;
     animation:fadeToast 2.5s forwards;
   `;
-  toast.innerHTML = msg;
+  toast.textContent = msg;
   if (!document.getElementById('toastStyle')) {
     const s = document.createElement('style');
     s.id = 'toastStyle';
