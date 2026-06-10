@@ -141,6 +141,18 @@ nav{
 .slot-time{font-size:0.72rem;color:rgba(246,237,216,0.4);margin-top:0.1rem;}
 .slot-btn.active .slot-time{color:var(--clay-l);}
 
+/* ── SAVED ADDRESS BANNER ── */
+.saved-addr-banner{background:rgba(76,175,80,0.07);border:1px solid rgba(76,175,80,0.25);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.4rem;display:none;}
+.saved-addr-banner.visible{display:block;}
+.saved-addr-row{display:flex;align-items:center;gap:0.9rem;}
+.saved-addr-icon{font-size:1.5rem;flex-shrink:0;}
+.saved-addr-info{flex:1;min-width:0;}
+.saved-addr-label{font-size:0.65rem;font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;color:rgba(76,175,80,0.8);margin-bottom:0.2rem;}
+.saved-addr-text{font-size:0.88rem;color:var(--cream);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.btn-use-addr{background:linear-gradient(135deg,#4CAF50,#388E3C);color:#fff;border:none;border-radius:9px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+.btn-new-addr{background:none;border:none;color:rgba(246,237,216,0.4);font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;margin-top:0.6rem;display:inline-block;padding:0;}
+.btn-new-addr:hover{color:var(--clay-l);}
+
 /* ── ADDRESS CONFIRMED CHIP ── */
 .address-chip{
   background:rgba(76,175,80,0.06);border:1px solid rgba(76,175,80,0.2);
@@ -343,6 +355,19 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
         <div class="panel-card">
           <div class="panel-title">Delivery Address</div>
           <p class="panel-sub">Where should we deliver your fresh village meat?</p>
+
+          <!-- SAVED ADDRESS BANNER -->
+          <div class="saved-addr-banner" id="savedAddrBanner">
+            <div class="saved-addr-row">
+              <div class="saved-addr-icon">📍</div>
+              <div class="saved-addr-info">
+                <div class="saved-addr-label">Saved address</div>
+                <div class="saved-addr-text" id="savedAddrText"></div>
+              </div>
+              <button type="button" class="btn-use-addr" onclick="useSavedAddress()">✓ Deliver here</button>
+            </div>
+            <button type="button" class="btn-new-addr" onclick="enterNewAddress()">+ Enter a different address</button>
+          </div>
 
           <form id="addressForm" novalidate>
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
@@ -838,18 +863,62 @@ async function saveOrder(order){
 function autoFillFromProfile() {
   const user = JSON.parse(localStorage.getItem('angadi_user') || 'null');
   if (!user) return;
-  if (user.name)            document.getElementById('fname').value    = user.name;
-  if (user.phone)           document.getElementById('fphone').value   = user.phone.replace('+91','');
+  if (user.name)  document.getElementById('fname').value  = user.name;
+  if (user.phone) document.getElementById('fphone').value = user.phone.replace('+91','');
   if (user.address) {
     const a = user.address;
-    if (a.flat)    document.getElementById('fflat').value    = a.flat;
-    if (a.area)    document.getElementById('farea').value    = a.area;
-    if (a.pincode) document.getElementById('fpincode').value = a.pincode;
+    if (a.flat)     document.getElementById('fflat').value     = a.flat;
+    if (a.area)     document.getElementById('farea').value     = a.area;
+    if (a.landmark) document.getElementById('flandmark').value = a.landmark;
+    if (a.pincode)  document.getElementById('fpincode').value  = a.pincode;
     if (a.city) {
       const sel = document.getElementById('fcity');
       for (let o of sel.options) if (o.value === a.city) { sel.value = a.city; break; }
     }
+    if (a.type) {
+      const sel = document.getElementById('ftype');
+      for (let o of sel.options) if (o.value === a.type) { sel.value = a.type; break; }
+    }
+    // Restore saved geo so user doesn't need to re-pin every time
+    if (a.lat && a.lng) {
+      window.deliveryGeo = { lat: a.lat, lng: a.lng, serviceable: true };
+    }
   }
+}
+
+function loadSavedAddress() {
+  const user = JSON.parse(localStorage.getItem('angadi_user') || 'null');
+  if (!user || !user.address || !user.address.flat) { autoFillFromProfile(); return; }
+  const a = user.address;
+  const parts = [a.flat, a.area, a.pincode ? '– ' + a.pincode : '', a.city].filter(Boolean).join(', ');
+  document.getElementById('savedAddrText').textContent = parts;
+  document.getElementById('savedAddrBanner').classList.add('visible');
+  autoFillFromProfile();
+}
+
+function useSavedAddress() {
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const a = user.address || {};
+  if (!a.flat || !a.area) { enterNewAddress(); return; }
+  if (!window.deliveryGeo || !window.deliveryGeo.lat) {
+    setLocStatus('Please pin your location on the map first.', 'bad');
+    document.getElementById('savedAddrBanner').classList.remove('visible');
+    return;
+  }
+  const name = user.name || document.getElementById('fname').value;
+  document.getElementById('addressChipText').innerHTML =
+    `<strong>Delivering to ${name}:</strong> ${a.flat}, ${a.area}${a.pincode ? ' – ' + a.pincode : ''}`;
+  goToStep(2);
+}
+
+function enterNewAddress() {
+  document.getElementById('savedAddrBanner').classList.remove('visible');
+  ['fname','fphone','fflat','farea','flandmark','fpincode'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  window.deliveryGeo = null;
+  setLocStatus('Tap "Use my location", search, or drag the pin to your exact spot.');
+  if (_locMarker) { _locMarker.setLatLng([17.385, 78.486]); }
 }
 
 // ─────────────────────────────────────────────
@@ -939,7 +1008,7 @@ if (true) { // Supabase connected
   try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){}
 }
 
-autoFillFromProfile();
+loadSavedAddress();
 renderSummary();
 initLocationPicker();
 

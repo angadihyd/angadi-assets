@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /login.html
+
+Sitemap: https://www.angadi.farm/sitemap.xml
