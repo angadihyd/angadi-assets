@@ -128,7 +128,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 .payment-badge.cod{background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.15);color:var(--gold);}
 
 /* Order detail panel */
-.order-detail-panel{position:fixed;top:0;right:-480px;bottom:0;width:480px;background:var(--ink-2);border-left:1px solid var(--border);z-index:200;transition:right 0.35s ease;overflow-y:auto;padding:2rem;}
+.order-detail-panel{position:fixed;top:0;right:-480px;bottom:0;width:480px;background:var(--ink-2);border-left:1px solid var(--border);z-index:200;transition:right 0.35s ease;overflow-y:auto;padding:2rem 2rem calc(2rem + env(safe-area-inset-bottom, 0px)) 2rem;}
 .order-detail-panel.open{right:0;}
 .panel-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:1px solid var(--border);color:var(--cream);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;}
 .panel-close:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
@@ -204,6 +204,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
     <div class="admin-topbar">
       <div class="topbar-title">All <span>Orders</span></div>
       <div style="display:flex;gap:0.8rem;align-items:center;">
+        <button class="btn-sm" id="alertsBtn" onclick="enableAlerts()" title="Enable push notifications on this device">🔔 Alerts</button>
         <button class="btn-sm" onclick="exportCSV()">📊 Export CSV</button>
         <button class="btn-sm primary" onclick="refreshOrders()">↻ Refresh</button>
       </div>
@@ -613,5 +614,26 @@ if (IS_ADMIN) init();
 </script>
 <script>window.ANGADI_PUSH_ROLE='admin';</script>
 <script src="../push-register.js" defer></script>
+<script>
+async function enableAlerts(){
+  const btn = document.getElementById('alertsBtn');
+  if (!('Notification' in window)){ showToast('Push not supported in this browser'); return; }
+  btn.textContent = '⏳ Enabling…'; btn.disabled = true;
+  try {
+    const ok = await window.AngadiPush.enable();
+    btn.textContent = ok ? '✅ Alerts on' : '🔔 Alerts';
+  } catch(e){ btn.textContent = '🔔 Alerts'; }
+  btn.disabled = false;
+}
+// Update button label if already subscribed
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && await reg.pushManager.getSubscription();
+    if (sub && Notification.permission === 'granted')
+      document.getElementById('alertsBtn').textContent = '✅ Alerts on';
+  } catch(e){}
+});
+</script>
 </body>
 </html>
