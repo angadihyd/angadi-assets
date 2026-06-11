@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angadi">
+<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
 <title>Angadi — Healthy, Hygienic & Handpicked | Village Meat Delivery Hyderabad</title>
 <meta name="description" content="Premium free-range goat, country chicken & fresh fish delivered from Telangana villages to your door in Hyderabad. Healthy · Hygienic · Handpicked.">
 <meta name="keywords" content="village meat delivery Hyderabad, free range goat meat Hyderabad, country chicken delivery Hyderabad, nati kodi delivery, meka mamsam Hyderabad, nattu kozhi, fresh meat home delivery, angadi meat, organic meat Hyderabad, farm fresh meat Hyderabad, goat meat delivery Hyderabad, chicken delivery Hyderabad, fish delivery Hyderabad, Telangana village meat, halal meat delivery Hyderabad, Banjara Hills meat delivery, Jubilee Hills meat delivery, Madhapur meat delivery, Gachibowli meat delivery, Kondapur meat delivery">
@@ -2043,9 +2049,11 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     else if(h>=11&&h<16) phase={emoji:'☀️',greet:'Good Afternoon',note:'Handpicked & hygienic',glow:'rgba(255,210,130,0.12)'};
     else if(h>=16&&h<19) phase={emoji:'🌇',greet:'Good Evening',note:'Order before we close',glow:'rgba(255,120,50,0.18)'};
     else                 phase={emoji:'🌙',greet:'Fresh for Tomorrow',note:'Cut fresh at sunrise',glow:'rgba(90,110,190,0.14)'};
-    // top sky-glow (visible)
+    // top sky-glow — remove any previous before adding (prevents stacking on re-render)
+    var old=document.getElementById('angadi-glow'); if(old) old.remove();
     var glow=document.createElement('div');
-    glow.style.cssText='position:fixed;top:0;left:0;right:0;height:38vh;pointer-events:none;z-index:1;background:radial-gradient(ellipse 80% 100% at 50% 0%,'+phase.glow+',transparent 70%);';
+    glow.id='angadi-glow';
+    glow.style.cssText='position:fixed;top:0;left:0;right:0;height:38vh;pointer-events:none;z-index:1;background:radial-gradient(ellipse 80% 100% at 50% 0%,'+phase.glow+',transparent 70%);transition:background 2s ease;';
     document.body.appendChild(glow);
     // greeting in the hero eyebrow
     var eb=document.querySelector('.hero-eyebrow');
@@ -2088,17 +2096,21 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
 
   function villageSound(on){
     if(!on) return;
-    var audio=new Audio('audio/village-ambiance.mp4');
-    audio.loop=true; audio.volume=0.35;
-    audio.addEventListener('canplaythrough',function(){
-      var btn=document.createElement('button');
-      var playing=false;
-      btn.innerHTML='🔊'; btn.title='Village ambience';
-      btn.style.cssText='position:fixed;left:1rem;bottom:5.2rem;z-index:1100;width:42px;height:42px;border-radius:50%;background:rgba(16,8,4,0.9);border:1px solid rgba(212,160,23,0.4);color:#F6EDD8;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(6px);';
-      btn.onclick=function(){ if(playing){audio.pause();btn.innerHTML='🔇';}else{audio.play().catch(function(){});btn.innerHTML='🔊';} playing=!playing; };
-      document.body.appendChild(btn);
-    }, {once:true});
-    audio.addEventListener('error',function(){}); // no file yet → no button
+    // Show button immediately — mobile blocks audio until user taps anyway
+    var btn=document.createElement('button');
+    var audio=null, playing=false;
+    btn.innerHTML='🔊'; btn.title='Village ambience';
+    btn.style.cssText='position:fixed;left:1rem;bottom:5.2rem;z-index:1100;width:42px;height:42px;border-radius:50%;background:rgba(16,8,4,0.9);border:1px solid rgba(212,160,23,0.4);color:#F6EDD8;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(6px);';
+    btn.onclick=function(){
+      if(!audio){
+        audio=new Audio('audio/village-ambiance.mp4');
+        audio.loop=true; audio.volume=0.35;
+        audio.addEventListener('error',function(){ btn.style.display='none'; });
+      }
+      if(playing){ audio.pause(); btn.innerHTML='🔇'; playing=false; }
+      else { audio.play().then(function(){ btn.innerHTML='🔊'; }).catch(function(){ btn.innerHTML='🔇'; }); playing=true; }
+    };
+    document.body.appendChild(btn);
   }
 
   function ticker(on){
