@@ -791,18 +791,45 @@ async function placeCOD(order){
   window.location.href = 'order-confirm.html?method=cod';
 }
 
+// ── ONLINE PAYMENT (server-authorised, signature + webhook confirmed) ──
+// The browser never sets the amount or the 'paid' status. The server creates
+// the order (locking the price), then verify-payment / the webhook confirm it.
 async function placeRazorpay(order){
-  // DEV MODE — Razorpay key not set yet
-  if (RAZORPAY_KEY === 'YOUR_RAZORPAY_KEY_ID') {
-    await saveOrder({ ...order, status:'pending', paymentId:'DEV' });
-    localStorage.setItem('angadi_last_order', JSON.stringify({ ...order, paymentId:'DEV' }));
-    localStorage.removeItem('angadi_cart');
-    window.location.href = 'order-confirm.html?method=online';
+  const fail = (msg) => {
+    alert(msg);
+    document.getElementById('btnPay').disabled = false;
+    renderSummary();
+  };
+
+  const savedUser = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const promoCode = localStorage.getItem('angadi_promo_code') || null;
+
+  // 1. Ask our server to create the order with validated prices
+  let data;
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items:     order.items,
+        slot:      order.customer.slot,
+        promoCode: promoCode,
+        customer:  order.customer,
+        userId:    savedUser.id || null,
+      }),
+    });
+    data = await res.json();
+    if (!res.ok) { fail(data.error || 'Could not start payment. Please try again.'); return; }
+  } catch (e) {
+    fail('Network error. Please check your connection and try again.');
     return;
   }
+
+  // 2. Open Razorpay with the server-created order
   const rzp = new Razorpay({
-    key:         RAZORPAY_KEY,
-    amount:      total() * 100,
+    key:         data.keyId,
+    order_id:    data.razorpayOrderId,   // amount is bound to this order on the server
+    amount:      data.amount,
     currency:    'INR',
     name:        'Angadi',
     description: `Order · ${cart.length} item${cart.length>1?'s':''}`,
@@ -810,14 +837,41 @@ async function placeRazorpay(order){
     prefill:     { name: order.customer.name, contact: order.customer.phone },
     theme:       { color: '#C4622D' },
     handler: async (response) => {
-      const finalOrder = { ...order, paymentId: response.razorpay_payment_id, status:'pending' };
-      await saveOrder(finalOrder);
-      localStorage.setItem('angadi_last_order', JSON.stringify(finalOrder));
+      // 3. Verify the signature server-side for instant confirmation.
+      //    (The webhook is the reliable backstop if this request is lost — e.g. on mobile UPI.)
+      try {
+        const vr = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id:   response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature:  response.razorpay_signature,
+          }),
+        });
+        const v = await vr.json().catch(() => ({}));
+        if (!vr.ok || !v.success) console.warn('Payment verify pending:', v.error || vr.status);
+      } catch (e) {
+        console.warn('Verify request failed; webhook will reconcile', e);
+      }
+
+      localStorage.setItem('angadi_last_order', JSON.stringify({ ...order, orderId: data.orderId, paymentId: response.razorpay_payment_id }));
       localStorage.removeItem('angadi_cart');
-      window.location.href = 'order-confirm.html?method=online';
+      localStorage.removeItem('angadi_promo_code');
+      localStorage.removeItem('angadi_promo_discount');
+      window.location.href = 'order-confirm.html?method=online&order=' + encodeURIComponent(data.orderId);
     },
     modal: { ondismiss: () => { document.getElementById('btnPay').disabled=false; renderSummary(); } }
   });
+
+  // Surface payment failures to the user instead of failing silently.
+  rzp.on('payment.failed', (resp) => {
+    const desc = resp?.error?.description || 'Your payment could not be completed.';
+    alert('Payment failed: ' + desc + '\nYou can try again.');
+    document.getElementById('btnPay').disabled = false;
+    renderSummary();
+  });
+
   rzp.open();
 }
 

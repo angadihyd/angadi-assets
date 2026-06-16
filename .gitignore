@@ -1,0 +1,9 @@
+.claude/settings.local.json
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS junk
+.DS_Store
