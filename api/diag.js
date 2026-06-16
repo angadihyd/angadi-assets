@@ -27,6 +27,13 @@ module.exports = async (req, res) => {
     // so we can spot a malformed value (missing https://, trailing slash, spaces).
     SUPABASE_URL_value: SUPABASE_URL || 'MISSING',
     service_role_is_jwt: !!(SUPABASE_SERVICE_ROLE_KEY && SUPABASE_SERVICE_ROLE_KEY.startsWith('eyJ')),
+    // Safe shape checks (no secret material; 'eyJ' is the universal JWT prefix).
+    srk_first3:         (SUPABASE_SERVICE_ROLE_KEY || '').slice(0, 3),
+    srk_length:         (SUPABASE_SERVICE_ROLE_KEY || '').length,
+    srk_leading_space:  /^\s/.test(SUPABASE_SERVICE_ROLE_KEY || ''),
+    srk_trailing_space: /\s$/.test(SUPABASE_SERVICE_ROLE_KEY || ''),
+    srk_starts_with_sb: (SUPABASE_SERVICE_ROLE_KEY || '').startsWith('sb_'),
+    deploy_commit:      (process.env.VERCEL_GIT_COMMIT_SHA || 'unknown').slice(0, 7),
   };
 
   // Live read-only test against Supabase using the service-role key.
