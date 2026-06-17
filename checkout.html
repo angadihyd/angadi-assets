@@ -694,11 +694,14 @@ function validateAddress(){
     if (!f.test(el.value)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
     else { el.classList.remove('error'); err.classList.remove('visible'); }
   });
-  // Require a picked, serviceable location
-  if (!window.deliveryGeo || !window.deliveryGeo.lat){
-    setLocStatus('Please pin your delivery location above.', 'bad'); ok = false;
-  } else if (!window.deliveryGeo.serviceable){
-    setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
+  // Require a picked, serviceable location — UNLESS the map failed to load
+  // (manual fallback), in which case the typed address is enough.
+  if (!(window.deliveryGeo && window.deliveryGeo.manual)) {
+    if (!window.deliveryGeo || !window.deliveryGeo.lat){
+      setLocStatus('Please pin your delivery location above.', 'bad'); ok = false;
+    } else if (!window.deliveryGeo.serviceable){
+      setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
+    }
   }
   return ok;
 }
@@ -1047,7 +1050,20 @@ async function searchPlaces(q){
   }catch(e){ box.classList.remove('open'); }
 }
 function initLocationPicker(){
-  const mapEl = document.getElementById('locMap'); if(!mapEl || typeof L === 'undefined') return;
+  const mapEl = document.getElementById('locMap'); if(!mapEl) return;
+
+  // Map library blocked / failed to load on this network → manual fallback so
+  // the box is never blank and checkout is never blocked.
+  if (typeof L === 'undefined'){
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:1rem;text-align:center;color:rgba(246,237,216,0.6);font-size:0.85rem;line-height:1.5;">🗺️ Map couldn’t load on your network.<br>Just type your area &amp; flat below — we’ll call to confirm the exact spot.</div>';
+    window.deliveryGeo = { lat:null, lng:null, serviceable:true, manual:true };
+    const fa = document.getElementById('farea');
+    if (fa){ fa.removeAttribute('readonly'); fa.placeholder = 'Type your area / colony / landmark'; }
+    const ld = document.getElementById('locDetect'); if (ld) ld.style.display = 'none';
+    setLocStatus('Type your address below to continue.');
+    return;
+  }
+
   _locMap = L.map('locMap',{zoomControl:true}).setView([17.385,78.4867],12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(_locMap);
   _locMarker = L.marker([17.385,78.4867],{draggable:true}).addTo(_locMap);
@@ -1057,7 +1073,19 @@ function initLocationPicker(){
   const search = document.getElementById('locSearch');
   search.addEventListener('input', ()=>{ clearTimeout(_locSearchT); _locSearchT=setTimeout(()=>searchPlaces(search.value),450); });
   document.addEventListener('click', e=>{ if(!e.target.closest('.loc-search-wrap')){ const s=document.getElementById('locSuggest'); if(s) s.classList.remove('open'); } });
-  setTimeout(()=>_locMap.invalidateSize(), 300);
+
+  // ── Robust sizing ── a single 300ms invalidateSize isn't enough on real phones
+  // (fonts/layout settle later, or the map starts off-screen) → tiles render blank.
+  // Re-run it several ways so the map always paints.
+  function fixMapSize(){ try { if(_locMap) _locMap.invalidateSize(); } catch(e){} }
+  [200, 600, 1200, 2500].forEach(function(t){ setTimeout(fixMapSize, t); });
+  window.addEventListener('load', fixMapSize);
+  window.addEventListener('resize', fixMapSize);
+  window.addEventListener('orientationchange', function(){ setTimeout(fixMapSize, 250); });
+  if ('IntersectionObserver' in window){
+    try { new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting) fixMapSize(); }); }).observe(mapEl); } catch(e){}
+  }
+
   detectLocation();   // auto-detect on load (silent fail)
 }
 
