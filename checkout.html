@@ -379,7 +379,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
             <div class="loc-card" id="locCard">
               <div class="loc-head">
-                <div class="form-label" style="margin:0;">📍 Pin your delivery location *</div>
+                <div class="form-label" style="margin:0;">📍 Pin your location <span style="font-weight:400;opacity:0.6;">(optional)</span></div>
                 <button type="button" class="loc-detect" id="locDetect">🎯 Use my location</button>
               </div>
               <div class="loc-search-wrap">
@@ -387,7 +387,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 <div class="loc-suggest" id="locSuggest"></div>
               </div>
               <div id="locMap" class="loc-map"></div>
-              <div class="loc-status" id="locStatus">Tap “Use my location”, search, or drag the pin to your exact spot.</div>
+              <div class="loc-status" id="locStatus">Optional — helps us reach you faster. You can also just fill the address below.</div>
               <div class="loc-eta" id="locEta">🛵 Delivered in ~60–90 min · Hyderabad only</div>
             </div>
 
@@ -413,11 +413,16 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
               </div>
             </div>
 
-            <div class="form-row full">
+            <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Area / Locality *</label>
-                <input class="form-input" id="farea" type="text" placeholder="Auto-filled from the map — edit if needed" autocomplete="address-line2">
-                <span class="form-error" id="farea-err">Pick your location on the map above</span>
+                <input class="form-input" id="farea" type="text" placeholder="e.g. Banjara Hills, Madhapur" autocomplete="address-line2">
+                <span class="form-error" id="farea-err">Please enter your area / locality</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Pincode *</label>
+                <input class="form-input" id="fpincode" type="tel" inputmode="numeric" maxlength="6" placeholder="500001" autocomplete="postal-code">
+                <span class="form-error" id="fpincode-err">Enter your 6-digit pincode</span>
               </div>
             </div>
 
@@ -435,8 +440,6 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 </select>
               </div>
             </div>
-            <!-- auto-filled from the map -->
-            <input type="hidden" id="fpincode" value="">
             <input type="hidden" id="fcity" value="Hyderabad">
 
             <!-- DELIVERY SLOT -->
@@ -686,22 +689,19 @@ function validateAddress(){
   [
     { id:'fname',  errId:'fname-err',  test: v => v.trim().length >= 2 },
     { id:'fphone', errId:'fphone-err', test: v => v.replace(/\D/g,'').length >= 10 },
-    { id:'fflat',  errId:'fflat-err',  test: v => v.trim().length >= 3 },
-    { id:'farea',  errId:'farea-err',  test: v => v.trim().length >= 3 },
+    { id:'fflat',    errId:'fflat-err',    test: v => v.trim().length >= 3 },
+    { id:'farea',    errId:'farea-err',    test: v => v.trim().length >= 3 },
+    { id:'fpincode', errId:'fpincode-err', test: v => /^\d{6}$/.test(v.trim()) },
   ].forEach(f => {
     const el = document.getElementById(f.id);
     const err = document.getElementById(f.errId);
     if (!f.test(el.value)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
     else { el.classList.remove('error'); err.classList.remove('visible'); }
   });
-  // Require a picked, serviceable location — UNLESS the map failed to load
-  // (manual fallback), in which case the typed address is enough.
-  if (!(window.deliveryGeo && window.deliveryGeo.manual)) {
-    if (!window.deliveryGeo || !window.deliveryGeo.lat){
-      setLocStatus('Please pin your delivery location above.', 'bad'); ok = false;
-    } else if (!window.deliveryGeo.serviceable){
-      setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
-    }
+  // The map pin is OPTIONAL — a complete typed address (incl. pincode) is enough
+  // to order. Only block if a pin WAS dropped and it's clearly outside Hyderabad.
+  if (window.deliveryGeo && window.deliveryGeo.lat && window.deliveryGeo.serviceable === false){
+    setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
   }
   return ok;
 }
@@ -1016,11 +1016,13 @@ async function applyPlace(lat,lng, presetArea){
   const info = await reverseGeocode(lat,lng);
   window.deliveryGeo.area = info.area; window.deliveryGeo.pincode = info.pincode;
   if (serviceable && info.area) { try { localStorage.setItem('angadi_location', info.area + ', ' + (info.city||'Hyderabad')); } catch(e){} }
+  // Only fill fields when we actually got a value — never wipe the user's typed
+  // area/pincode if reverse-geocoding failed (e.g. Nominatim blocked on their network).
   const farea=document.getElementById('farea'), fpin=document.getElementById('fpincode'), fcity=document.getElementById('fcity');
-  if(farea && (presetArea || !farea.value)) farea.value = presetArea || info.area;
-  if(fpin) fpin.value = info.pincode;
-  if(fcity) fcity.value = info.city || 'Hyderabad';
-  if(serviceable) setLocStatus('✓ '+(info.area||'Location set')+(info.pincode?' · '+info.pincode:''),'ok');
+  if(farea && (presetArea || (info.area && !farea.value))) farea.value = presetArea || info.area;
+  if(fpin && info.pincode) fpin.value = info.pincode;
+  if(fcity && info.city) fcity.value = info.city;
+  if(serviceable) setLocStatus('✓ Pinned'+(info.area?' · '+info.area:'')+(info.pincode?' · '+info.pincode:''),'ok');
   else setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵','bad');
 }
 function detectLocation(){
