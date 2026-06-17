@@ -379,15 +379,15 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
             <div class="loc-card" id="locCard">
               <div class="loc-head">
-                <div class="form-label" style="margin:0;">📍 Pin your location <span style="font-weight:400;opacity:0.6;">(optional)</span></div>
-                <button type="button" class="loc-detect" id="locDetect">🎯 Use my location</button>
+                <div class="form-label" style="margin:0;">📍 Share your delivery location</div>
+                <button type="button" class="loc-detect" id="locDetect">🎯 Use my current location</button>
               </div>
               <div class="loc-search-wrap">
                 <input class="form-input" id="locSearch" type="text" placeholder="Search area, colony or landmark…" autocomplete="off">
                 <div class="loc-suggest" id="locSuggest"></div>
               </div>
               <div id="locMap" class="loc-map"></div>
-              <div class="loc-status" id="locStatus">Optional — helps us reach you faster. You can also just fill the address below.</div>
+              <div class="loc-status" id="locStatus">Tap “Use my current location” for exact GPS delivery — or search / drag the pin.</div>
               <div class="loc-eta" id="locEta">🛵 Delivered in ~60–90 min · Hyderabad only</div>
             </div>
 
@@ -698,10 +698,16 @@ function validateAddress(){
     if (!f.test(el.value)) { el.classList.add('error'); err.classList.add('visible'); ok = false; }
     else { el.classList.remove('error'); err.classList.remove('visible'); }
   });
-  // The map pin is OPTIONAL — a complete typed address (incl. pincode) is enough
-  // to order. Only block if a pin WAS dropped and it's clearly outside Hyderabad.
-  if (window.deliveryGeo && window.deliveryGeo.lat && window.deliveryGeo.serviceable === false){
-    setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
+  // Require the customer's location so the delivery partner can navigate to the
+  // exact spot (Google Maps link is saved with the order). They can set it via
+  // "Use my current location" (GPS), search, or by tapping the map. Skipped only
+  // if the map library itself couldn't load (manual fallback → typed address).
+  if (!(window.deliveryGeo && window.deliveryGeo.manual)) {
+    if (!window.deliveryGeo || !window.deliveryGeo.lat){
+      setLocStatus('Please share your delivery location — tap “Use my current location” or tap your spot on the map.', 'bad'); ok = false;
+    } else if (window.deliveryGeo.serviceable === false){
+      setLocStatus('Sorry, we currently deliver only in Hyderabad. 🛵', 'bad'); ok = false;
+    }
   }
   return ok;
 }
