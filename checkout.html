@@ -1039,8 +1039,9 @@ async function searchPlaces(q){
   if(q.trim().length < 3){ box.classList.remove('open'); box.innerHTML=''; return; }
   try{
     const r = await fetch(`/api/geocode?q=${encodeURIComponent(q+' Hyderabad')}`);
+    if(!r.ok){ box.innerHTML='<button type="button" disabled style="opacity:.6;">Search unavailable ('+r.status+') — just type your address below.</button>'; box.classList.add('open'); return; }
     const list = await r.json();
-    if(!list.length){ box.innerHTML='<button type="button" disabled style="opacity:.5;">No results — drag the pin instead</button>'; box.classList.add('open'); return; }
+    if(!Array.isArray(list) || !list.length){ box.innerHTML='<button type="button" disabled style="opacity:.5;">No results — type your address below or drag the pin.</button>'; box.classList.add('open'); return; }
     box.innerHTML = list.map(p=>`<button type="button" data-lat="${p.lat}" data-lng="${p.lon}" data-label="${(p.display_name||'').replace(/"/g,'&quot;')}">${p.display_name}</button>`).join('');
     box.classList.add('open');
     box.querySelectorAll('button[data-lat]').forEach(b=>b.addEventListener('click',()=>{
@@ -1049,7 +1050,11 @@ async function searchPlaces(q){
       document.getElementById('locSearch').value = label;
       applyPlace(parseFloat(b.dataset.lat), parseFloat(b.dataset.lng), label);
     }));
-  }catch(e){ box.classList.remove('open'); }
+  }catch(e){
+    // Never fail silently — show why so it's not a mysterious empty box.
+    box.innerHTML='<button type="button" disabled style="opacity:.6;">Couldn’t search (offline?) — just type your address below.</button>';
+    box.classList.add('open');
+  }
 }
 function initLocationPicker(){
   const mapEl = document.getElementById('locMap'); if(!mapEl) return;
