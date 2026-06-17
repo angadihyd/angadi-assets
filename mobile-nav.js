@@ -161,7 +161,7 @@
     if (!('geolocation' in navigator)) return;
 
     function onPos(p) {
-      fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + p.coords.latitude + '&lon=' + p.coords.longitude + '&addressdetails=1')
+      fetch('/api/geocode?lat=' + p.coords.latitude + '&lon=' + p.coords.longitude)
         .then(function (r) { return r.json(); })
         .then(function (d) {
           var a = d.address || {};
