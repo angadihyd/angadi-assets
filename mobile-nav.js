@@ -103,6 +103,24 @@
           '<span class="angadi-brand-name">ANGADI</span>' +
           '<span class="angadi-brand-tag">Healthy · Hygienic · Handpicked</span>' +
         '</span>';
+
+      // The TOP header logo opens the slide-out menu on touch (people instinctively
+      // tap the logo). Footer logo and desktop keep the normal "go home" behaviour.
+      if (el.closest('nav')) {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', function (e) {
+          var menu = document.getElementById('mobileMenu');
+          var hamburger = document.getElementById('menuToggle') || document.querySelector('.nav-hamburger');
+          // Only hijack when we're in mobile layout (hamburger visible) and a menu exists.
+          var mobileLayout = hamburger && hamburger.offsetParent !== null;
+          if (menu && mobileLayout) {
+            e.preventDefault();
+            if (window.angadiBounce) window.angadiBounce(el.querySelector('.angadi-brand-mark') || el);
+            menu.classList.add('open');
+          }
+          // otherwise: let the <a href="/"> navigate home as usual
+        });
+      }
     });
   }
 
@@ -228,6 +246,60 @@
     refreshBadge();
     showLocation();
     setupLang();
+    setupInstall();
+  }
+
+  // ── PWA INSTALL ("Add to Home Screen" → app on Android & iPhone) ──
+  function setupInstall() {
+    // Already running as an installed app? Nothing to do.
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    if (standalone) return;
+    try { if (localStorage.getItem('angadi_install_dismissed') === '1') return; } catch (e) {}
+
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var isSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
+    var deferred = null;
+
+    var st = document.createElement('style');
+    st.textContent = [
+      '.angadi-install{position:fixed;left:50%;transform:translateX(-50%);',
+      '  bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:1300;',
+      '  background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;',
+      '  border:1px solid rgba(212,160,23,0.5);border-radius:100px;padding:0.6rem 1.15rem;',
+      '  font-family:"DM Sans",sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.01em;',
+      '  box-shadow:0 6px 24px rgba(0,0,0,0.45);display:none;align-items:center;gap:0.5rem;cursor:pointer;}',
+      '.angadi-install.show{display:inline-flex;animation:angInstallIn .4s ease;}',
+      '.angadi-install .x{margin-left:0.45rem;opacity:0.65;font-weight:400;font-size:0.95rem;}',
+      '@media(min-width:721px){.angadi-install{bottom:24px;}}',
+      '@keyframes angInstallIn{from{opacity:0;transform:translateX(-50%) translateY(14px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}',
+    ].join('');
+    document.head.appendChild(st);
+
+    var btn = document.createElement('button');
+    btn.className = 'angadi-install';
+    btn.type = 'button';
+    function show(label) { btn.innerHTML = label + ' <span class="x" aria-label="dismiss">✕</span>'; btn.classList.add('show'); }
+    btn.addEventListener('click', function (e) {
+      if (e.target && e.target.classList.contains('x')) {
+        btn.classList.remove('show');
+        try { localStorage.setItem('angadi_install_dismissed', '1'); } catch (er) {}
+        return;
+      }
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { btn.classList.remove('show'); deferred = null; });
+      } else if (isIOS) {
+        alert('To install the Angadi app:\n\n1. Tap the Share button  (the box with an ↑ arrow) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"');
+      }
+    });
+    document.body.appendChild(btn);
+
+    // Android / Chrome: capture the native install prompt.
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; show('📲 Install App'); });
+    // iOS Safari has no beforeinstallprompt — show the hint button directly.
+    if (isIOS && isSafari) show('📲 Install App');
+    // Hide once installed.
+    window.addEventListener('appinstalled', function () { btn.classList.remove('show'); });
   }
 
   // ── HAPTIC FEEDBACK (iOS-compatible) ──
