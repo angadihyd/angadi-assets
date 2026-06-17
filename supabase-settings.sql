@@ -17,6 +17,7 @@ insert into site_settings (key, value) values
   ('farmer', '{"name":"Rafi Bhai","location":"Nalgonda","story":"12 years rearing native country goats on open pastures. Every animal hand-picked.","photo":""}'),
   ('cutoff', '{"hour":16,"label":"same-day delivery"}'),
   ('banner', '{"active":false,"text":"","cta":"Order Now"}'),
-  ('features', '{"ticker":true,"sound":true,"goldenHour":true,"bulkOrder":true}')
+  ('features', '{"ticker":true,"sound":true,"goldenHour":true,"bulkOrder":true}'),
+  ('delivery', '{"standard_fee":49,"free_above":999,"express_fee":99}')
 on conflict (key) do nothing;
 -- ═══════════════════════════════════════════════════

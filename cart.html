@@ -681,8 +681,10 @@ const PROMOS = {
 // ─────────────────────────────────────────────
 //  DELIVERY OPTIONS
 // ─────────────────────────────────────────────
-const DELIVERY_OPTIONS = [
-  { id:'standard', name:'Standard Delivery', desc:'Delivered within 4–6 hours', price:0,   free_above:999  },
+// Prices/threshold are admin-configurable (site_settings 'delivery').
+// These are fallback defaults until loadDeliveryConfig() updates them.
+let DELIVERY_OPTIONS = [
+  { id:'standard', name:'Standard Delivery', desc:'Delivered within 4–6 hours', price:49,  free_above:999  },
   { id:'express',  name:'Express Delivery',  desc:'Delivered within 2 hours',   price:99,  free_above:null },
 ];
 
@@ -1058,6 +1060,23 @@ function closeMobile() { document.getElementById('mobileMenu').classList.remove(
 //  INIT
 // ─────────────────────────────────────────────
 render();
+
+// Load admin-configured delivery charges, then refresh the cart display.
+async function loadDeliveryConfig(){
+  try{
+    const r = await fetch(COUPON_URL+'/rest/v1/site_settings?key=eq.delivery&select=value',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
+    if(!r.ok) return;
+    const a = await r.json();
+    const v = a && a[0] && a[0].value;
+    if(!v) return;
+    const std = DELIVERY_OPTIONS.find(d=>d.id==='standard');
+    const exp = DELIVERY_OPTIONS.find(d=>d.id==='express');
+    if(std){ if(v.standard_fee!=null) std.price=Number(v.standard_fee); if(v.free_above!=null) std.free_above=Number(v.free_above); }
+    if(exp && v.express_fee!=null){ exp.price=Number(v.express_fee); }
+    render();
+  }catch(e){ /* keep defaults */ }
+}
+loadDeliveryConfig();
 
 // NAV LOGIN STATE
 (function(){

@@ -610,14 +610,17 @@ const promoDiscount = Number(localStorage.getItem('angadi_promo_discount') || 0)
 let selectedSlot    = 'Morning (7 AM – 12 PM)';
 let selectedMethod  = 'razorpay';
 let supabaseClient  = null;
+// Delivery charges — admin-configurable via Settings (site_settings 'delivery').
+// These are fallback defaults until the live values load.
+let deliveryConfig  = { standard_fee: 49, free_above: 999, express_fee: 99 };
 
 // ─────────────────────────────────────────────
 //  PRICE HELPERS
 // ─────────────────────────────────────────────
 function subtotal(){ return cart.reduce((s,i) => s + i.price * i.qty, 0); }
 function deliveryCost(){
-  if (selectedSlot === 'Express (2 hrs, +₹99)') return 99;
-  return subtotal() >= 999 ? 0 : 49;
+  if (selectedSlot === 'Express (2 hrs, +₹99)') return deliveryConfig.express_fee;
+  return subtotal() >= deliveryConfig.free_above ? 0 : deliveryConfig.standard_fee;
 }
 function total(){ return subtotal() - promoDiscount + deliveryCost(); }
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
@@ -1071,6 +1074,25 @@ if (true) { // Supabase connected
 loadSavedAddress();
 renderSummary();
 initLocationPicker();
+loadDeliveryConfig();
+
+// Load admin-configured delivery charges, then refresh the displayed totals.
+async function loadDeliveryConfig(){
+  if (!supabaseClient) return;
+  try {
+    const { data } = await supabaseClient
+      .from('site_settings').select('value').eq('key','delivery').single();
+    if (data && data.value) {
+      const v = data.value;
+      deliveryConfig = {
+        standard_fee: Number(v.standard_fee ?? deliveryConfig.standard_fee),
+        free_above:   Number(v.free_above   ?? deliveryConfig.free_above),
+        express_fee:  Number(v.express_fee  ?? deliveryConfig.express_fee),
+      };
+      renderSummary();
+    }
+  } catch(e){ /* keep defaults */ }
+}
 
 window.addEventListener('scroll', () => document.getElementById('navbar')?.classList.toggle('scrolled', window.scrollY > 40));
 document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));

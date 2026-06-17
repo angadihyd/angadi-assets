@@ -54,6 +54,17 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
+    <h2>🚚 Delivery Charges</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Controls the delivery fee at checkout. Changes apply to new orders immediately.</p>
+    <div class="row">
+      <div><label>Standard fee (₹)</label><input class="in" id="d-standard" type="number" min="0" placeholder="49"></div>
+      <div><label>Free delivery above (₹)</label><input class="in" id="d-free" type="number" min="0" placeholder="999"></div>
+      <div><label>Express fee (₹, 2-hr slot)</label><input class="in" id="d-express" type="number" min="0" placeholder="99"></div>
+    </div>
+    <p style="font-size:0.72rem;color:rgba(246,237,216,0.35);margin-top:0.6rem;">Standard delivery is FREE when the cart subtotal reaches the “free above” amount. Express is always charged.</p>
+  </div>
+
+  <div class="card">
     <h2>📣 Occasion Banner</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Top banner for functions, Sundays, festivals. Turn on when needed.</p>
     <div class="toggle"><input type="checkbox" id="b-active"> <span>Show banner</span></div>
@@ -84,9 +95,10 @@ async function load(){
     const r=await fetch(URL+'/rest/v1/site_settings?select=*',{headers:H});
     const rows=r.ok?await r.json():[];
     const map={}; rows.forEach(x=>map[x.key]=x.value||{});
-    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{};
+    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{};
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
     g('c-hour').value=c.hour!=null?c.hour:16; g('c-label').value=c.label||'same-day delivery';
+    g('d-standard').value=d.standard_fee!=null?d.standard_fee:49; g('d-free').value=d.free_above!=null?d.free_above:999; g('d-express').value=d.express_fee!=null?d.express_fee:99;
     g('b-active').checked=!!b.active; g('b-text').value=b.text||'';
     g('x-ticker').checked=x.ticker!==false; g('x-sound').checked=x.sound!==false; g('x-golden').checked=x.goldenHour!==false; g('x-bulk').checked=x.bulkOrder!==false;
   }catch(e){}
@@ -99,6 +111,7 @@ async function saveAll(){
   try{
     await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
     await put('cutoff',{hour:parseInt(g('c-hour').value,10)||16,label:g('c-label').value.trim()||'same-day delivery'});
+    await put('delivery',{standard_fee:parseInt(g('d-standard').value,10)||0,free_above:parseInt(g('d-free').value,10)||0,express_fee:parseInt(g('d-express').value,10)||0});
     await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});
     await put('features',{ticker:g('x-ticker').checked,sound:g('x-sound').checked,goldenHour:g('x-golden').checked,bulkOrder:g('x-bulk').checked});
     st.textContent='✓ Saved! Changes are live on the site.'; st.style.color='#7BC67E';

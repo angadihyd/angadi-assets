@@ -108,8 +108,27 @@ module.exports = async (req, res) => {
     validatedItems.push({ name: it.name, price: unitPrice, qty });
   }
 
-  // ── Delivery (server rules) ──
-  const delivery = slot === EXPRESS_SLOT ? 99 : (subtotal >= 999 ? 0 : 49);
+  // ── Delivery (admin-configurable via site_settings 'delivery') ──
+  let dcfg = { standard_fee: 49, free_above: 999, express_fee: 99 };
+  try {
+    const sr = await fetch(
+      `${SUPABASE_URL}/rest/v1/site_settings?key=eq.delivery&select=value`,
+      { headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } }
+    );
+    if (sr.ok) {
+      const rows = await sr.json();
+      const v = Array.isArray(rows) && rows[0] && rows[0].value;
+      if (v) dcfg = {
+        standard_fee: Number(v.standard_fee ?? dcfg.standard_fee),
+        free_above:   Number(v.free_above   ?? dcfg.free_above),
+        express_fee:  Number(v.express_fee  ?? dcfg.express_fee),
+      };
+    }
+  } catch (e) { /* fall back to defaults */ }
+
+  const delivery = slot === EXPRESS_SLOT
+    ? dcfg.express_fee
+    : (subtotal >= dcfg.free_above ? 0 : dcfg.standard_fee);
 
   // ── Discount (server-validated promo) ──
   let discount = 0;
