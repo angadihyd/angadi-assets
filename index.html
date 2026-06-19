@@ -180,6 +180,8 @@
 <!-- Fonts: load asynchronously, swap immediately so text shows without waiting -->
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@400;500;600&family=Bebas+Neue&display=swap&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=DM+Sans:wght@400;500;600&family=Bebas+Neue&display=swap"></noscript>
+<!-- Editorial design system fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & ROOT ── */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -1298,6 +1300,34 @@ footer{
   .why-image-main{height:240px;}   /* old single-image layout only — mosaic must keep its natural height */
 }
 </style>
+<!-- ══ EDITORIAL DESIGN SYSTEM ══ -->
+<style>
+  .ed-hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden;background:#100B07;}
+  .ed-hero-bg{position:absolute;inset:0;background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center 30%/cover no-repeat;}
+  .ed-hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(16,11,7,0.93) 0%,rgba(16,11,7,0.74) 38%,rgba(16,11,7,0.18) 75%,rgba(16,11,7,0.42) 100%);}
+  .ed-hero-inner{position:relative;z-index:2;padding:0 clamp(1.4rem,5vw,3.5rem);max-width:1180px;width:100%;}
+  .ed-kicker{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;}
+  .ed-kicker .ed-rule{width:54px;height:1px;background:#C0612E;}
+  .ed-kicker span{font-family:'Inter',sans-serif;font-size:0.72rem;letter-spacing:0.32em;text-transform:uppercase;color:#F4ECDD;font-weight:500;}
+  .ed-title{font-family:'Fraunces',serif;font-weight:340;font-size:clamp(2.6rem,6.4vw,6rem);line-height:0.99;letter-spacing:-0.015em;max-width:14ch;color:#F4ECDD;}
+  .ed-title em{font-style:italic;font-weight:340;color:#C0612E;}
+  .ed-sub{font-family:'Inter',sans-serif;font-size:clamp(0.98rem,1.4vw,1.05rem);font-weight:300;line-height:1.75;color:rgba(244,236,221,0.64);max-width:46ch;margin:2.2rem 0 2.8rem;}
+  .ed-actions{display:flex;align-items:center;gap:2.2rem;flex-wrap:wrap;}
+  .ed-btn-fill{background:#C0612E;color:#F4ECDD;padding:1.05rem 2.2rem;font-family:'Inter',sans-serif;font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:0.7rem;text-decoration:none;transition:background .3s;}
+  .ed-btn-fill:hover{background:#a8521f;}
+  .ed-link-quiet{color:#F4ECDD;text-decoration:none;font-family:'Inter',sans-serif;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;font-weight:500;display:inline-flex;align-items:center;gap:0.55rem;border-bottom:1px solid transparent;padding-bottom:3px;transition:border-color .3s;}
+  .ed-link-quiet:hover{border-color:#C0612E;}
+  .ed-meta{position:absolute;left:0;right:0;bottom:0;z-index:2;border-top:1px solid rgba(244,236,221,0.16);display:flex;gap:3rem;padding:1.5rem clamp(1.4rem,5vw,3.5rem);flex-wrap:wrap;background:linear-gradient(0deg,rgba(16,11,7,0.5),transparent);}
+  .ed-meta div{font-family:'Inter',sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(244,236,221,0.62);}
+  .ed-meta b{color:#F4ECDD;font-weight:600;}
+  @media(max-width:720px){
+    .ed-actions{gap:1.2rem;}
+    .ed-meta{gap:1.1rem;padding:1rem 1.4rem;}
+    .ed-meta div:last-child{flex-basis:100%;}
+    .ed-hero-bg::after{background:linear-gradient(180deg,rgba(16,11,7,0.5),rgba(16,11,7,0.45) 40%,rgba(16,11,7,0.94));}
+    .ed-hero-bg{background-position:center 22%;}
+  }
+</style>
 </head>
 <body>
 
@@ -1313,8 +1343,8 @@ footer{
     <li><a href="#contact">Contact</a></li>
   </ul>
   <div class="nav-right">
-    <button class="nav-cart" onclick="window.location.href='cart.html'">
-      🛒
+    <button class="nav-cart" onclick="window.location.href='cart.html'" aria-label="Cart">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span class="cart-badge">0</span>
     </button>
     <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
@@ -1336,42 +1366,27 @@ footer{
   <a href="#products" class="btn-primary" onclick="closeMobile()">Order Now →</a>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-dust"></div>
-  <div class="hero-content">
-    <div class="hero-eyebrow">Hyderabad's Premium Village Meat</div>
-    <h1 class="hero-title">
-      <span class="line-gold">Telangana's Finest</span><br>
-      <span class="line-clay">From Villages</span><br>
-      To Your Table
-    </h1>
-    <p class="hero-sub">
-      <strong>Free-range goat, country chicken & farm eggs</strong> sourced directly from Telangana villages. Processed hygienically. Delivered cold to your door.
-    </p>
-    <div class="hero-ctas">
-      <a href="#products" class="btn-primary">🛒 Shop Now</a>
-      <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="btn-ghost" target="_blank">💬 WhatsApp Order</a>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <span class="hero-stat-number">500+</span>
-        <span class="hero-stat-label">Happy Families</span>
-      </div>
-      <div class="hero-stat">
-        <span class="hero-stat-number">100%</span>
-        <span class="hero-stat-label">Free Range</span>
-      </div>
-      <div class="hero-stat">
-        <span class="hero-stat-number">24hr</span>
-        <span class="hero-stat-label">Fresh Delivery</span>
-      </div>
+<!-- HERO — Editorial -->
+<section class="ed-hero">
+  <div class="ed-hero-bg"></div>
+  <div class="ed-hero-inner">
+    <div class="ed-kicker"><span class="ed-rule"></span><span>Telangana · Since the soil</span></div>
+    <h1 class="ed-title">The village's <em>finest</em>, brought to your table.</h1>
+    <p class="ed-sub">Free-range goat, country chicken and farm eggs — sourced from a handful of Telangana villages, cut by hand at dawn, and delivered cold to your door the same morning.</p>
+    <div class="ed-actions">
+      <a href="#products" class="ed-btn-fill">Shop the harvest
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </a>
+      <a href="#story" class="ed-link-quiet">Our story
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </a>
     </div>
   </div>
-  <div class="hero-scroll">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
+  <div class="ed-meta">
+    <div><b>Free-range</b> goat</div>
+    <div><b>Country</b> chicken</div>
+    <div><b>Farm</b> eggs</div>
+    <div><b>Same-morning</b> delivery · Hyderabad</div>
   </div>
 </section>
 
@@ -2041,7 +2056,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
 (function(){
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
   var H={apikey:KEY,Authorization:'Bearer '+KEY};
-  var DEFAULTS={ farmer:{name:'',location:'',story:'',photo:''}, cutoff:{hour:16,label:'same-day delivery'}, banner:{active:false,text:''}, features:{ticker:true,sound:true,goldenHour:true,bulkOrder:true} };
+  var DEFAULTS={ farmer:{name:'',location:'',story:'',photo:''}, cutoff:{hour:16,label:'same-day delivery'}, banner:{active:false,text:''}, features:{ticker:false,sound:true,goldenHour:true,bulkOrder:true} };
 
   function goldenHour(){
     var h=new Date().getHours(), phase;
