@@ -532,25 +532,25 @@ nav.scrolled{
 /* ── SECTION BASE ── */
 section{padding:6rem 4rem;}
 .section-eyebrow{
-  display:inline-flex;align-items:center;gap:0.5rem;
-  font-family:'Space Mono',monospace;
-  font-size:0.7rem;color:var(--clay);
-  letter-spacing:0.15em;text-transform:uppercase;
-  margin-bottom:1rem;
+  display:inline-flex;align-items:center;gap:0.7rem;
+  font-family:'Inter',sans-serif;
+  font-size:0.72rem;font-weight:500;color:var(--clay);
+  letter-spacing:0.28em;text-transform:uppercase;
+  margin-bottom:1.2rem;
 }
 .section-eyebrow::before{
   content:'';display:block;
-  width:20px;height:1px;background:var(--clay);
+  width:34px;height:1px;background:var(--clay);
 }
 .section-title{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(2rem,4vw,3.2rem);
-  font-weight:700;line-height:1.15;
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.1rem,4.4vw,3.5rem);
+  font-weight:360;line-height:1.06;letter-spacing:-0.01em;
   color:var(--cream);
   margin-bottom:1rem;
 }
 .section-title em{
-  font-style:italic;color:var(--gold);
+  font-style:italic;color:var(--clay);font-weight:360;
 }
 .section-sub{
   font-size:1rem;font-weight:300;
@@ -802,8 +802,9 @@ section{padding:6rem 4rem;}
   border:1px solid var(--border);
   border-radius:12px;
   display:flex;align-items:center;justify-content:center;
-  font-size:1.3rem;
+  font-size:1.3rem;color:#E8956A;
 }
+.pillar-icon svg{width:23px;height:23px;}
 .pillar-title{
   font-family:'Playfair Display',serif;
   font-size:1rem;font-weight:700;
@@ -937,8 +938,9 @@ section{padding:6rem 4rem;}
   transform:scale(1.1);
 }
 .step-icon{
-  font-size:2rem;margin-bottom:1rem;
+  font-size:2rem;margin-bottom:1rem;color:#E8956A;
 }
+.step-icon svg{width:30px;height:30px;}
 .step-title{
   font-family:'Playfair Display',serif;
   font-size:1rem;font-weight:700;
@@ -1599,28 +1601,28 @@ footer{
       <p class="section-sub">We go to the source — Telangana villages — to handpick the healthiest animals so your family gets the best.</p>
       <div class="why-pillars">
         <div class="pillar fade-up">
-          <div class="pillar-icon">🌾</div>
+          <div class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V10"/><path d="M12 10C12 6 9 3.5 4 3.5 4 8 7 10 12 10z"/><path d="M12 13c0-3.2 3-5.5 8-5.5 0 4-3 5.5-8 5.5z"/></svg></div>
           <div>
             <div class="pillar-title">Direct Village Sourcing</div>
             <p class="pillar-desc">We partner with Telangana farmers to source free-range goats and country chicken. No middlemen, no factory farms.</p>
           </div>
         </div>
         <div class="pillar fade-up">
-          <div class="pillar-icon">🧼</div>
+          <div class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
           <div>
             <div class="pillar-title">Hygienic Processing Facility</div>
             <p class="pillar-desc">FSSAI-compliant processing unit with stainless steel surfaces, daily sanitisation, and gloved handlers at every step.</p>
           </div>
         </div>
         <div class="pillar fade-up">
-          <div class="pillar-icon">❄️</div>
+          <div class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.2 7l15.6 10M19.8 7L4.2 17"/><path d="M12 5.5 9.7 4M12 5.5 14.3 4M12 18.5 9.7 20M12 18.5l2.3 1.5"/></svg></div>
           <div>
             <div class="pillar-title">Cold Chain Delivery</div>
             <p class="pillar-desc">Chilled packing within 2 hours of processing. Insulated delivery bags maintain temperature from our unit to your door.</p>
           </div>
         </div>
         <div class="pillar fade-up">
-          <div class="pillar-icon">🎯</div>
+          <div class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l7-7"/><path d="M14 11l6-6c1-1 1-2.5 0-3s-2.5-1-3 0l-6 6"/><path d="M11 8l5 5"/></svg></div>
           <div>
             <div class="pillar-title">Cut to Order</div>
             <p class="pillar-desc">Curry cut, biryani cut, boneless — tell us how you want it. We cut fresh to your specification before dispatch.</p>
@@ -1674,25 +1676,25 @@ footer{
   <div class="steps-grid">
     <div class="step fade-up">
       <div class="step-num">01</div>
-      <div class="step-icon">📱</div>
+      <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></div>
       <div class="step-title">Place Your Order</div>
       <p class="step-desc">Order online or via WhatsApp. Choose your cut, quantity, and delivery slot. We confirm within minutes.</p>
     </div>
     <div class="step fade-up">
       <div class="step-num">02</div>
-      <div class="step-icon">🌾</div>
+      <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V10"/><path d="M12 10C12 6 9 3.5 4 3.5 4 8 7 10 12 10z"/><path d="M12 13c0-3.2 3-5.5 8-5.5 0 4-3 5.5-8 5.5z"/></svg></div>
       <div class="step-title">Village Sourcing</div>
       <p class="step-desc">We select the animal from our partner farms in Telangana. Free-range, healthy, verified.</p>
     </div>
     <div class="step fade-up">
       <div class="step-num">03</div>
-      <div class="step-icon">🧼</div>
+      <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
       <div class="step-title">Hygienic Processing</div>
       <p class="step-desc">Cleaned, cut to your specification, and packed in our FSSAI-compliant facility with full cold storage.</p>
     </div>
     <div class="step fade-up">
       <div class="step-num">04</div>
-      <div class="step-icon">🚚</div>
+      <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
       <div class="step-title">Cold Delivery</div>
       <p class="step-desc">Insulated packaging, temperature-monitored delivery. Fresh at your door within the promised window.</p>
     </div>
