@@ -12,11 +12,11 @@
   var LOGO = 'angadi/Andadi logo .png';
 
   var TABS = [
-    { id: 'index.html',      label: 'Home',    icon: '🏡', match: ['', 'index.html'] },
-    { id: 'shop.html',       label: 'Shop',    icon: '🥩', match: ['shop.html', 'product-detail.html'] },
-    { id: 'cart.html',       label: 'Cart',    icon: '🛒', match: ['cart.html', 'checkout.html'], badge: true },
-    { id: 'my-orders.html',  label: 'Orders',  icon: '🧾', match: ['my-orders.html', 'order-confirm.html'] },
-    { id: 'my-profile.html', label: 'Account', icon: '👤', match: ['my-profile.html', 'login.html'] },
+    { id: 'index.html',      label: 'Home',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>', match: ['', 'index.html'] },
+    { id: 'shop.html',       label: 'Shop',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9 5 4h14l1.5 5"/><path d="M4.5 9v11h15V9"/><path d="M9.5 20v-5.5h5V20"/></svg>', match: ['shop.html', 'product-detail.html'] },
+    { id: 'cart.html',       label: 'Cart',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M2.5 3.5h2L7 16h11l2-8.5H6"/></svg>', match: ['cart.html', 'checkout.html'], badge: true },
+    { id: 'my-orders.html',  label: 'Orders',  icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2.5h11v19l-2.7-1.8-2.8 1.8-2.8-1.8L6.5 21.5z"/><path d="M9.5 7.5h5M9.5 11.5h5"/></svg>', match: ['my-orders.html', 'order-confirm.html'] },
+    { id: 'my-profile.html', label: 'Account', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>', match: ['my-profile.html', 'login.html'] },
   ];
 
   function cartCount() {
@@ -64,7 +64,8 @@
     '  .ang-mtab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;',
     '    min-height:60px;text-decoration:none;color:rgba(246,237,216,0.5);font-family:inherit;',
     '    font-size:0.62rem;font-weight:600;letter-spacing:0.02em;position:relative;-webkit-tap-highlight-color:transparent;transition:color .2s;}',
-    '  .ang-mtab .ang-mi{font-size:1.25rem;line-height:1;transition:transform .2s;}',
+    '  .ang-mtab .ang-mi{font-size:1.25rem;line-height:1;transition:transform .2s;display:flex;}',
+    '  .ang-mtab .ang-mi svg{width:21px;height:21px;}',
     '  .ang-mtab.active{color:#E8956A;}',
     '  .ang-mtab.active .ang-mi{transform:translateY(-1px) scale(1.08);}',
     '  .ang-mtab.active::before{content:"";position:absolute;top:0;width:26px;height:3px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#C4622D,#D4A017);}',
@@ -234,8 +235,8 @@
     var cur = 'en'; try { cur = localStorage.getItem('angadi_lang') || 'en'; } catch (e) {}
     var b = document.createElement('button');
     b.className = 'ang-lang';
-    b.innerHTML = '🌐 <span id="angLangLbl">' + (cur === 'te' ? 'English' : 'తెలుగు') + '</span>';
-    b.style.cssText = 'position:fixed;right:1rem;top:74px;z-index:99999;background:rgba(16,8,4,0.92);color:#F6EDD8;border:1px solid rgba(212,160,23,0.4);border-radius:100px;padding:0.4rem 0.8rem;font-size:0.74rem;font-weight:700;cursor:pointer;font-family:inherit;backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,0.4);';
+    b.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg> <span id="angLangLbl">' + (cur === 'te' ? 'English' : 'తెలుగు') + '</span>';
+    b.style.cssText = 'position:fixed;right:1rem;top:74px;z-index:99999;display:inline-flex;align-items:center;gap:0.4rem;background:rgba(16,11,7,0.82);color:#EFE2C6;border:1px solid rgba(201,162,75,0.45);border-radius:100px;padding:0.42rem 0.9rem;font-family:Inter,sans-serif;font-size:0.72rem;font-weight:500;letter-spacing:0.04em;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,0.4);';
     b.onclick = function () { var next = (localStorage.getItem('angadi_lang') === 'te') ? 'en' : 'te'; applyLang(next); };
     document.body.appendChild(b);
     if (cur === 'te') setTimeout(function () { applyLang('te'); }, 150);
