@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Editorial + Seal-wrapped logo (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--ink:#100B07;--cream:#F4ECDD;--cream-dim:rgba(244,236,221,0.62);--clay:#C0612E;--line:rgba(244,236,221,0.16);}
+  body{font-family:'Inter',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+
+  /* ── SEAL-WRAPPED LOGO (the new emblem) ── */
+  .logo-seal{position:relative;flex-shrink:0;}
+  .logo-seal .ring{animation:spin 26s linear infinite;display:block;}
+  .logo-seal .logo-img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover;
+    box-shadow:0 2px 14px rgba(0,0,0,0.4);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* sizes */
+  .logo-seal.lg{width:132px;height:132px;}     .logo-seal.lg .logo-img{width:80px;height:80px;}
+  .logo-seal.sm{width:54px;height:54px;}        .logo-seal.sm .logo-img{width:34px;height:34px;}
+
+  /* NAV */
+  nav{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.5rem 3.5rem;}
+  .brand{display:flex;align-items:center;gap:0.85rem;}
+  .brand .name{font-family:'Fraunces',serif;font-weight:500;font-size:1.4rem;letter-spacing:0.26em;padding-left:0.26em;color:var(--cream);}
+  .nav-links{display:flex;gap:2.6rem;}
+  .nav-links a{color:var(--cream-dim);text-decoration:none;font-size:0.72rem;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;transition:color .3s;}
+  .nav-links a:hover{color:var(--cream);}
+  .nav-right{display:flex;align-items:center;gap:1.6rem;}
+  .nav-ico{color:var(--cream-dim);cursor:pointer;transition:color .3s;}
+  .nav-ico:hover{color:var(--cream);}
+  .btn-outline{border:1px solid var(--line);color:var(--cream);background:transparent;padding:0.65rem 1.45rem;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;transition:all .3s;font-family:'Inter';}
+  .btn-outline:hover{background:var(--cream);color:var(--ink);}
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center 30%/cover no-repeat;}
+  .hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(16,11,7,0.93),rgba(16,11,7,0.74) 38%,rgba(16,11,7,0.18) 75%,rgba(16,11,7,0.42));}
+  .hero-inner{position:relative;z-index:2;padding:0 3.5rem;max-width:1180px;}
+  .hero-inner .logo-seal{margin-bottom:1.8rem;}
+  .kicker{display:flex;align-items:center;gap:1rem;margin-bottom:1.8rem;}
+  .kicker .rule{width:54px;height:1px;background:var(--clay);}
+  .kicker span{font-size:0.72rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--cream);font-weight:500;}
+  h1{font-family:'Fraunces',serif;font-weight:340;font-size:clamp(2.6rem,6.4vw,6rem);line-height:0.99;letter-spacing:-0.015em;max-width:14ch;}
+  h1 em{font-style:italic;font-weight:340;color:var(--clay);}
+  .sub{font-size:1.05rem;font-weight:300;line-height:1.75;color:var(--cream-dim);max-width:46ch;margin:2rem 0 2.6rem;}
+  .actions{display:flex;align-items:center;gap:2.2rem;flex-wrap:wrap;}
+  .btn-fill{background:var(--clay);color:var(--cream);padding:1.05rem 2.2rem;font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:0.7rem;text-decoration:none;transition:background .3s;}
+  .btn-fill:hover{background:#a8521f;}
+  .link-quiet{color:var(--cream);text-decoration:none;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;font-weight:500;display:inline-flex;align-items:center;gap:0.55rem;border-bottom:1px solid transparent;padding-bottom:3px;transition:border-color .3s;}
+  .link-quiet:hover{border-color:var(--clay);}
+  .meta{position:absolute;left:0;right:0;bottom:0;z-index:2;border-top:1px solid var(--line);display:flex;gap:3rem;padding:1.5rem 3.5rem;flex-wrap:wrap;}
+  .meta div{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--cream-dim);}
+  .meta b{color:var(--cream);font-weight:600;}
+  @media(max-width:720px){
+    nav{padding:1.1rem 1.3rem;} .nav-links{display:none;}
+    .hero-inner{padding:0 1.4rem;} .meta{padding:1rem 1.4rem;gap:1.1rem;} .meta div:last-child{flex-basis:100%;}
+    .actions{gap:1.2rem;} .logo-seal.lg{width:108px;height:108px;} .logo-seal.lg .logo-img{width:66px;height:66px;}
+    .hero-bg::after{background:linear-gradient(180deg,rgba(16,11,7,0.5),rgba(16,11,7,0.45) 40%,rgba(16,11,7,0.94));}
+  }
+</style>
+</head>
+<body>
+<!-- reusable seal markup is duplicated for nav (sm) and hero (lg) -->
+<nav>
+  <div class="brand">
+    <div class="logo-seal sm">
+      <svg class="ring" width="54" height="54" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="58" stroke="#C0612E" stroke-width="1.4"/>
+        <path id="r1" d="M60,12 a48,48 0 1,1 -0.1,0" fill="none"/>
+        <text fill="#F4ECDD" font-family="Inter" font-size="9" letter-spacing="3.2" font-weight="500"><textPath href="#r1" startOffset="0%">· ANGADI · TELANGANA · EST · </textPath></text>
+      </svg>
+      <img class="logo-img" src="angadi/Andadi logo .png" alt="Angadi">
+    </div>
+    <span class="name">ANGADI</span>
+  </div>
+  <div class="nav-links"><a href="#">Shop</a><a href="#">Our Story</a><a href="#">How it Works</a><a href="#">Contact</a></div>
+  <div class="nav-right">
+    <svg class="nav-ico" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <svg class="nav-ico" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <button class="btn-outline">Order</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <div class="logo-seal lg">
+      <svg class="ring" width="132" height="132" viewBox="0 0 132 132" fill="none">
+        <circle cx="66" cy="66" r="64" stroke="#C0612E" stroke-width="1"/>
+        <circle cx="66" cy="66" r="50" stroke="rgba(244,236,221,0.28)" stroke-width="0.6"/>
+        <path id="r2" d="M66,14 a52,52 0 1,1 -0.1,0" fill="none"/>
+        <text fill="#F4ECDD" font-family="Inter" font-size="7.4" letter-spacing="3.6" font-weight="500"><textPath href="#r2" startOffset="0%">· HANDPICKED · HYGIENIC · FROM THE VILLAGE </textPath></text>
+      </svg>
+      <img class="logo-img" src="angadi/Andadi logo .png" alt="Angadi">
+    </div>
+    <div class="kicker"><span class="rule"></span><span>Telangana · Since the soil</span></div>
+    <h1>The village's <em>finest</em>, brought to your table.</h1>
+    <p class="sub">Free-range goat, country chicken and farm eggs — sourced from a handful of Telangana villages, cut by hand at dawn, and delivered cold to your door the same morning.</p>
+    <div class="actions">
+      <a href="#" class="btn-fill">Shop the harvest
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+      <a href="#" class="link-quiet">Our story
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+    </div>
+  </div>
+  <div class="meta">
+    <div><b>Free-range</b> goat</div><div><b>Country</b> chicken</div><div><b>Farm</b> eggs</div><div><b>Same-morning</b> delivery · Hyderabad</div>
+  </div>
+</section>
+</body>
+</html>
