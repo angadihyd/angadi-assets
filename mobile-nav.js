@@ -31,10 +31,12 @@
   css.textContent = [
     /* ===== Premium brand lockup (all viewports) ===== */
     '.angadi-brand{display:flex;align-items:center;gap:0.6rem;text-decoration:none;}',
-    '.angadi-brand-mark{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;',
-    '  background:#F6EDD8;border:1.5px solid rgba(212,160,23,0.55);',
-    '  box-shadow:0 2px 12px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(122,51,24,0.15);}',
-    '.angadi-brand-mark img{width:100%;height:100%;object-fit:cover;object-position:50% 33%;display:block;}',
+    '.angadi-brand-mark{position:relative;width:46px;height:46px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}',
+    '.angadi-brand-mark img{width:70%;height:70%;border-radius:50%;object-fit:cover;object-position:50% 33%;display:block;background:#F6EDD8;box-shadow:0 2px 10px rgba(0,0,0,0.35);}',
+    /* seal ring around the logo (maker\'s mark) */
+    '.angadi-brand-mark .seal-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(201,162,75,0.6);}',
+    '.angadi-brand-mark .seal-ring::before{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px dashed rgba(201,162,75,0.45);animation:angSealSpin 26s linear infinite;}',
+    '@keyframes angSealSpin{to{transform:rotate(360deg);}}',
     '.angadi-brand-text{display:flex;flex-direction:column;line-height:1;}',
     '.angadi-brand-name{font-family:"Bebas Neue",sans-serif;font-size:1.4rem;letter-spacing:0.13em;color:#F6EDD8;}',
     '.angadi-brand-tag{font-family:"Space Mono",monospace;font-size:0.5rem;letter-spacing:0.22em;',
@@ -98,7 +100,7 @@
       el.dataset.angadiBranded = '1';
       el.classList.add('angadi-brand');
       el.innerHTML =
-        '<span class="angadi-brand-mark"><img src="' + LOGO + '" alt="Angadi"></span>' +
+        '<span class="angadi-brand-mark"><span class="seal-ring"></span><img src="' + LOGO + '" alt="Angadi"></span>' +
         '<span class="angadi-brand-text">' +
           '<span class="angadi-brand-name">ANGADI</span>' +
           '<span class="angadi-brand-tag">Healthy · Hygienic · Handpicked</span>' +
