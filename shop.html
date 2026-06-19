@@ -74,6 +74,8 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Editorial design system -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & ROOT ── */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -243,15 +245,16 @@ nav.scrolled{height:60px;}
 .shop-breadcrumb a:hover{color:var(--clay-l);}
 .shop-breadcrumb span{color:var(--clay-l);}
 .shop-hero-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(2.8rem,6vw,5rem);
-  line-height:0.95;
-  letter-spacing:0.03em;
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.4rem,5.4vw,4.4rem);
+  font-weight:360;
+  line-height:1.0;
+  letter-spacing:-0.015em;
   color:var(--cream);
-  margin-bottom:0.8rem;
+  margin-bottom:0.9rem;
 }
 .shop-hero-title em{
-  color:var(--gold);font-style:normal;
+  color:var(--clay-l);font-style:italic;font-weight:360;
 }
 .shop-hero-sub{
   font-size:0.95rem;font-weight:300;
@@ -655,13 +658,13 @@ nav.scrolled{height:60px;}
   line-height:1.6;
 }
 .section-title{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(2rem,4vw,3rem);
-  font-weight:700;line-height:1.15;
+  font-family:'Fraunces',serif;
+  font-size:clamp(2rem,4.2vw,3.2rem);
+  font-weight:360;line-height:1.07;letter-spacing:-0.01em;
   color:var(--cream);
   margin-bottom:1rem;
 }
-.section-title em{font-style:italic;color:var(--gold);}
+.section-title em{font-style:italic;color:var(--clay-l);font-weight:360;}
 .section-sub{
   font-size:1rem;font-weight:300;
   color:rgba(246,237,216,0.6);
@@ -792,20 +795,23 @@ footer{
 
 /* ── WHATSAPP FLOAT ── */
 .wa-float{
-  position:fixed;bottom:2rem;right:2rem;z-index:999;
-  width:56px;height:56px;
-  background:#25D366;
+  position:fixed;bottom:5.4rem;right:1.3rem;z-index:999;
+  width:50px;height:50px;
+  background:rgba(16,11,7,0.82);
+  border:1px solid rgba(201,162,75,0.45);
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:1.5rem;
-  box-shadow:0 4px 20px rgba(37,211,102,0.4);
+  color:#EFE2C6;
+  backdrop-filter:blur(8px);
+  box-shadow:0 6px 22px rgba(0,0,0,0.4);
   text-decoration:none;
   transition:all 0.3s;
-  animation:waBounce 3s ease infinite;
 }
+.wa-float svg{width:22px;height:22px;}
 .wa-float:hover{
-  transform:scale(1.1);
-  box-shadow:0 8px 32px rgba(37,211,102,0.5);
+  background:#C0612E;border-color:#C0612E;
+  transform:translateY(-2px);
+  box-shadow:0 10px 28px rgba(0,0,0,0.5);
 }
 @keyframes waBounce{
   0%,100%{transform:translateY(0);}
@@ -1336,7 +1342,7 @@ footer{
 </footer>
 
 <!-- WHATSAPP FLOAT -->
-<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20fresh%20meat" class="wa-float" target="_blank" title="Order on WhatsApp">💬</a>
+<a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20fresh%20meat" class="wa-float" target="_blank" title="Order on WhatsApp" aria-label="Order on WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.7-5A8 8 0 1 1 8 19.3z"/><path d="M9 10a3.5 3.5 0 0 0 5 4l1-1-2-1-1 1a4 4 0 0 1-2-2l1-1-1-2-1 1a3.5 3.5 0 0 0 0 1z"/></svg></a>
 
 <script>
 // ── NAV SCROLL
