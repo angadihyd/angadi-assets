@@ -1330,13 +1330,23 @@ footer{
   .ed-meta div{font-family:'Inter',sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(244,236,221,0.62);}
   .ed-meta b{color:#F4ECDD;font-weight:600;}
   @media(max-width:720px){
-    .ed-actions{gap:1.2rem;}
-    .ed-meta{gap:1.1rem;padding:1rem 1.4rem;}
+    /* Mobile-first: shorter, calmer hero that fits a phone without collisions */
+    .ed-hero{display:block;min-height:auto;padding:104px 0 2.2rem;}
+    .ed-seal{width:72px;height:72px;margin-bottom:1rem;}
+    .ed-seal-logo{width:42px;height:42px;}
+    .ed-kicker{gap:0.65rem;margin-bottom:1rem;}
+    .ed-kicker .ed-rule{width:28px;}
+    .ed-kicker span{font-size:0.6rem;letter-spacing:0.18em;}
+    .ed-title{font-size:2.1rem;line-height:1.08;max-width:none;}
+    .ed-sub{font-size:0.95rem;line-height:1.65;margin:1.3rem 0 1.7rem;}
+    .ed-actions{gap:0.6rem 1.4rem;}
+    .ed-btn-fill{padding:0.9rem 1.6rem;}
+    /* meta strip flows in-line on mobile (not pinned over the floating buttons) */
+    .ed-meta{position:static;margin:1.8rem 1.4rem 0;gap:0.5rem 1.3rem;padding:1.1rem 0 0;background:none;}
+    .ed-meta div{font-size:0.64rem;letter-spacing:0.15em;}
     .ed-meta div:last-child{flex-basis:100%;}
-    .ed-seal{width:94px;height:94px;margin-bottom:1.2rem;}
-    .ed-seal-logo{width:54px;height:54px;}
-    .ed-hero-bg::after{background:linear-gradient(180deg,rgba(16,11,7,0.5),rgba(16,11,7,0.45) 40%,rgba(16,11,7,0.94));}
-    .ed-hero-bg{background-position:center 22%;}
+    .ed-hero-bg::after{background:linear-gradient(180deg,rgba(16,11,7,0.55),rgba(16,11,7,0.5) 45%,rgba(16,11,7,0.95));}
+    .ed-hero-bg{background-position:center 20%;}
   }
 </style>
 </head>
