@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Premium hero (same composition)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fraunces:ital,opsz,wght@1,9..144,400..500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#0E0A06; --cream:#F4ECDD; --cream-dim:rgba(244,236,221,0.66);
+    --clay:#C76A38; --gold:#D9A646; --line:rgba(244,236,221,0.16);
+  }
+  body{font-family:'Inter',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+
+  /* NAV (minimal, premium) */
+  nav{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.3rem;}
+  .brand{display:flex;align-items:center;gap:0.6rem;}
+  .brand .mark{position:relative;width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
+  .brand .mark img{width:70%;height:70%;border-radius:50%;background:var(--cream);object-fit:cover;}
+  .brand .mark .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(217,166,70,0.6);}
+  .brand .mark .ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px dashed rgba(217,166,70,0.4);}
+  .brand .name{font-family:'Anton',sans-serif;font-size:1.4rem;letter-spacing:0.14em;color:var(--cream);}
+  .nav-ico{display:flex;gap:1.1rem;align-items:center;color:var(--cream);}
+
+  /* HERO — same comfortable composition, premium treatment */
+  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:88px 1.4rem 2rem;}
+  .hero-bg{position:absolute;inset:0;background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center 28%/cover no-repeat;}
+  .hero-bg::after{content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(14,10,6,0.55) 0%,rgba(14,10,6,0.35) 30%,rgba(14,10,6,0.72) 72%,rgba(14,10,6,0.96) 100%);}
+  .hero-in{position:relative;z-index:2;width:100%;max-width:1100px;}
+
+  .eyebrow{display:inline-flex;align-items:center;gap:0.6rem;font-size:0.66rem;font-weight:500;letter-spacing:0.26em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:1.3rem;}
+  .eyebrow .rule{width:26px;height:1px;background:var(--gold);}
+
+  h1{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;line-height:0.94;letter-spacing:0.005em;
+    font-size:clamp(2.9rem,12vw,6.4rem);color:var(--cream);}
+  h1 .accent{font-family:'Fraunces',serif;font-style:italic;font-weight:400;text-transform:none;letter-spacing:-0.01em;
+    color:var(--gold);font-size:0.92em;}
+  .sub{font-size:1rem;font-weight:300;line-height:1.7;color:var(--cream-dim);max-width:40ch;margin:1.5rem 0 2rem;}
+  .sub b{color:var(--cream);font-weight:500;}
+
+  .ctas{display:flex;flex-direction:column;gap:0.8rem;max-width:420px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;padding:1.05rem 1.5rem;
+    font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;text-decoration:none;transition:all .3s;}
+  .btn-fill{background:var(--clay);color:#fff;}
+  .btn-fill:hover{background:#b25c2c;}
+  .btn-ghost{border:1px solid var(--line);color:var(--cream);background:rgba(255,255,255,0.03);}
+  .btn-ghost:hover{border-color:var(--gold);}
+
+  /* stats — hairline separators, refined */
+  .stats{display:flex;margin-top:2.4rem;border-top:1px solid var(--line);padding-top:1.4rem;max-width:480px;}
+  .stat{flex:1;}
+  .stat + .stat{border-left:1px solid var(--line);padding-left:1.1rem;}
+  .stat .n{font-family:'Anton',sans-serif;font-size:1.7rem;color:var(--cream);line-height:1;letter-spacing:0.02em;}
+  .stat .l{font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cream-dim);margin-top:0.4rem;}
+
+  @media(min-width:760px){
+    nav{padding:1.6rem 3rem;}
+    .hero{padding:0 3rem;}
+    .ctas{flex-direction:row;}
+    .btn{flex:0 0 auto;}
+    .sub{font-size:1.08rem;}
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">
+    <span class="mark"><span class="ring"></span><img src="angadi/Andadi logo .png" alt="Angadi"></span>
+    <span class="name">ANGADI</span>
+  </div>
+  <div class="nav-ico">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-in">
+    <div class="eyebrow"><span class="rule"></span>Hyderabad · Premium Village Meat</div>
+    <h1>Telangana's <span class="accent">finest</span><br>from villages<br>to your table</h1>
+    <p class="sub"><b>Free-range goat, country chicken &amp; farm eggs</b> sourced directly from Telangana villages. Processed hygienically. Delivered cold to your door.</p>
+    <div class="ctas">
+      <a href="#" class="btn btn-fill">Shop Now
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </a>
+      <a href="#" class="btn btn-ghost">WhatsApp Order</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">500+</div><div class="l">Happy Families</div></div>
+      <div class="stat"><div class="n">100%</div><div class="l">Free Range</div></div>
+      <div class="stat"><div class="n">24hr</div><div class="l">Fresh Delivery</div></div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
