@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Hero (full photo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#140E08; --ink2:#1C140C; --cream:#F5EFE3; --dim:rgba(245,239,227,0.6);
+    --gold:#D9A646; --clay:#C2622E; --line:rgba(245,239,227,0.14);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+
+  /* masthead (dark) — no contrast issues over the bright sky */
+  .masthead{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;}
+  .brand{display:flex;align-items:center;gap:0.55rem;}
+  .brand img{width:36px;height:36px;border-radius:50%;background:var(--cream);object-fit:cover;}
+  .brand span{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:0.18em;padding-left:0.18em;}
+  .mast-r{display:flex;align-items:center;gap:1.1rem;color:var(--cream);}
+
+  /* full photo band — whole scene visible, nothing cropped */
+  .photo{position:relative;width:100%;line-height:0;}
+  .photo img{width:100%;height:auto;display:block;}
+  .photo::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:42%;
+    background:linear-gradient(180deg,rgba(20,14,8,0) 0%,var(--ink) 96%);pointer-events:none;}
+
+  /* content area (dark) — calm, restrained */
+  .content{padding:0.4rem 1.4rem 2.6rem;}
+  .eyebrow{font-size:0.66rem;font-weight:500;letter-spacing:0.26em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;}
+  h1{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.94;letter-spacing:0.01em;
+    font-size:clamp(2.9rem,15vw,5.5rem);color:var(--cream);}
+  h1 .gold{color:var(--gold);}
+  .sub{font-size:0.98rem;font-weight:300;line-height:1.6;color:var(--dim);max-width:38ch;margin:1.2rem 0 1.8rem;}
+  .sub b{color:var(--cream);font-weight:500;}
+
+  .ctas{display:flex;flex-direction:column;gap:0.75rem;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.55rem;padding:1rem 1.6rem;border-radius:100px;
+    font-size:0.88rem;font-weight:600;letter-spacing:0.02em;text-decoration:none;transition:all .25s;}
+  .btn-fill{background:var(--clay);color:#fff;}
+  .btn-fill:hover{background:#ab5527;}
+  .btn-ghost{border:1px solid var(--line);color:var(--cream);background:rgba(255,255,255,0.02);}
+  .btn-ghost:hover{border-color:var(--gold);}
+
+  .trust{margin-top:2rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:0.8rem;font-weight:300;color:var(--dim);}
+  .trust b{color:var(--cream);font-weight:600;}
+
+  @media(min-width:760px){
+    .masthead{padding:1.4rem 3rem;}
+    .photo img{max-height:62vh;object-fit:cover;object-position:center 32%;}
+    .content{max-width:1100px;margin:0 auto;padding:1rem 3rem 3rem;}
+    h1{font-size:clamp(3.5rem,6vw,6rem);}
+    .ctas{flex-direction:row;}
+    .btn{flex:0 0 auto;}
+    .sub{font-size:1.1rem;}
+    .trust{max-width:560px;}
+  }
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><img src="angadi/Andadi logo .png" alt="Angadi"><span>ANGADI</span></div>
+    <div class="mast-r">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </div>
+  </header>
+
+  <div class="photo">
+    <img src="ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png" alt="Shepherd and goats at sunset in a Telangana village">
+  </div>
+
+  <section class="content">
+    <div class="eyebrow">Hyderabad · Premium Village Meat</div>
+    <h1>Telangana's <span class="gold">Finest</span><br>From Villages<br>To Your Table</h1>
+    <p class="sub"><b>Free-range goat, country chicken &amp; farm eggs</b> — raised on open pasture, cut fresh at dawn, delivered cold to your door.</p>
+    <div class="ctas">
+      <a href="#" class="btn btn-fill">Shop Now
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </a>
+      <a href="#" class="btn btn-ghost">WhatsApp Order</a>
+    </div>
+    <div class="trust"><b>Trusted by 500+ families</b> across Hyderabad · 100% free-range · same-morning delivery</div>
+  </section>
+</body>
+</html>
