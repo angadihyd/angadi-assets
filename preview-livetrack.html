@@ -5,192 +5,219 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Angadi — Live Herd Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{
-    --ink:#241710; --ink2:#1B130C; --cream:#F5EFE3; --dim:rgba(245,239,227,0.6);
-    --amber:#E0902E; --maroon:#8C2433; --green:#4E8A45; --line:rgba(245,239,227,0.14);
+    --ink:#211610; --ink2:#180F09; --cream:#F5EFE3; --dim:rgba(245,239,227,0.58);
+    --amber:#E8A24A; --maroon:#9C2A3A; --green:#56934B; --live:#46D88A; --line:rgba(245,239,227,0.12);
   }
   body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
-  .sec{padding:3rem 1.4rem 3.4rem;max-width:1100px;margin:0 auto;}
-  .eyebrow{display:inline-flex;align-items:center;gap:0.55rem;font-size:0.66rem;font-weight:600;letter-spacing:0.24em;
-    text-transform:uppercase;color:var(--amber);margin-bottom:0.9rem;}
-  .eyebrow .ln{width:26px;height:1px;background:var(--amber);}
-  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.96;letter-spacing:0.01em;
-    font-size:clamp(2.2rem,9vw,3.6rem);color:var(--cream);}
+  .sec{padding:3.2rem 1.3rem 3.6rem;max-width:1080px;margin:0 auto;}
+  .eyebrow{display:inline-flex;align-items:center;gap:0.6rem;font-family:'Space Mono',monospace;font-size:0.64rem;font-weight:700;
+    letter-spacing:0.26em;text-transform:uppercase;color:var(--amber);margin-bottom:1rem;}
+  .eyebrow .ln{width:24px;height:1px;background:var(--amber);}
+  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.94;letter-spacing:0.012em;
+    font-size:clamp(2.4rem,10vw,4rem);color:var(--cream);}
   h2 .am{color:var(--amber);}
-  .lead{font-size:0.98rem;font-weight:300;line-height:1.65;color:var(--dim);max-width:54ch;margin:1rem 0 1.5rem;}
+  .lead{font-size:0.96rem;font-weight:300;line-height:1.62;color:var(--dim);max-width:50ch;margin:1rem 0 1.6rem;}
   .lead b{color:var(--cream);font-weight:500;}
 
-  .live{display:flex;align-items:center;gap:0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--line);
-    border-radius:14px;padding:0.8rem 1rem;margin-bottom:0.9rem;}
-  .live .dot{width:9px;height:9px;border-radius:50%;background:#43d17a;flex:0 0 auto;box-shadow:0 0 0 0 rgba(67,209,122,0.6);animation:lp 1.8s infinite;}
-  @keyframes lp{0%{box-shadow:0 0 0 0 rgba(67,209,122,0.55);}70%{box-shadow:0 0 0 8px rgba(67,209,122,0);}100%{box-shadow:0 0 0 0 rgba(67,209,122,0);}}
-  .live .txt{flex:1;min-width:0;}
-  .live .l1{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:#7fe0a3;font-weight:600;}
-  .live .l2{font-size:0.95rem;font-weight:600;color:var(--cream);margin-top:1px;}
-  .live .time{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.04em;color:var(--amber);line-height:1;text-align:right;}
+  /* ── map stage ── */
+  .stage{position:relative;border:1px solid var(--line);border-radius:22px;overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02);}
+  #map{height:440px;width:100%;background:var(--ink2);}
+  .leaflet-tile{filter:sepia(0.4) saturate(0.92) brightness(0.58) contrast(1.06) hue-rotate(-8deg);}
+  .leaflet-container{background:#180F09;font-family:'DM Sans',sans-serif;}
+  .leaflet-control-attribution{background:rgba(20,12,6,0.55)!important;color:rgba(245,239,227,0.35)!important;font-size:9px!important;}
+  .leaflet-bar a{background:#211610!important;color:#F5EFE3!important;border-color:rgba(245,239,227,0.12)!important;}
+  .leaflet-bar{border:none!important;box-shadow:0 4px 14px rgba(0,0,0,0.4)!important;}
+  /* sky-tone wash (set by time) + vignette for depth */
+  .sky{position:absolute;inset:0;z-index:400;pointer-events:none;mix-blend-mode:soft-light;opacity:0.55;transition:background 1.5s;}
+  .vig{position:absolute;inset:0;z-index:401;pointer-events:none;
+    background:radial-gradient(130% 90% at 50% 35%,transparent 55%,rgba(10,6,3,0.5) 100%);}
 
-  .map-wrap{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.45);}
-  #map{height:410px;width:100%;background:var(--ink2);}
-  .leaflet-tile{filter:sepia(0.42) saturate(0.9) brightness(0.6) contrast(1.05) hue-rotate(-8deg);}
-  .leaflet-container{background:#1B130C;font-family:'DM Sans',sans-serif;}
-  .leaflet-control-attribution{background:rgba(20,12,6,0.6)!important;color:rgba(245,239,227,0.4)!important;}
-  .leaflet-bar a{background:#241710!important;color:#F5EFE3!important;border-color:rgba(245,239,227,0.15)!important;}
-
-  .vlbl{font-size:0.6rem;font-weight:600;color:#fff;white-space:nowrap;background:rgba(20,12,6,0.78);
-    border:1px solid var(--line);padding:1px 6px;border-radius:5px;transform:translateY(8px);}
-  .vdot{width:9px;height:9px;border-radius:50%;background:rgba(224,144,46,0.85);border:1.5px solid #fff3df;}
+  /* markers */
   .vwrap{display:flex;flex-direction:column;align-items:center;}
-  .shed .ico{width:28px;height:28px;border-radius:8px;background:rgba(20,12,6,0.88);border:1px solid rgba(140,36,51,0.6);
-    display:flex;align-items:center;justify-content:center;color:#e88;}
-  .shed .vlbl{transform:translateY(4px);}
+  .vdot{width:8px;height:8px;border-radius:50%;background:rgba(232,162,74,0.9);border:1.5px solid #fff3df;box-shadow:0 1px 4px rgba(0,0,0,0.5);}
+  .vlbl{margin-top:5px;font-size:0.58rem;font-weight:600;letter-spacing:0.02em;color:#fff;white-space:nowrap;
+    background:rgba(20,12,6,0.72);border:1px solid var(--line);padding:1px 6px;border-radius:5px;backdrop-filter:blur(3px);}
+  .shed .ico{width:26px;height:26px;border-radius:8px;background:rgba(20,12,6,0.85);border:1px solid rgba(156,42,58,0.65);display:flex;align-items:center;justify-content:center;color:#e89aa3;}
   .herd{display:flex;flex-direction:column;align-items:center;position:relative;}
-  .herd .ring{position:absolute;left:50%;top:9px;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:1px solid rgba(224,144,46,0.5);animation:hr 2.6s infinite;}
-  @keyframes hr{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0.9;}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0;}}
-  .herd .core{width:20px;height:20px;border-radius:50%;background:var(--amber);border:2px solid #fff3df;box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;}
+  .herd .ring{position:absolute;left:50%;top:11px;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;border:1.5px solid rgba(232,162,74,0.55);animation:hr 2.8s infinite;}
+  @keyframes hr{0%{transform:translate(-50%,-50%) scale(0.4);opacity:1;}100%{transform:translate(-50%,-50%) scale(1.15);opacity:0;}}
+  .herd .core{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffd084,var(--amber));
+    border:2px solid #fff6e6;box-shadow:0 0 18px rgba(232,162,74,0.7),0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;}
   .herd .core svg{width:13px;height:13px;color:#241710;}
-  .herd .hlbl{margin-top:5px;font-size:0.64rem;font-weight:700;color:#241710;background:var(--amber);padding:2px 8px;border-radius:6px;white-space:nowrap;}
 
-  .rhythm{display:grid;grid-template-columns:1fr;gap:0.6rem;margin-top:1.4rem;}
-  .stage{display:flex;gap:0.85rem;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:0.85rem 1rem;background:rgba(255,255,255,0.02);transition:all .3s;}
-  .stage.on{border-color:rgba(224,144,46,0.6);background:rgba(224,144,46,0.08);}
-  .stage .ic{color:var(--amber);flex:0 0 auto;margin-top:1px;}
-  .stage .st{font-weight:600;font-size:0.9rem;color:var(--cream);}
-  .stage .sd{font-size:0.8rem;color:var(--dim);margin-top:2px;line-height:1.45;}
-  .stage .now{font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#241710;background:var(--amber);border-radius:5px;padding:1px 6px;font-weight:700;margin-left:auto;align-self:center;display:none;}
-  .stage.on .now{display:inline-block;}
-  .note{font-size:0.78rem;color:var(--dim);margin-top:1.1rem;line-height:1.5;}
+  /* frosted HUD */
+  .hud{position:absolute;left:12px;right:12px;bottom:12px;z-index:402;
+    background:rgba(24,15,9,0.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(245,239,227,0.14);border-radius:16px;padding:0.85rem 1rem;
+    box-shadow:0 12px 30px rgba(0,0,0,0.4);}
+  .hud-top{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;}
+  .badge{display:inline-flex;align-items:center;gap:0.4rem;font-family:'Space Mono',monospace;font-size:0.6rem;font-weight:700;
+    letter-spacing:0.2em;color:var(--live);background:rgba(70,216,138,0.12);border:1px solid rgba(70,216,138,0.3);
+    padding:3px 8px;border-radius:100px;}
+  .badge .rec{width:7px;height:7px;border-radius:50%;background:var(--live);animation:lp 1.6s infinite;}
+  @keyframes lp{0%{box-shadow:0 0 0 0 rgba(70,216,138,0.6);}70%{box-shadow:0 0 0 6px rgba(70,216,138,0);}100%{box-shadow:0 0 0 0 rgba(70,216,138,0);}}
+  .hud-time{margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.05em;color:var(--cream);line-height:1;}
+  .hud-status{font-size:0.98rem;font-weight:600;color:var(--cream);line-height:1.25;}
+  .hud-chips{display:flex;gap:1.1rem;margin-top:0.7rem;flex-wrap:wrap;}
+  .chip{display:flex;flex-direction:column;}
+  .chip .k{font-family:'Space Mono',monospace;font-size:0.54rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);}
+  .chip .v{font-size:0.86rem;font-weight:700;color:var(--amber);margin-top:1px;}
 
-  @media(min-width:720px){ .sec{padding:4.5rem 2rem 5rem;} #map{height:500px;} .rhythm{grid-template-columns:repeat(2,1fr);} }
+  /* day arc */
+  .arc{margin-top:1.5rem;}
+  .arc-bar{position:relative;height:9px;border-radius:100px;overflow:visible;
+    background:linear-gradient(90deg,#1a1430 0%,#3a2a4a 12%,#9c5a3a 22%,#e0a24a 33%,#f3d27a 50%,#e0a24a 67%,#a8543a 78%,#3a2a4a 88%,#1a1430 100%);}
+  .arc-now{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--amber);box-shadow:0 0 14px rgba(232,162,74,0.8),0 2px 6px rgba(0,0,0,0.5);}
+  .arc-tick{position:absolute;top:-6px;width:2px;height:21px;background:rgba(245,239,227,0.5);transform:translateX(-50%);}
+  .arc-labels{display:flex;justify-content:space-between;margin-top:0.7rem;font-family:'Space Mono',monospace;
+    font-size:0.58rem;letter-spacing:0.06em;color:var(--dim);}
+  .arc-cap{display:flex;justify-content:space-between;margin-top:0.4rem;font-size:0.72rem;color:var(--dim);}
+  .arc-cap b{color:var(--amber);font-weight:600;}
+
+  .note{font-size:0.78rem;color:var(--dim);margin-top:1.4rem;line-height:1.55;border-top:1px solid var(--line);padding-top:1.1rem;}
+  .note b{color:var(--cream);font-weight:500;}
+
+  @media(min-width:720px){ .sec{padding:5rem 2rem;} #map{height:540px;} .hud{left:18px;right:auto;width:340px;bottom:18px;} }
 </style>
 </head>
 <body>
 <section class="sec">
-  <div class="eyebrow"><span class="ln"></span>Live from the Grounds</div>
-  <h2>Watch the herd <span class="am">roam, live</span></h2>
-  <p class="lead">Our goats are reared across <b>Gutrajpalli, Medipalli, Gullakota, Gollapalle, Lingampalli & Kasaram</b> — villages around Jagtial, North Telangana. They aren't penned. Each day they wander out to graze the forest and farmland, doze through the midday heat, and drift home by dusk. This map follows their <b>real, unhurried rhythm</b> — no two days the same.</p>
+  <div class="eyebrow"><span class="ln"></span>Live · Origin Tracking</div>
+  <h2>Follow the herd, <span class="am">in real time</span></h2>
+  <p class="lead">Reared across <b>Gutrajpalli, Medipalli, Gullakota, Gollapalle, Lingampalli &amp; Kasaram</b> — the villages of Jagtial, North Telangana. Never penned by day. They wander the forest and farmland, rest through the midday heat, and drift home by dusk. What you see below is their <b>real, unhurried rhythm</b> — live, right now.</p>
 
-  <div class="live">
-    <span class="dot"></span>
-    <div class="txt"><div class="l1">Live · The Herd</div><div class="l2" id="statusText">Loading…</div></div>
-    <div class="time" id="clock">--:--</div>
+  <div class="stage">
+    <div id="map"></div>
+    <div class="sky" id="sky"></div>
+    <div class="vig"></div>
+    <div class="hud">
+      <div class="hud-top">
+        <span class="badge"><span class="rec"></span>LIVE</span>
+        <span class="hud-time" id="clock">--:--</span>
+      </div>
+      <div class="hud-status" id="statusText">Locating the herd…</div>
+      <div class="hud-chips">
+        <div class="chip"><span class="k">Near</span><span class="v" id="cNear">—</span></div>
+        <div class="chip"><span class="k">Out since</span><span class="v" id="cOut">—</span></div>
+        <div class="chip"><span class="k">Roamed today</span><span class="v" id="cKm">—</span></div>
+      </div>
+    </div>
   </div>
 
-  <div class="map-wrap"><div id="map"></div></div>
-  <div class="rhythm" id="rhythm"></div>
-  <p class="note">Some mornings they set off early, some days they linger. The herd grazes, rests in the shade, then grazes again — we let them live by their own clock, not ours.</p>
+  <div class="arc">
+    <div class="arc-bar">
+      <div class="arc-tick" id="tOut"></div>
+      <div class="arc-tick" id="tHome"></div>
+      <div class="arc-now" id="tNow"></div>
+    </div>
+    <div class="arc-labels"><span>12 AM</span><span>6 AM</span><span>NOON</span><span>6 PM</span><span>12 AM</span></div>
+    <div class="arc-cap"><span>Out at <b id="capOut">—</b></span><span>Home by <b id="capHome">—</b></span></div>
+  </div>
+
+  <p class="note"><b>No two days alike.</b> Some mornings they set off early, some they linger; they graze, doze in the shade, then graze again. We let the herd keep its own clock — this tracker simply follows it.</p>
 </section>
 
 <script>
 (function(){
   var SHED = [18.7935, 78.9075];
   var VILLAGES = [
-    { n:'Gutrajpalli', ll:[18.823, 78.862] },
-    { n:'Medipalli',   ll:[18.758, 78.949] },
-    { n:'Gullakota',   ll:[18.851, 78.938] },
-    { n:'Gollapalle',  ll:[18.731, 78.884] },
-    { n:'Lingampalli', ll:[18.799, 79.001] },
-    { n:'Kasaram',     ll:[18.879, 78.884] }
+    { n:'Gutrajpalli', ll:[18.823, 78.862] },{ n:'Medipalli', ll:[18.758, 78.949] },
+    { n:'Gullakota', ll:[18.851, 78.938] },{ n:'Gollapalle', ll:[18.731, 78.884] },
+    { n:'Lingampalli', ll:[18.799, 79.001] },{ n:'Kasaram', ll:[18.879, 78.884] }
   ];
   var ALL = VILLAGES.map(function(v){return v.ll;}).concat([SHED]);
+  // the herd's OWN local grazing grounds near the shed (realistic daily roam)
+  var GRAZE = [
+    { n:'the north field',    ll:[18.8045, 78.9015] },
+    { n:'the forest edge',    ll:[18.8035, 78.9145] },
+    { n:'the east pasture',   ll:[18.7955, 78.9205] },
+    { n:'the stream bank',    ll:[18.7855, 78.9105] },
+    { n:'the west farmland',  ll:[18.7885, 78.8955] },
+    { n:'the tamarind grove', ll:[18.8005, 78.8925] }
+  ];
 
-  // ── map ──
   var map = L.map('map', { scrollWheelZoom:false, zoomControl:true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:15, attribution:'© OpenStreetMap' }).addTo(map);
-  function fit(){ map.fitBounds(L.latLngBounds(ALL), { padding:[55,55] }); }
+  function fit(){ map.fitBounds(L.latLngBounds(ALL), { padding:[60,60] }); }
   fit(); setTimeout(function(){ map.invalidateSize(); fit(); }, 350);
 
   VILLAGES.forEach(function(v){
-    L.marker(v.ll, { icon:L.divIcon({ className:'', iconSize:[0,0],
-      html:'<div class="vwrap"><span class="vdot"></span><span class="vlbl">'+v.n+'</span></div>' }) }).addTo(map)
-      .bindPopup('<b>'+v.n+'</b><br>Free-range grazing village');
+    L.marker(v.ll,{icon:L.divIcon({className:'',iconSize:[0,0],html:'<div class="vwrap"><span class="vdot"></span><span class="vlbl">'+v.n+'</span></div>'})}).addTo(map).bindPopup('<b>'+v.n+'</b><br>Free-range grazing village');
   });
-  L.marker(SHED, { icon:L.divIcon({ className:'', iconSize:[0,0],
-    html:'<div class="vwrap shed"><span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="vlbl">The shed</span></div>' }) }).addTo(map)
-    .bindPopup('<b>The home shed</b><br>Where the herd sleeps');
+  L.marker(SHED,{icon:L.divIcon({className:'',iconSize:[0,0],html:'<div class="vwrap shed"><span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="vlbl">The shed</span></div>'})}).addTo(map).bindPopup('<b>The home shed</b>');
 
-  var herd = L.marker(SHED, { icon:L.divIcon({ className:'', iconSize:[0,0],
-    html:'<div class="herd"><span class="ring"></span><span class="core"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 13c0-2 1-3 2-4 0-2 2-3 4-3 1 0 2 .5 2 .5S13 6 14 6c2 0 4 1 4 3 1 1 2 2 2 4 0 1-1 2-2 2h-1l-1 4h-2l-.5-3h-3L11 19H9l-1-4H6c-1 0-2-1-2-2z"/></svg></span><span class="hlbl" id="hlbl">The herd</span></div>' }) }).addTo(map);
+  var trail = L.polyline([], { color:'#E8A24A', weight:3, opacity:0.85, lineJoin:'round', lineCap:'round' }).addTo(map);
+  var trailGlow = L.polyline([], { color:'#ffcf86', weight:7, opacity:0.18, lineJoin:'round', lineCap:'round' }).addTo(map);
+  var herd = L.marker(SHED,{icon:L.divIcon({className:'',iconSize:[0,0],html:'<div class="herd"><span class="ring"></span><span class="core"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 13c0-2 1-3 2-4 0-2 2-3 4-3 1 0 2 .5 2 .5S13 6 14 6c2 0 4 1 4 3 1 1 2 2 2 4 0 1-1 2-2 2h-1l-1 4h-2l-.5-3h-3L11 19H9l-1-4H6c-1 0-2-1-2-2z"/></svg></span></div>'})}).addTo(map);
 
-  // ── deterministic per-day randomness (organic, but consistent for everyone today) ──
   function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-  function lerp(a,b,t){return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];}
-  function fmt(d){var h=d.getHours(),m=d.getMinutes(),ap=h<12?'AM':'PM',hh=h%12;if(hh===0)hh=12;return hh+':'+(m<10?'0':'')+m+' '+ap;}
-  function hm(min){var h=Math.floor(min/60),m=Math.round(min%60),ap=h<12?'AM':'PM',hh=h%12;if(hh===0)hh=12;return hh+':'+(m<10?'0':'')+m+' '+ap;}
+  function lerp(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
+  function fmt(d){var h=d.getHours(),m=d.getMinutes(),ap=h<12?'AM':'PM',hh=h%12||12;return hh+':'+(m<10?'0':'')+m+' '+ap;}
+  function hm(min){var h=Math.floor(min/60),m=Math.round(min%60),ap=h<12?'AM':'PM',hh=h%12||12;return hh+':'+(m<10?'0':'')+m+' '+ap;}
+  function hav(a,b){var R=6371,dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180,la1=a[0]*Math.PI/180,la2=b[0]*Math.PI/180;var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.sin(dLon/2)*Math.sin(dLon/2)*Math.cos(la1)*Math.cos(la2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 
   function buildDay(){
-    var now=new Date(); var doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
-    var rng=mulberry32(doy*2654435761);
-    var start = 9*60 + 5 + Math.floor(rng()*100);    // out between ~9:05 and ~10:45 (varies daily)
-    var end   = 18*60 + Math.floor(rng()*70);        // home between ~6:00 and ~7:10
-    // pick a wandering order of villages for today
-    var order = VILLAGES.slice(); for(var i=order.length-1;i>0;i--){var j=Math.floor(rng()*(i+1));var t=order[i];order[i]=order[j];order[j]=t;}
-    var segs=[]; var t=start; var prev=SHED;
-    for(var k=0;k<order.length && t < end-45;k++){
-      var v=order[k];
-      var walk = 16 + Math.floor(rng()*22);                 // 16–38 min wandering to the next ground
-      segs.push({type:'walk',from:prev,to:v.ll,t0:t,t1:t+walk,name:v.n}); t+=walk;
-      var midday = (t>=12*60+30 && t<=14*60+30);
-      var act = midday ? 'rest' : 'graze';
-      var dur = midday ? (70+Math.floor(rng()*55)) : (22+Math.floor(rng()*34)); // rest long, graze shorter
-      if(t+dur>end-30) dur=Math.max(20,end-30-t);
-      segs.push({type:act,loc:v.ll,t0:t,t1:t+dur,name:v.n}); t+=dur;
-      prev=v.ll;
-    }
-    var walkHome=Math.max(18,end-t);
-    segs.push({type:'walk',from:prev,to:SHED,t0:t,t1:t+walkHome,name:'the shed'});
-    return { start:start, end:t+walkHome, segs:segs };
+    var now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),rng=mulberry32(doy*2654435761);
+    var start=9*60+5+Math.floor(rng()*100), end=18*60+Math.floor(rng()*70);
+    var order=GRAZE.slice();for(var i=order.length-1;i>0;i--){var j=Math.floor(rng()*(i+1)),t=order[i];order[i]=order[j];order[j]=t;}
+    var segs=[],t=start,prev=SHED;
+    for(var k=0;k<order.length&&t<end-45&&k<4;k++){var v=order[k];var walk=18+Math.floor(rng()*26);segs.push({type:'walk',from:prev,to:v.ll,t0:t,t1:t+walk,name:v.n});t+=walk;
+      var midday=(t>=12*60+30&&t<=14*60+30),act=midday?'rest':'graze',dur=midday?(70+Math.floor(rng()*55)):(22+Math.floor(rng()*34));if(t+dur>end-30)dur=Math.max(20,end-30-t);
+      segs.push({type:act,loc:v.ll,t0:t,t1:t+dur,name:v.n});t+=dur;prev=v.ll;}
+    var wh=Math.max(18,end-t);segs.push({type:'walk',from:prev,to:SHED,t0:t,t1:t+wh,name:'the shed'});
+    return {start:start,end:t+wh,segs:segs};
   }
-  var DAY = buildDay();
+  var DAY=buildDay();
 
-  var target = SHED.slice(), cur = SHED.slice();
+  // static arc markers
+  function pct(min){return Math.max(0,Math.min(100,min/1440*100));}
+  document.getElementById('tOut').style.left=pct(DAY.start)+'%';
+  document.getElementById('tHome').style.left=pct(DAY.end)+'%';
+  document.getElementById('capOut').textContent=hm(DAY.start);
+  document.getElementById('capHome').textContent=hm(DAY.end);
+
+  function posAt(mins){ // returns {pos, status, near}
+    if(mins<DAY.start) return {pos:SHED.slice(),status:'In the shed — heading out around '+hm(DAY.start),near:'The shed'};
+    if(mins>=DAY.end){var h=new Date().getHours();return {pos:SHED.slice(),status:(h>=21||h<5)?'Asleep in the shelter for the night':'Home for the evening, settling in',near:'The shed'};}
+    var s=null;for(var i=0;i<DAY.segs.length;i++){if(mins>=DAY.segs[i].t0&&mins<DAY.segs[i].t1){s=DAY.segs[i];break;}}if(!s)s=DAY.segs[DAY.segs.length-1];
+    if(s.type==='walk'){var p=(mins-s.t0)/(s.t1-s.t0);return {pos:lerp(s.from,s.to,p),status:(s.name==='the shed')?'Walking home as the light fades':'Drifting toward '+s.name+' to graze',near:s.name};}
+    if(s.type==='graze'){var jx=Math.sin(mins*1.3)*0.0005,jy=Math.cos(mins*1.7)*0.0005;return {pos:[s.loc[0]+jy,s.loc[1]+jx],status:'Grazing '+s.name,near:s.name};}
+    return {pos:s.loc.slice(),status:'Dozing in the shade near '+s.name+' through the midday heat',near:s.name};
+  }
+
+  function trailUpto(mins){var pts=[SHED.slice()];for(var i=0;i<DAY.segs.length;i++){var s=DAY.segs[i];if(s.t1<=mins){if(s.type==='walk')pts.push(s.to.slice());else pts.push(s.loc.slice());}else if(mins>s.t0){pts.push(posAt(mins).pos);break;}else break;}return pts;}
+  function dist(pts){var d=0;for(var i=1;i<pts.length;i++)d+=hav(pts[i-1],pts[i]);return d;}
+
+  function skyTone(h){
+    if(h>=5&&h<8) return 'radial-gradient(120% 80% at 50% 0%,rgba(255,170,120,0.5),rgba(120,80,140,0.25),transparent 70%)'; // dawn
+    if(h>=8&&h<16) return 'radial-gradient(120% 80% at 50% 0%,rgba(255,225,170,0.35),transparent 65%)'; // day
+    if(h>=16&&h<19) return 'radial-gradient(120% 80% at 50% 0%,rgba(255,150,80,0.55),rgba(150,60,90,0.3),transparent 72%)'; // dusk
+    return 'radial-gradient(120% 90% at 50% 0%,rgba(40,50,110,0.55),rgba(15,12,30,0.5),transparent 75%)'; // night
+  }
+
+  var target=SHED.slice(),cur=SHED.slice();
   function resolve(){
-    var now=new Date(); var mins=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
-    document.getElementById('clock').textContent = fmt(now);
-    var status, lbl='The herd';
-    if (mins < DAY.start){
-      target=SHED.slice(); status='Still in the shed — heading out around '+hm(DAY.start);
-    } else if (mins >= DAY.end){
-      target=SHED.slice(); status = (now.getHours()>=21||now.getHours()<5) ? 'Asleep in the shelter for the night' : 'Back in the shelter, settling for the evening';
-    } else {
-      var s=null; for(var i=0;i<DAY.segs.length;i++){ if(mins>=DAY.segs[i].t0 && mins<DAY.segs[i].t1){ s=DAY.segs[i]; break; } }
-      if(!s) s=DAY.segs[DAY.segs.length-1];
-      if(s.type==='walk'){ var p=(mins-s.t0)/(s.t1-s.t0); target=lerp(s.from,s.to,p); status = (s.name==='the shed')?'Walking home as the light fades':'Drifting toward '+s.name+' to graze'; lbl='walking'; }
-      else if(s.type==='graze'){ var jx=(Math.sin(mins*1.3)*0.0006), jy=(Math.cos(mins*1.7)*0.0006); target=[s.loc[0]+jy, s.loc[1]+jx]; status='Grazing the fields near '+s.name; lbl='grazing'; }
-      else { target=s.loc.slice(); status='Dozing in the shade near '+s.name+' through the midday heat'; lbl='resting'; }
-    }
-    document.getElementById('statusText').textContent=status;
-    document.getElementById('hlbl').textContent=lbl;
-    highlight(mins);
+    var now=new Date(),mins=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+    document.getElementById('clock').textContent=fmt(now);
+    var r=posAt(mins);target=r.pos;
+    document.getElementById('statusText').textContent=r.status;
+    document.getElementById('cNear').textContent=r.near.replace(/^the /,'');
+    document.getElementById('cOut').textContent=(mins>=DAY.start&&mins<DAY.end)?hm(DAY.start):'—';
+    var tp=trailUpto(mins);trail.setLatLngs(tp);trailGlow.setLatLngs(tp);
+    document.getElementById('cKm').textContent=(mins<DAY.start)?'0.0 km':(dist(tp).toFixed(1)+' km');
+    document.getElementById('tNow').style.left=pct(mins)+'%';
+    document.getElementById('sky').style.background=skyTone(now.getHours());
   }
-
-  // smooth follow
-  (function animate(){ cur[0]+=(target[0]-cur[0])*0.08; cur[1]+=(target[1]-cur[1])*0.08; herd.setLatLng(cur); requestAnimationFrame(animate); })();
-
-  // ── organic timeline (no rigid clock) ──
-  var STAGES=[
-    { key:'morning', ic:'M12 3v2M5 6l1.5 1.5M3 12h2M19 12h2M17.5 7.5 19 6M7 17a5 5 0 0 1 10 0', st:'Morning · out to the grounds', sd:'Some days early, some days late — the herd ambles out to the village fields.' },
-    { key:'day',     ic:'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z', st:'Daytime · graze, then rest', sd:'They eat across the open land, then doze in the shade through the midday sun.' },
-    { key:'evening', ic:'M17 18a5 5 0 0 0-10 0M12 2v7M3 18h18M5.6 9.6 7 11M17 11l1.4-1.4', st:'Evening · home before dark', sd:'As the sun drops, they wander back along the day’s trail to the shed.' },
-    { key:'night',   ic:'M21 12.8A8 8 0 1 1 11 3a6 6 0 0 0 10 9.8z', st:'Night · safe in the shelter', sd:'Penned in for the night, resting up for another day of roaming.' }
-  ];
-  var rh=document.getElementById('rhythm');
-  STAGES.forEach(function(s){
-    var d=document.createElement('div'); d.className='stage'; d.dataset.key=s.key;
-    d.innerHTML='<span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="'+s.ic+'"/></svg></span><div><div class="st">'+s.st+'</div><div class="sd">'+s.sd+'</div></div><span class="now">Now</span>';
-    rh.appendChild(d);
-  });
-  function highlight(mins){
-    var phase = mins<DAY.start?'morning' : (mins>=DAY.end ? 'night' : (mins>=17*60 ? 'evening':'day'));
-    if(mins>=DAY.end && new Date().getHours()<21 && new Date().getHours()>=17) phase='evening';
-    document.querySelectorAll('.stage').forEach(function(e){ e.classList.toggle('on', e.dataset.key===phase); });
-  }
-
-  resolve(); setInterval(resolve, 5000);
+  (function animate(){cur[0]+=(target[0]-cur[0])*0.09;cur[1]+=(target[1]-cur[1])*0.09;herd.setLatLng(cur);requestAnimationFrame(animate);})();
+  resolve();setInterval(resolve,4000);
 })();
 </script>
 </body>
