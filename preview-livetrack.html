@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Live Herd Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#241710; --ink2:#1B130C; --cream:#F5EFE3; --dim:rgba(245,239,227,0.6);
+    --amber:#E0902E; --maroon:#8C2433; --green:#4E8A45; --line:rgba(245,239,227,0.14);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+  .sec{padding:3rem 1.4rem 3.4rem;max-width:1100px;margin:0 auto;}
+  .eyebrow{display:inline-flex;align-items:center;gap:0.55rem;font-size:0.66rem;font-weight:600;letter-spacing:0.24em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:0.9rem;}
+  .eyebrow .ln{width:26px;height:1px;background:var(--amber);}
+  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.96;letter-spacing:0.01em;
+    font-size:clamp(2.2rem,9vw,3.6rem);color:var(--cream);}
+  h2 .am{color:var(--amber);}
+  .lead{font-size:0.98rem;font-weight:300;line-height:1.65;color:var(--dim);max-width:54ch;margin:1rem 0 1.5rem;}
+  .lead b{color:var(--cream);font-weight:500;}
+
+  /* live status bar */
+  .live{display:flex;align-items:center;gap:0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--line);
+    border-radius:14px;padding:0.8rem 1rem;margin-bottom:0.9rem;}
+  .live .dot{width:9px;height:9px;border-radius:50%;background:#43d17a;flex:0 0 auto;
+    box-shadow:0 0 0 0 rgba(67,209,122,0.6);animation:lp 1.8s infinite;}
+  @keyframes lp{0%{box-shadow:0 0 0 0 rgba(67,209,122,0.55);}70%{box-shadow:0 0 0 8px rgba(67,209,122,0);}100%{box-shadow:0 0 0 0 rgba(67,209,122,0);}}
+  .live .txt{flex:1;min-width:0;}
+  .live .l1{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:#7fe0a3;font-weight:600;}
+  .live .l2{font-size:0.95rem;font-weight:600;color:var(--cream);margin-top:1px;}
+  .live .time{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.04em;color:var(--amber);line-height:1;}
+
+  .map-wrap{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.45);}
+  #map{height:400px;width:100%;background:var(--ink2);}
+  .leaflet-tile{filter:sepia(0.42) saturate(0.9) brightness(0.6) contrast(1.05) hue-rotate(-8deg);}
+  .leaflet-container{background:#1B130C;font-family:'DM Sans',sans-serif;}
+  .leaflet-control-attribution{background:rgba(20,12,6,0.6)!important;color:rgba(245,239,227,0.4)!important;}
+  .leaflet-bar a{background:#241710!important;color:#F5EFE3!important;border-color:rgba(245,239,227,0.15)!important;}
+
+  /* markers */
+  .pin{display:flex;flex-direction:column;align-items:center;}
+  .pin .lbl{margin-top:5px;font-size:0.64rem;font-weight:600;color:#fff;white-space:nowrap;
+    background:rgba(20,12,6,0.85);border:1px solid var(--line);padding:2px 7px;border-radius:6px;}
+  .shed .ico{width:30px;height:30px;border-radius:8px;background:rgba(20,12,6,0.85);border:1px solid rgba(224,144,46,0.5);
+    display:flex;align-items:center;justify-content:center;color:var(--amber);}
+  /* the herd — live moving dot */
+  .herd{position:relative;}
+  .herd .ring{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;
+    border:1px solid rgba(224,144,46,0.5);animation:hr 2.6s infinite;}
+  @keyframes hr{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0.9;}100%{transform:translate(-50%,-50%) scale(1);opacity:0;}}
+  .herd .core{width:18px;height:18px;border-radius:50%;background:var(--amber);border:2px solid #fff3df;
+    box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;}
+  .herd .core svg{width:12px;height:12px;color:#241710;}
+
+  /* daily rhythm timeline */
+  .rhythm{display:grid;grid-template-columns:1fr;gap:0.6rem;margin-top:1.4rem;}
+  .stage{display:flex;gap:0.85rem;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:0.85rem 1rem;
+    background:rgba(255,255,255,0.02);transition:all .3s;}
+  .stage.on{border-color:rgba(224,144,46,0.6);background:rgba(224,144,46,0.08);}
+  .stage .tm{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--amber);letter-spacing:0.03em;min-width:62px;line-height:1.2;}
+  .stage.on .tm{color:#ffbf66;}
+  .stage .st{font-weight:600;font-size:0.9rem;color:var(--cream);}
+  .stage .sd{font-size:0.8rem;color:var(--dim);margin-top:2px;line-height:1.45;}
+  .stage .now{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:#241710;background:var(--amber);
+    border-radius:5px;padding:1px 6px;font-weight:700;margin-left:auto;align-self:center;display:none;}
+  .stage.on .now{display:inline-block;}
+
+  @media(min-width:720px){
+    .sec{padding:4.5rem 2rem 5rem;}
+    #map{height:480px;}
+    .rhythm{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<section class="sec">
+  <div class="eyebrow"><span class="ln"></span>Live from the Grounds</div>
+  <h2>Watch the herd <span class="am">roam, live</span></h2>
+  <p class="lead">Our goats are reared in <b>Ramannapet & the villages around Jagtial</b>, North Telangana. They aren't penned — each morning they walk out to the forest, graze across wild grass and farmland all day, and return to shelter by evening. This map follows their <b>real daily rhythm</b> — right now.</p>
+
+  <div class="live">
+    <span class="dot"></span>
+    <div class="txt">
+      <div class="l1">Live · The Herd</div>
+      <div class="l2" id="statusText">Loading…</div>
+    </div>
+    <div class="time" id="clock">--:--</div>
+  </div>
+
+  <div class="map-wrap"><div id="map"></div></div>
+
+  <div class="rhythm" id="rhythm"></div>
+</section>
+
+<script>
+(function(){
+  // Representative coords around Jagtial / Ramannapet, North Telangana.
+  // (Swap for your exact farm + grazing GPS when ready.)
+  var SHED = [18.7935, 78.9075];
+  var GRAZE = [                       // the day's roaming loop (forest + farmland)
+    [18.8015, 78.9165],
+    [18.8075, 78.9250],
+    [18.8035, 78.9355],
+    [18.7955, 78.9330],
+    [18.7910, 78.9215]
+  ];
+  var ALL = GRAZE.concat([SHED]);
+
+  var map = L.map('map', { scrollWheelZoom:false, zoomControl:true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:16, attribution:'© OpenStreetMap' }).addTo(map);
+  map.fitBounds(L.latLngBounds(ALL), { padding:[55,55] });
+  setTimeout(function(){ map.invalidateSize(); map.fitBounds(L.latLngBounds(ALL), { padding:[55,55] }); }, 350);
+
+  // grazing area (soft circle) + day's trail
+  L.circle([18.799,78.927], { radius:1500, color:'#4E8A45', weight:1, fillColor:'#4E8A45', fillOpacity:0.12 }).addTo(map);
+  L.polyline([SHED].concat(GRAZE).concat([SHED]), { color:'#E0902E', weight:1.5, opacity:0.45, dashArray:'2 7' }).addTo(map);
+
+  // shed marker
+  L.marker(SHED, { icon:L.divIcon({ className:'', iconSize:[0,0], html:
+    '<div class="pin shed"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="lbl">The shed · Ramannapet</span></div>' }) }).addTo(map);
+
+  // herd marker (live)
+  var herd = L.marker(SHED, { icon:L.divIcon({ className:'', iconSize:[0,0], html:
+    '<div class="pin herd"><span class="ring"></span><span class="core"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 13c0-2 1-3 2-4 0-2 2-3 4-3 1 0 2 .5 2 .5S13 6 14 6c2 0 4 1 4 3 1 1 2 2 2 4 0 1-1 2-2 2h-1l-1 4h-2l-.5-3h-3L11 19H9l-1-4H6c-1 0-2-1-2-2z"/></svg></span><span class="lbl" id="herdLbl">The herd</span></div>' }) }).addTo(map);
+
+  // ── time logic ──
+  var STAGES = [
+    { from:390,  to:600,  key:'wake',  tm:'6:30 AM', st:'Waking in the shed',     sd:'The herd stirs at first light, fed and watered before the day’s walk.' },
+    { from:600,  to:1110, key:'graze', tm:'10:00 AM', st:'Out grazing the forest', sd:'They roam the Jagtial forest and farmland — wild grass, shrubs, open air.' },
+    { from:1110, to:1140, key:'home',  tm:'6:30 PM', st:'Walking home',           sd:'As the sun drops, the herd heads back along the same trail to shelter.' },
+    { from:1140, to:1830, key:'sleep', tm:'Night',   st:'Resting in the shelter', sd:'Safe in the shed for the night, ready to do it all again tomorrow.' }
+  ]; // minutes; 'sleep' wraps past midnight (1140→ next 390 = 06:30) handled below
+
+  function fmt(d){ var h=d.getHours(), m=d.getMinutes(); var ap=h<12?'AM':'PM'; var hh=h%12; if(hh===0)hh=12; return hh+':'+(m<10?'0':'')+m+' '+ap; }
+
+  function lerp(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]; }
+
+  var anim=null;
+  function setStatus(){
+    var now=new Date(); var mins=now.getHours()*60+now.getMinutes();
+    document.getElementById('clock').textContent = fmt(now);
+
+    var phase;
+    if (mins>=600 && mins<1110) phase='graze';
+    else if (mins>=390 && mins<600) phase='wake';
+    else if (mins>=1110 && mins<1140) phase='home';
+    else phase='sleep';
+
+    var statusMap={ wake:'In the shed — about to head out', graze:'Grazing in the Jagtial forest right now', home:'Walking back to the shed', sleep:'Resting in the shelter for the night' };
+    document.getElementById('statusText').textContent = statusMap[phase];
+    document.getElementById('herdLbl').textContent = (phase==='graze') ? 'The herd · grazing' : 'The herd';
+
+    // highlight timeline
+    var els=document.querySelectorAll('.stage');
+    els.forEach(function(e){ e.classList.toggle('on', e.dataset.key===phase); });
+
+    // position / animation
+    if (anim){ clearInterval(anim); anim=null; }
+    if (phase==='graze'){
+      // gently wander the grazing loop
+      var i=0, seg=0; // seg 0..1 between GRAZE[i] and GRAZE[i+1]
+      herd.setLatLng(GRAZE[0]);
+      anim=setInterval(function(){
+        seg+=0.018;
+        if(seg>=1){ seg=0; i=(i+1)%GRAZE.length; }
+        var a=GRAZE[i], b=GRAZE[(i+1)%GRAZE.length];
+        herd.setLatLng(lerp(a,b,seg));
+      }, 90);
+    } else if (phase==='home'){
+      herd.setLatLng(lerp(GRAZE[0], SHED, 0.5));
+    } else {
+      herd.setLatLng(SHED);
+    }
+  }
+
+  // build timeline
+  var rhythmEl=document.getElementById('rhythm');
+  STAGES.forEach(function(s){
+    var d=document.createElement('div'); d.className='stage'; d.dataset.key=s.key;
+    d.innerHTML='<div class="tm">'+s.tm+'</div><div><div class="st">'+s.st+'</div><div class="sd">'+s.sd+'</div></div><span class="now">Now</span>';
+    rhythmEl.appendChild(d);
+  });
+
+  setStatus();
+  setInterval(setStatus, 30000); // refresh status every 30s
+})();
+</script>
+</body>
+</html>
