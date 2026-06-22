@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Trust Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#241710; --ink2:#1B130C; --cream:#F5EFE3; --dim:rgba(245,239,227,0.6);
+    --amber:#E0902E; --maroon:#8C2433; --green:#3F7A39; --line:rgba(245,239,227,0.14);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+
+  .sec{padding:3rem 1.4rem 3.4rem;max-width:1100px;margin:0 auto;}
+  .eyebrow{display:inline-flex;align-items:center;gap:0.55rem;font-size:0.66rem;font-weight:600;letter-spacing:0.24em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:0.9rem;}
+  .eyebrow .ln{width:26px;height:1px;background:var(--amber);}
+  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.96;letter-spacing:0.01em;
+    font-size:clamp(2.2rem,9vw,3.6rem);color:var(--cream);}
+  h2 .am{color:var(--amber);}
+  .lead{font-size:1rem;font-weight:300;line-height:1.65;color:var(--dim);max-width:52ch;margin:1.1rem 0 1.8rem;}
+  .lead b{color:var(--cream);font-weight:500;}
+
+  /* map */
+  .map-wrap{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,0.45);}
+  #map{height:380px;width:100%;background:var(--ink2);}
+  /* warm premium tone over the OSM tiles to match the brand */
+  .leaflet-tile{filter:sepia(0.45) saturate(0.85) brightness(0.62) contrast(1.05) hue-rotate(-8deg);}
+  .leaflet-container{background:#1B130C;font-family:'DM Sans',sans-serif;}
+  .leaflet-control-attribution{background:rgba(20,12,6,0.6) !important;color:rgba(245,239,227,0.4) !important;}
+  .leaflet-control-attribution a{color:rgba(245,239,227,0.55) !important;}
+  .leaflet-bar a{background:#241710 !important;color:#F5EFE3 !important;border-color:rgba(245,239,227,0.15) !important;}
+
+  /* custom village pin */
+  .vpin{display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);}
+  .vdot{width:13px;height:13px;border-radius:50%;background:var(--amber);border:2px solid #fff3df;
+    box-shadow:0 0 0 0 rgba(224,144,46,0.6);animation:ping 2.4s infinite;}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(224,144,46,0.55);}70%{box-shadow:0 0 0 12px rgba(224,144,46,0);}100%{box-shadow:0 0 0 0 rgba(224,144,46,0);}}
+  .vlabel{margin-top:5px;font-size:0.66rem;font-weight:600;letter-spacing:0.02em;color:#fff;white-space:nowrap;
+    background:rgba(20,12,6,0.82);border:1px solid rgba(224,144,46,0.4);padding:2px 7px;border-radius:6px;}
+  .hpin .vdot{background:var(--maroon);border-color:#ffd9df;animation:none;width:15px;height:15px;}
+  .hpin .vlabel{border-color:rgba(140,36,51,0.6);}
+
+  /* trust strip */
+  .strip{display:grid;grid-template-columns:1fr;gap:0.8rem;margin-top:1.6rem;}
+  .pt{display:flex;gap:0.8rem;align-items:flex-start;background:rgba(255,255,255,0.025);border:1px solid var(--line);
+    border-radius:14px;padding:1rem 1.1rem;}
+  .pt svg{flex:0 0 auto;color:var(--amber);margin-top:2px;}
+  .pt .t{font-weight:600;font-size:0.92rem;color:var(--cream);}
+  .pt .d{font-size:0.82rem;color:var(--dim);line-height:1.5;margin-top:2px;}
+
+  @media(min-width:720px){
+    .sec{padding:4.5rem 2rem 5rem;}
+    #map{height:460px;}
+    .strip{grid-template-columns:repeat(3,1fr);gap:1rem;}
+  }
+</style>
+</head>
+<body>
+<section class="sec">
+  <div class="eyebrow"><span class="ln"></span>Full Traceability</div>
+  <h2>Know exactly where<br>your meat <span class="am">roams free</span></h2>
+  <p class="lead">Every animal is <b>free-range</b>, raised on open pasture in these Telangana villages by farmers we know by name. No factory farms, no cages — just open land, sun, and grass. Tap a pin to see the grounds.</p>
+
+  <div class="map-wrap"><div id="map"></div></div>
+
+  <div class="strip">
+    <div class="pt">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22V10"/><path d="M12 10C12 6 9 3.5 4 3.5 4 8 7 10 12 10z"/><path d="M12 13c0-3.2 3-5.5 8-5.5 0 4-3 5.5-8 5.5z"/></svg>
+      <div><div class="t">6 partner villages</div><div class="d">Hand-picked free-range farms within 100 km of Hyderabad.</div></div>
+    </div>
+    <div class="pt">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <div><div class="t">Farmer-verified</div><div class="d">We visit every farm. You can trace each order to its source.</div></div>
+    </div>
+    <div class="pt">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      <div><div class="t">Same-morning to you</div><div class="d">Cut at dawn in the village, delivered cold across Hyderabad.</div></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  var map = L.map('map', { scrollWheelZoom:false, zoomControl:true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:14, attribution:'© OpenStreetMap' }).addTo(map);
+
+  var villages = [
+    { n:'Vikarabad',    ll:[17.337, 77.904], d:'Free-range goats' },
+    { n:'Sangareddy',   ll:[17.625, 78.083], d:'Country chicken' },
+    { n:'Medak',        ll:[18.046, 78.265], d:'Goats & sheep' },
+    { n:'Bhongir',      ll:[17.512, 78.886], d:'Country chicken' },
+    { n:'Nalgonda',     ll:[17.054, 79.267], d:'Free-range goats' },
+    { n:'Mahbubnagar',  ll:[16.748, 77.985], d:'Native goats' }
+  ];
+
+  villages.forEach(function(v){
+    var icon = L.divIcon({ className:'', html:'<div class="vpin"><span class="vdot"></span><span class="vlabel">'+v.n+'</span></div>', iconSize:[0,0] });
+    L.marker(v.ll, { icon:icon }).addTo(map)
+      .bindPopup('<b>'+v.n+'</b><br>'+v.d+' · open pasture');
+  });
+
+  // delivery hub
+  var hub = L.divIcon({ className:'', html:'<div class="vpin hpin"><span class="vdot"></span><span class="vlabel">Hyderabad · You</span></div>', iconSize:[0,0] });
+  L.marker([17.385, 78.486], { icon:hub }).addTo(map).bindPopup('<b>Delivered to your door</b><br>Cold-chain, same morning');
+
+  // fit all pins in view with padding so every village label shows
+  var pts = villages.map(function(v){ return v.ll; }); pts.push([17.385, 78.486]);
+  map.fitBounds(L.latLngBounds(pts), { padding:[48, 48] });
+  setTimeout(function(){ map.invalidateSize(); map.fitBounds(L.latLngBounds(pts), { padding:[48,48] }); }, 400);
+</script>
+</body>
+</html>
