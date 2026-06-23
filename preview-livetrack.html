@@ -245,6 +245,8 @@
   setInterval(tick, 55);
   resolve();setInterval(resolve,4000);
 })();
+// report height to parent when embedded as a homepage section
+(function(){function p(){try{parent.postMessage({ang:'h',id:'lt',h:document.body.scrollHeight},'*');}catch(e){}}window.addEventListener('load',p);window.addEventListener('resize',p);setInterval(p,1500);})();
 </script>
 </body>
 </html>

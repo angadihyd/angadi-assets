@@ -109,6 +109,8 @@
   var hub = L.divIcon({ className:'', html:'<div class="vpin hpin"><span class="vdot"></span><span class="vlabel">Hyderabad · You</span></div>', iconSize:[0,0] });
   L.marker([17.385, 78.486], { icon:hub }).addTo(map).bindPopup('<b>Delivered to your door</b><br>Cold-chain, same morning');
 
+  (function(){function p(){try{parent.postMessage({ang:'h',id:'tm',h:document.body.scrollHeight},'*');}catch(e){}}window.addEventListener('load',p);window.addEventListener('resize',p);setInterval(p,1500);})();
+
   // fit all pins in view with padding so every village label shows
   var pts = villages.map(function(v){ return v.ll; }); pts.push([17.385, 78.486]);
   map.fitBounds(L.latLngBounds(pts), { padding:[48, 48] });
