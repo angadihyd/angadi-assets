@@ -146,7 +146,8 @@
 
   var map = L.map('map', { scrollWheelZoom:false, zoomControl:true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:15, attribution:'© OpenStreetMap' }).addTo(map);
-  function fit(){ map.fitBounds(L.latLngBounds(ALL), { padding:[60,60] }); }
+  // focus the live map on the herd's OWN grazing grounds so its movement is visible
+  function fit(){ map.fitBounds(L.latLngBounds(GRAZE.map(function(g){return g.ll;}).concat([SHED])), { padding:[70,70] }); }
   fit(); setTimeout(function(){ map.invalidateSize(); fit(); }, 350);
 
   VILLAGES.forEach(function(v){
@@ -203,11 +204,34 @@
     return 'radial-gradient(120% 90% at 50% 0%,rgba(40,50,110,0.55),rgba(15,12,30,0.5),transparent 75%)'; // night
   }
 
-  var target=SHED.slice(),cur=SHED.slice();
+  var cur=SHED.slice();
+  function findSeg(mins){for(var i=0;i<DAY.segs.length;i++){if(mins>=DAY.segs[i].t0&&mins<DAY.segs[i].t1)return DAY.segs[i];}return DAY.segs[DAY.segs.length-1];}
+  // exact live position each frame — continuous so the herd is always visibly alive
+  function liveTarget(){
+    var now=new Date(),mins=now.getHours()*60+now.getMinutes()+now.getSeconds()/60,base,ts=performance.now()/1000;
+    if(mins<DAY.start||mins>=DAY.end){
+      base=SHED.slice();
+      var h=now.getHours();
+      if(h>=5 && h<21){ // milling around the pen before/after the day's roam (visible)
+        base=[ base[0]+(Math.sin(ts*0.3)+0.4*Math.sin(ts*0.72))*0.00065,
+               base[1]+(Math.cos(ts*0.27)+0.4*Math.cos(ts*0.66))*0.00065 ]; }
+    } else {
+      var s=findSeg(mins);
+      if(s.type==='walk'){ var p=(mins-s.t0)/(s.t1-s.t0); base=lerp(s.from,s.to,p); }
+      else base=s.loc.slice();
+      if(s.type==='graze'){   // mill across the grazing ground (~120m, clearly visible over seconds)
+        base=[ base[0]+(Math.sin(ts*0.24)+0.5*Math.sin(ts*0.58))*0.0011,
+               base[1]+(Math.cos(ts*0.21)+0.5*Math.cos(ts*0.63))*0.0011 ]; }
+      else if(s.type==='rest'){ // dozing — small shuffle in the shade
+        base=[ base[0]+Math.sin(ts*0.4)*0.0004, base[1]+Math.cos(ts*0.35)*0.0004 ]; }
+    }
+    var tb=ts;   // gentle breathing, always on
+    return [ base[0]+Math.sin(tb*0.5)*0.00026, base[1]+Math.cos(tb*0.4)*0.00026 ];
+  }
   function resolve(){
     var now=new Date(),mins=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
     document.getElementById('clock').textContent=fmt(now);
-    var r=posAt(mins);target=r.pos;
+    var r=posAt(mins);
     document.getElementById('statusText').textContent=r.status;
     document.getElementById('cNear').textContent=r.near.replace(/^the /,'');
     document.getElementById('cOut').textContent=(mins>=DAY.start&&mins<DAY.end)?hm(DAY.start):'—';
@@ -216,7 +240,9 @@
     document.getElementById('tNow').style.left=pct(mins)+'%';
     document.getElementById('sky').style.background=skyTone(now.getHours());
   }
-  (function animate(){cur[0]+=(target[0]-cur[0])*0.09;cur[1]+=(target[1]-cur[1])*0.09;herd.setLatLng(cur);requestAnimationFrame(animate);})();
+  // timer-driven so motion runs reliably (rAF can pause in some contexts)
+  function tick(){ var t=liveTarget(); cur[0]+=(t[0]-cur[0])*0.16; cur[1]+=(t[1]-cur[1])*0.16; herd.setLatLng(cur); }
+  setInterval(tick, 55);
   resolve();setInterval(resolve,4000);
 })();
 </script>
