@@ -1349,6 +1349,40 @@ footer{
     .ed-hero-bg{background-position:center 20%;}
   }
 </style>
+<!-- ══ HERO (ART, LIVE) ══ -->
+<style>
+  .ah-hero{background:#080503;position:relative;}
+  .ah-photo{position:relative;width:100%;line-height:0;}
+  .ah-photo img{width:100%;height:auto;display:block;}
+  .ah-photo::before{content:'';position:absolute;top:0;left:0;right:0;height:120px;background:linear-gradient(180deg,rgba(8,5,3,0.62),transparent);pointer-events:none;z-index:1;}
+  .ah-photo::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:58%;background:linear-gradient(180deg,rgba(8,5,3,0) 0%,rgba(8,5,3,0.6) 55%,#080503 99%);pointer-events:none;}
+  .ah-content{position:relative;z-index:2;margin-top:-62px;padding:0 1.4rem 2.4rem;}
+  .ah-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;font-family:'DM Sans',sans-serif;font-size:0.64rem;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:#E0902E;margin-bottom:0.85rem;text-shadow:0 1px 10px rgba(8,5,3,0.8);}
+  .ah-eyebrow .ah-dot{width:5px;height:5px;border-radius:50%;background:#4E8A45;}
+  .ah-title{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.9;letter-spacing:0.012em;font-size:clamp(2.7rem,13vw,5.2rem);color:#F5EFE3;text-shadow:0 2px 26px rgba(8,5,3,0.6);}
+  .ah-title .ah-am{color:#E0902E;}
+  .ah-sub{font-family:'DM Sans',sans-serif;font-size:0.96rem;font-weight:300;line-height:1.55;color:rgba(245,239,227,0.62);max-width:34ch;margin:1rem 0 1.5rem;}
+  .ah-sub b{color:#F5EFE3;font-weight:500;}
+  .ah-ctas{display:flex;flex-direction:column;gap:0.7rem;}
+  .ah-btn{display:inline-flex;align-items:center;justify-content:center;gap:0.55rem;padding:1.05rem 1.6rem;border-radius:100px;font-family:'DM Sans',sans-serif;font-size:0.92rem;font-weight:600;text-decoration:none;transition:all .25s;}
+  .ah-fill{background:#8C2433;color:#fff;box-shadow:0 10px 28px rgba(140,36,51,0.42);}
+  .ah-fill:hover{background:#a32c3e;transform:translateY(-1px);}
+  .ah-ghost{border:1px solid rgba(245,239,227,0.16);color:#F5EFE3;background:rgba(255,255,255,0.03);}
+  .ah-ghost:hover{border-color:#E0902E;}
+  .ah-nudge{display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:1rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;line-height:1.4;color:rgba(245,239,227,0.62);text-align:center;}
+  .ah-nudge .ah-pulse{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#4E8A45;box-shadow:0 0 0 0 rgba(78,138,69,0.6);animation:ahp 2s infinite;}
+  @keyframes ahp{0%{box-shadow:0 0 0 0 rgba(78,138,69,0.55);}70%{box-shadow:0 0 0 7px rgba(78,138,69,0);}100%{box-shadow:0 0 0 0 rgba(78,138,69,0);}}
+  .ah-nudge b{color:#E0902E;font-weight:600;}
+  @media(min-width:760px){
+    .ah-photo img{max-height:62vh;object-fit:cover;object-position:center 34%;}
+    .ah-content{max-width:1100px;margin:-90px auto 0;padding:0 3.5rem 3rem;}
+    .ah-title{font-size:clamp(3.4rem,6vw,6rem);}
+    .ah-ctas{flex-direction:row;}
+    .ah-btn{flex:0 0 auto;}
+    .ah-nudge{justify-content:flex-start;}
+    .ah-sub{font-size:1.08rem;}
+  }
+</style>
 </head>
 <body>
 
@@ -1387,42 +1421,22 @@ footer{
   <a href="#products" class="btn-primary" onclick="closeMobile()">Order Now →</a>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-dust"></div>
-  <div class="hero-content">
-    <div class="hero-eyebrow">Hyderabad's Premium Village Meat</div>
-    <h1 class="hero-title">
-      <span class="line-gold">Telangana's Finest</span><br>
-      <span class="line-clay">From Villages</span><br>
-      To Your Table
-    </h1>
-    <p class="hero-sub">
-      <strong>Free-range goat, country chicken &amp; farm eggs</strong> sourced directly from Telangana villages. Processed hygienically. Delivered cold to your door.
-    </p>
-    <div class="hero-ctas">
-      <a href="#products" class="btn-primary">Shop Now</a>
-      <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="btn-ghost" target="_blank">WhatsApp Order</a>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <span class="hero-stat-number">500+</span>
-        <span class="hero-stat-label">Happy Families</span>
-      </div>
-      <div class="hero-stat">
-        <span class="hero-stat-number">100%</span>
-        <span class="hero-stat-label">Free Range</span>
-      </div>
-      <div class="hero-stat">
-        <span class="hero-stat-number">24hr</span>
-        <span class="hero-stat-label">Fresh Delivery</span>
-      </div>
-    </div>
+<!-- HERO (ART — full photo, layered, conversion) -->
+<section class="ah-hero">
+  <div class="ah-photo">
+    <img src="ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png" alt="Shepherd and goats at sunset in a Telangana village">
   </div>
-  <div class="hero-scroll">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
+  <div class="ah-content">
+    <div class="ah-eyebrow"><span class="ah-dot"></span>Hyderabad · Premium Village Meat</div>
+    <h1 class="ah-title">Telangana's <span class="ah-am">Finest</span><br>From Villages<br>To Your Table</h1>
+    <p class="ah-sub"><b>Free-range goat, country chicken &amp; farm eggs</b> — raised on open pasture, cut fresh at dawn, delivered cold to your door.</p>
+    <div class="ah-ctas">
+      <a href="#products" class="ah-btn ah-fill">Shop Fresh Cuts
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </a>
+      <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="ah-btn ah-ghost" target="_blank">Order on WhatsApp</a>
+    </div>
+    <div class="ah-nudge"><span class="ah-pulse"></span><span>Order by <b>11 AM</b> for same-morning delivery&nbsp;·&nbsp; trusted by <b>500+</b> families</span></div>
   </div>
 </section>
 
