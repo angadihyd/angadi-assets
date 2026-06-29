@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Trust sections (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#241710; --ink2:#1B130C; --cream:#F5EFE3; --dim:rgba(245,239,227,0.6);
+    --amber:#E0902E; --maroon:#8C2433; --green:#4E8A45; --gold:#D9A646; --line:rgba(245,239,227,0.13);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+  .sec{padding:3rem 1.3rem;max-width:1080px;margin:0 auto;}
+  .eyebrow{display:inline-flex;align-items:center;gap:0.6rem;font-size:0.66rem;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:var(--amber);margin-bottom:0.9rem;}
+  .eyebrow .ln{width:26px;height:1px;background:var(--amber);}
+  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.96;letter-spacing:0.01em;font-size:clamp(2.2rem,9vw,3.4rem);color:var(--cream);}
+  h2 .am{color:var(--amber);}
+  .lead{font-size:0.96rem;font-weight:300;line-height:1.6;color:var(--dim);max-width:52ch;margin:0.9rem 0 0;}
+
+  /* PROMISE */
+  .promise{display:grid;grid-template-columns:1fr;gap:0.8rem;margin-top:1.6rem;}
+  .pcard{display:flex;gap:0.9rem;align-items:flex-start;border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;background:rgba(255,255,255,0.025);}
+  .pcard .ic{width:42px;height:42px;border-radius:11px;flex:0 0 auto;background:linear-gradient(135deg,rgba(224,144,46,0.18),rgba(224,144,46,0.04));border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--amber);}
+  .pcard .t{font-weight:600;font-size:0.98rem;color:var(--cream);}
+  .pcard .d{font-size:0.84rem;color:var(--dim);line-height:1.5;margin-top:3px;}
+
+  /* CERTS */
+  .certs{display:grid;grid-template-columns:repeat(2,1fr);gap:0.7rem;margin-top:1.6rem;}
+  .cert{border:1px solid var(--line);border-radius:14px;padding:1rem;text-align:center;background:rgba(255,255,255,0.02);}
+  .cert .ic{color:var(--gold);margin-bottom:0.5rem;display:flex;justify-content:center;}
+  .cert .t{font-weight:700;font-size:0.88rem;color:var(--cream);letter-spacing:0.02em;}
+  .cert .d{font-size:0.72rem;color:var(--dim);margin-top:2px;}
+  .ph{color:var(--amber);font-style:italic;}
+
+  /* REVIEWS */
+  .rev{display:grid;grid-template-columns:1fr;gap:0.9rem;margin-top:1.6rem;}
+  .rcard{border:1px solid var(--line);border-radius:16px;padding:1.2rem 1.3rem;background:rgba(255,255,255,0.025);}
+  .stars{color:var(--gold);letter-spacing:2px;font-size:0.95rem;}
+  .quote{font-size:0.96rem;line-height:1.6;color:var(--cream);margin:0.6rem 0 0.9rem;font-weight:300;}
+  .who{display:flex;align-items:center;gap:0.7rem;}
+  .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--maroon),#5e1822);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--cream);font-size:0.9rem;flex:0 0 auto;}
+  .who .n{font-weight:600;font-size:0.86rem;color:var(--cream);}
+  .who .m{font-size:0.74rem;color:var(--dim);}
+  .verified{margin-left:auto;font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);display:inline-flex;align-items:center;gap:0.3rem;}
+
+  .sample{margin-top:1.2rem;font-size:0.72rem;color:var(--amber);background:rgba(224,144,46,0.08);border:1px dashed rgba(224,144,46,0.4);border-radius:10px;padding:0.6rem 0.9rem;}
+
+  .divline{height:1px;background:var(--line);margin:0.5rem 1.3rem;max-width:1080px;}
+  @media(min-width:720px){
+    .sec{padding:4rem 2rem;}
+    .promise{grid-template-columns:repeat(3,1fr);}
+    .certs{grid-template-columns:repeat(4,1fr);}
+    .rev{grid-template-columns:repeat(3,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<!-- OUR PROMISE -->
+<section class="sec">
+  <div class="eyebrow"><span class="ln"></span>Our Promise</div>
+  <h2>Order with <span class="am">complete confidence</span></h2>
+  <p class="lead">If it's not fresh, it's on us. Every order is backed by a simple promise — because earning your family's trust matters more than any single sale.</p>
+  <div class="promise">
+    <div class="pcard">
+      <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18l-2 9H5z"/><path d="M3 6 2 3"/><path d="M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg></span>
+      <div><div class="t">Fresh, or full refund</div><div class="d">Not happy with freshness or quality? We refund or replace it — no questions asked.</div></div>
+    </div>
+    <div class="pcard">
+      <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <div><div class="t">Hygienic, FSSAI facility</div><div class="d">Cleaned and cut in a licensed, sanitised unit with gloved handlers at every step.</div></div>
+    </div>
+    <div class="pcard">
+      <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M4.2 7l15.6 10M19.8 7 4.2 17M12 5.5 9.7 4M12 5.5 14.3 4"/></svg></span>
+      <div><div class="t">Cold-chain to your door</div><div class="d">Chilled within 2 hours of cutting and kept cold all the way to your home.</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divline"></div>
+
+<!-- CERTIFIED & TRACEABLE -->
+<section class="sec">
+  <div class="eyebrow"><span class="ln"></span>Certified &amp; Traceable</div>
+  <h2>Verified, not just <span class="am">claimed</span></h2>
+  <div class="certs">
+    <div class="cert">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <div class="t">FSSAI Licensed</div><div class="d"><span class="ph">Lic. No. ____</span></div>
+    </div>
+    <div class="cert">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>
+      <div class="t">Halal &amp; Jhatka</div><div class="d"><span class="ph">both available</span></div>
+    </div>
+    <div class="cert">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 3h6M10 3v6l-4 8a2 2 0 0 0 2 3h8a2 2 0 0 0 2-3l-4-8V3"/></svg></span>
+      <div class="t">Lab-Tested</div><div class="d"><span class="ph">no hormones / antibiotics</span></div>
+    </div>
+    <div class="cert">
+      <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 22V10"/><path d="M12 10C12 6 9 3.5 4 3.5 4 8 7 10 12 10z"/><path d="M12 13c0-3.2 3-5.5 8-5.5 0 4-3 5.5-8 5.5z"/></svg></span>
+      <div class="t">Free-Range Verified</div><div class="d">Traceable to the village</div>
+    </div>
+  </div>
+  <div class="sample">⚠ Placeholders — send me your real <b>FSSAI licence number</b>, whether you offer <b>Halal/Jhatka</b>, and any <b>lab-test report</b>, and I'll put the verified details here.</div>
+</section>
+
+<div class="divline"></div>
+
+<!-- REVIEWS -->
+<section class="sec">
+  <div class="eyebrow"><span class="ln"></span>From Our Families</div>
+  <h2>What <span class="am">Hyderabad</span> says</h2>
+  <div class="rev">
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p class="quote">"The goat was genuinely fresh — you can tell it's not the frozen stuff. Cut exactly how I asked. This is my regular now."</p>
+      <div class="who"><span class="av">R</span><div><div class="n">Ravi Shankar</div><div class="m">Banjara Hills</div></div><span class="verified">✓ Verified</span></div>
+    </div>
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p class="quote">"Loved seeing where the goats are reared. Delivery was cold and on time. Quality you can trust for the family."</p>
+      <div class="who"><span class="av">P</span><div><div class="n">Padmaja Nair</div><div class="m">Jubilee Hills</div></div><span class="verified">✓ Verified</span></div>
+    </div>
+    <div class="rcard">
+      <div class="stars">★★★★★</div>
+      <p class="quote">"Country chicken tasted like the ones from my village. Hygienic packing, fair weight. Highly recommend Angadi."</p>
+      <div class="who"><span class="av">K</span><div><div class="n">Kiran Kumar</div><div class="m">Gachibowli</div></div><span class="verified">✓ Verified</span></div>
+    </div>
+  </div>
+  <div class="sample">⚠ Sample reviews for layout only — these will be replaced with <b>real customer reviews</b> (we can collect them via WhatsApp after delivery). Nothing fake goes live.</div>
+</section>
+
+</body>
+</html>
