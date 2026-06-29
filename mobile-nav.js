@@ -29,6 +29,13 @@
   // ── styles ──
   var css = document.createElement('style');
   css.textContent = [
+    /* ===== Site-wide premium theme: maroon primary CTAs (match the hero) ===== */
+    /* doubled class = higher specificity so it reliably overrides each page */
+    '.btn-primary.btn-primary,.btn-order.btn-order,.btn-add.btn-add,.btn-add-small.btn-add-small,.btn-checkout.btn-checkout,.btn-add-address.btn-add-address{',
+    '  background:#8C2433 !important;background-image:none !important;color:#F5EFE3 !important;',
+    '  border-color:#8C2433 !important;box-shadow:0 8px 24px rgba(140,36,51,0.32) !important;}',
+    '.btn-primary.btn-primary:hover,.btn-order.btn-order:hover,.btn-add.btn-add:hover,.btn-checkout.btn-checkout:hover,.btn-add-address.btn-add-address:hover{',
+    '  background:#a32c3e !important;border-color:#a32c3e !important;}',
     /* ===== Premium brand lockup (all viewports) ===== */
     '.angadi-brand{display:flex;align-items:center;gap:0.6rem;text-decoration:none;}',
     '.angadi-brand-mark{position:relative;width:46px;height:46px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}',
