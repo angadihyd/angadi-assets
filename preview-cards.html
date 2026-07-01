@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angadi — Product cards (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --ink:#080503; --card:#19110A; --cream:#F5EFE3; --dim:rgba(245,239,227,0.5);
+    --amber:#E0902E; --maroon:#8C2433; --green:#4E8A45; --line:rgba(245,239,227,0.1);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);-webkit-font-smoothing:antialiased;}
+  .sec{padding:2.6rem 1.2rem 3.2rem;max-width:1120px;margin:0 auto;}
+
+  /* heading — premium standard */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.6rem;}
+  .eyebrow{display:inline-flex;align-items:center;gap:0.55rem;font-size:0.64rem;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:var(--amber);margin-bottom:0.7rem;}
+  .eyebrow .ln{width:22px;height:1px;background:var(--amber);}
+  h2{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(2rem,8vw,3rem);line-height:0.98;letter-spacing:0.01em;color:var(--cream);}
+  h2 .am{color:var(--amber);}
+  .viewall{flex:0 0 auto;font-size:0.78rem;font-weight:600;color:var(--cream);text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;border-bottom:1px solid transparent;padding-bottom:2px;transition:border-color .25s;white-space:nowrap;}
+  .viewall:hover{border-color:var(--amber);}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.9rem;}
+
+  .pc{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:transform .35s ease,border-color .35s ease,box-shadow .35s ease;}
+  .pc:hover{transform:translateY(-5px);border-color:rgba(224,144,46,0.4);box-shadow:0 18px 44px rgba(0,0,0,0.5);}
+  .pc-img{position:relative;aspect-ratio:1/1;overflow:hidden;background:#0e0905;}
+  .pc-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;filter:brightness(0.96);}
+  .pc:hover .pc-img img{transform:scale(1.05);}
+  .pc-tag{position:absolute;top:0.7rem;left:0.7rem;background:rgba(8,5,3,0.7);backdrop-filter:blur(6px);border:1px solid var(--line);
+    border-radius:100px;padding:0.22rem 0.6rem;font-size:0.58rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream);}
+  .pc-tag.hot{color:#ffd9a0;border-color:rgba(224,144,46,0.5);}
+
+  .pc-body{padding:0.95rem 1rem 1.05rem;display:flex;flex-direction:column;flex:1;}
+  .pc-te{font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:0.25rem;}
+  .pc-name{font-family:'DM Sans',sans-serif;font-size:1.02rem;font-weight:600;color:var(--cream);line-height:1.15;margin-bottom:0.35rem;}
+  .pc-desc{font-size:0.74rem;color:var(--dim);line-height:1.5;margin-bottom:0.9rem;flex:1;}
+  .pc-foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;}
+  .pc-price{display:flex;flex-direction:column;}
+  .pc-amt{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;line-height:0.9;letter-spacing:0.02em;color:var(--amber);}
+  .pc-unit{font-size:0.62rem;color:var(--dim);margin-top:0.2rem;}
+  .pc-add{display:inline-flex;align-items:center;gap:0.35rem;background:var(--maroon);color:#fff;border:none;cursor:pointer;
+    border-radius:100px;padding:0.5rem 0.85rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;transition:all .25s;}
+  .pc-add:hover{background:#a32c3e;transform:translateY(-1px);}
+
+  @media(min-width:680px){ .grid{grid-template-columns:repeat(3,1fr);gap:1.2rem;} .sec{padding:4rem 2rem;} .pc-body{padding:1.1rem 1.2rem 1.2rem;} .pc-name{font-size:1.1rem;} }
+  @media(min-width:980px){ .grid{grid-template-columns:repeat(4,1fr);} }
+</style>
+</head>
+<body>
+<section class="sec">
+  <div class="head">
+    <div>
+      <div class="eyebrow"><span class="ln"></span>Fresh Today</div>
+      <h2>Our <span class="am">Handpicked</span> Selection</h2>
+    </div>
+    <a href="#" class="viewall">View all <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+  </div>
+
+  <div class="grid">
+    <a class="pc" href="#">
+      <div class="pc-img"><img src="product/mutton.png" alt="Village Goat Meat"><span class="pc-tag hot">Bestseller</span></div>
+      <div class="pc-body">
+        <div class="pc-te">Meka Mamsam</div>
+        <div class="pc-name">Village Goat Meat</div>
+        <p class="pc-desc">Farm-raised Telangana goat, hand-cut to curry pieces.</p>
+        <div class="pc-foot"><div class="pc-price"><span class="pc-amt">₹680</span><span class="pc-unit">per kg</span></div><button class="pc-add">Add <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      </div>
+    </a>
+    <a class="pc" href="#">
+      <div class="pc-img"><img src="product/country chiken.png" alt="Country Chicken"><span class="pc-tag">Free-range</span></div>
+      <div class="pc-body">
+        <div class="pc-te">Nati Kodi</div>
+        <div class="pc-name">Country Chicken</div>
+        <p class="pc-desc">Lean, full-flavoured native chicken, cleaned & cut.</p>
+        <div class="pc-foot"><div class="pc-price"><span class="pc-amt">₹520</span><span class="pc-unit">per kg</span></div><button class="pc-add">Add <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      </div>
+    </a>
+    <a class="pc" href="#">
+      <div class="pc-img"><img src="product/fish.png" alt="Fresh River Fish"><span class="pc-tag">Today's catch</span></div>
+      <div class="pc-body">
+        <div class="pc-te">Chepa Mukkalu</div>
+        <div class="pc-name">Fresh River Fish</div>
+        <p class="pc-desc">Cleaned and cut river fish, delivered cold the same day.</p>
+        <div class="pc-foot"><div class="pc-price"><span class="pc-amt">₹450</span><span class="pc-unit">per kg</span></div><button class="pc-add">Add <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      </div>
+    </a>
+    <a class="pc" href="#">
+      <div class="pc-img"><img src="product/liver.png" alt="Goat Liver"><span class="pc-tag">Fresh cut</span></div>
+      <div class="pc-body">
+        <div class="pc-te">Meka Kalleja</div>
+        <div class="pc-name">Goat Liver</div>
+        <p class="pc-desc">Tender goat liver, cut fresh to order at dawn.</p>
+        <div class="pc-foot"><div class="pc-price"><span class="pc-amt">₹1,000</span><span class="pc-unit">per kg</span></div><button class="pc-add">Add <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      </div>
+    </a>
+  </div>
+</section>
+</body>
+</html>
