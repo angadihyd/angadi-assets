@@ -199,6 +199,10 @@ html{scroll-behavior:smooth;}
   --ink-3:#1A0E06;
   --border:rgba(196,98,45,0.2);
   --border-gold:rgba(212,160,23,0.25);
+  --amber:#E0902E;
+  --maroon:#8C2433;
+  --card:#19110A;
+  --line:rgba(245,239,227,0.1);
 }
 body{
   font-family:'DM Sans',sans-serif;
@@ -532,25 +536,24 @@ nav.scrolled{
 /* ── SECTION BASE ── */
 section{padding:6rem 4rem;}
 .section-eyebrow{
-  display:inline-flex;align-items:center;gap:0.7rem;
-  font-family:'Inter',sans-serif;
-  font-size:0.72rem;font-weight:500;color:var(--clay);
-  letter-spacing:0.28em;text-transform:uppercase;
-  margin-bottom:1.2rem;
+  display:inline-flex;align-items:center;gap:0.55rem;
+  font-size:0.64rem;font-weight:600;color:var(--amber);
+  letter-spacing:0.24em;text-transform:uppercase;
+  margin-bottom:0.9rem;
 }
 .section-eyebrow::before{
   content:'';display:block;
-  width:34px;height:1px;background:var(--clay);
+  width:22px;height:1px;background:var(--amber);
 }
 .section-title{
-  font-family:'Fraunces',serif;
-  font-size:clamp(2.1rem,4.4vw,3.5rem);
-  font-weight:360;line-height:1.06;letter-spacing:-0.01em;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,8vw,3.4rem);
+  font-weight:400;line-height:0.98;letter-spacing:0.01em;
   color:var(--cream);
   margin-bottom:1rem;
 }
 .section-title em{
-  font-style:italic;color:var(--clay);font-weight:360;
+  font-style:normal;color:var(--amber);font-weight:400;
 }
 .section-sub{
   font-size:1rem;font-weight:300;
@@ -568,125 +571,107 @@ section{padding:6rem 4rem;}
 }
 .products-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.5rem;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2rem;
 }
 .product-card{
-  background:var(--ink-3);
-  border:1px solid var(--border);
-  border-radius:16px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
   overflow:hidden;
   cursor:pointer;
-  transition:all 0.4s ease;
+  transition:transform 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease;
   position:relative;
+  display:flex;flex-direction:column;
 }
 .product-card:hover{
-  border-color:rgba(196,98,45,0.5);
-  transform:translateY(-6px);
-  box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(196,98,45,0.2);
-}
-.product-card:first-child{
-  grid-column:span 2;
+  border-color:rgba(224,144,46,0.4);
+  transform:translateY(-5px);
+  box-shadow:0 18px 44px rgba(0,0,0,0.5);
 }
 .product-img-wrap{
   position:relative;overflow:hidden;
-  height:260px;
-}
-.product-card:first-child .product-img-wrap{
-  height:280px;
+  aspect-ratio:1/1;
 }
 /* Static cards: main image fills the wrap */
 .product-img-wrap:not(.has-video) img{
   width:100%;height:100%;
   object-fit:cover;
   transition:transform 0.6s ease;
-  filter:brightness(0.9) saturate(1.1);
+  filter:brightness(0.96);
 }
 .product-card:hover .product-img-wrap:not(.has-video) img{
-  transform:scale(1.06);
+  transform:scale(1.05);
 }
 .product-badge{
-  position:absolute;top:1rem;left:1rem;
-  background:rgba(8,5,3,0.75);
-  backdrop-filter:blur(8px);
-  border:1px solid var(--border-gold);
+  position:absolute;top:0.7rem;left:0.7rem;
+  background:rgba(8,5,3,0.7);
+  backdrop-filter:blur(6px);
+  border:1px solid var(--line);
   border-radius:100px;
-  padding:0.3rem 0.8rem;
-  font-family:'Space Mono',monospace;
-  font-size:0.65rem;color:var(--gold);
+  padding:0.22rem 0.6rem;
+  font-size:0.58rem;font-weight:600;color:var(--cream);
   letter-spacing:0.1em;text-transform:uppercase;
 }
-.product-fresh{
-  position:absolute;top:1rem;right:1rem;
-  width:44px;height:44px;
-  background:linear-gradient(135deg,var(--clay),var(--clay-d));
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.6rem;font-weight:700;color:var(--cream);
-  letter-spacing:0.05em;text-transform:uppercase;
-  text-align:center;line-height:1.2;
-}
 .product-body{
-  padding:1.4rem 1.5rem 1.5rem;
+  padding:0.95rem 1rem 1.05rem;
+  display:flex;flex-direction:column;flex:1;
 }
 .product-name-te{
-  font-size:0.72rem;font-weight:500;
-  color:var(--clay-l);letter-spacing:0.08em;
+  font-size:0.6rem;font-weight:600;
+  color:var(--amber);letter-spacing:0.1em;
   text-transform:uppercase;
-  margin-bottom:0.3rem;
+  margin-bottom:0.25rem;
 }
 .product-name{
-  font-family:'Playfair Display',serif;
-  font-size:1.25rem;font-weight:700;
-  color:var(--cream);
-  margin-bottom:0.5rem;
-}
-.product-card:first-child .product-name{
-  font-size:1.6rem;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.02rem;font-weight:600;
+  color:var(--cream);line-height:1.15;
+  margin-bottom:0.35rem;
 }
 .product-desc{
-  font-size:0.83rem;color:rgba(246,237,216,0.55);
-  line-height:1.6;margin-bottom:1.2rem;
+  font-size:0.74rem;color:var(--dim,rgba(246,237,216,0.5));
+  line-height:1.5;margin-bottom:0.9rem;flex:1;
 }
 .product-footer{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-top:auto;
 }
 .product-price{
   display:flex;flex-direction:column;
 }
 .product-price-main{
   font-family:'Bebas Neue',sans-serif;
-  font-size:1.8rem;line-height:1;
-  color:var(--gold);
+  font-size:1.5rem;line-height:0.9;letter-spacing:0.02em;
+  color:var(--amber);
 }
 .product-price-unit{
-  font-size:0.7rem;color:rgba(246,237,216,0.4);
+  font-size:0.62rem;color:rgba(246,237,216,0.4);
   margin-top:0.2rem;
 }
 .btn-add{
-  background:rgba(196,98,45,0.12);
-  border:1px solid var(--border);
-  color:var(--clay-l);
-  width:40px;height:40px;border-radius:10px;
+  background:var(--maroon);
+  border:1px solid var(--maroon);
+  color:#fff;
+  width:40px;height:40px;border-radius:100px;
   font-size:1.3rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:all 0.3s;
+  transition:all 0.25s;
 }
 .btn-add:hover{
-  background:var(--clay);
-  border-color:var(--clay);
-  color:var(--cream);
-  transform:scale(1.1);
+  background:#a32c3e;
+  border-color:#a32c3e;
+  transform:translateY(-1px);
 }
 .view-all-link{
-  font-size:0.85rem;font-weight:500;
-  color:var(--clay-l);
+  font-size:0.78rem;font-weight:600;
+  color:var(--cream);
   text-decoration:none;
   display:inline-flex;align-items:center;gap:0.4rem;
-  letter-spacing:0.05em;
-  transition:gap 0.3s;
+  border-bottom:1px solid transparent;padding-bottom:2px;
+  transition:border-color 0.25s;
 }
-.view-all-link:hover{gap:0.8rem;color:var(--cream);}
+.view-all-link:hover{border-color:var(--amber);}
 
 /* ── WHY ANGADI ── */
 .why-section{
@@ -1203,8 +1188,7 @@ footer{
 
 /* ── RESPONSIVE ── */
 @media(max-width:1024px){
-  .products-grid{grid-template-columns:repeat(2,1fr);}
-  .product-card:first-child{grid-column:span 2;}
+  .products-grid{grid-template-columns:repeat(3,1fr);}
   .why-grid,.story-grid{gap:3rem;}
   .steps-grid{grid-template-columns:repeat(2,1fr);}
   .steps-grid::before{display:none;}
@@ -1270,9 +1254,8 @@ footer{
   .hero-scroll{display:none;}
 
   /* ── PRODUCTS ── */
-  .products-grid{grid-template-columns:1fr;}
-  .product-card:first-child{grid-column:span 1;}
-  .product-img-wrap{height:220px;}
+  .products-grid{grid-template-columns:repeat(2,1fr);gap:0.9rem;}
+  .product-body{padding:0.85rem 0.9rem 0.95rem;}
 
   /* ── WHY / STORY ── */
   /* Use plain block stacking on mobile so the photos and heading can never overlap */
@@ -1300,8 +1283,6 @@ footer{
   .hero-stat{min-width:70px;}
   .hero-ctas .btn-primary,.hero-ctas .btn-ghost{font-size:0.88rem;padding:0.82rem 1.2rem;}
   .steps-grid{grid-template-columns:1fr;}
-  .products-section .section-title{font-size:1.8rem;}
-  .product-img-wrap{height:200px;}
   .why-image-main{height:240px;}   /* old single-image layout only — mosaic must keep its natural height */
 }
 </style>
@@ -1508,8 +1489,7 @@ footer{
           <source data-src="product/gaot farmer animated video.mp4" type="video/mp4">
         </video>
         <img src="product/mutton.png" alt="Village Goat Meat" class="pip-product-img">
-        <div class="product-badge">⭐ Bestseller</div>
-        <div class="product-fresh">FRESH<br>TODAY</div>
+        <div class="product-badge">Bestseller</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Meka Mamsam</div>
@@ -1532,7 +1512,7 @@ footer{
           <source data-src="product/country chiken animated video.mp4" type="video/mp4">
         </video>
         <img src="product/country chiken.png" alt="Country Chicken" class="pip-product-img">
-        <div class="product-badge">🌿 Nati</div>
+        <div class="product-badge">Free-range</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Nati Kodi</div>
@@ -1555,7 +1535,7 @@ footer{
           <source data-src="product/fisher man animated video.mp4" type="video/mp4">
         </video>
         <img src="product/fish.png" alt="Fresh River Fish" class="pip-product-img">
-        <div class="product-badge">🐟 River Fresh</div>
+        <div class="product-badge">Today's catch</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Chepa Mukkalu</div>
@@ -1575,7 +1555,7 @@ footer{
     <div class="product-card fade-up">
       <div class="product-img-wrap">
         <img src="product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png" alt="Country Eggs">
-        <div class="product-badge">🥚 Farm Fresh</div>
+        <div class="product-badge">Farm fresh</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Nati Kodi Gudlu</div>
@@ -2188,28 +2168,8 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
   }
 
   function ticker(on){
-    return; // Live-order popup disabled — reads as spam, not premium.
-    fetch('https://www.angadi.farm/api/supabase/rest/v1/orders?select=customer,items,placed_at&order=placed_at.desc&limit=12',{headers:H})
-      .then(function(r){return r.ok?r.json():[];})
-      .then(function(list){
-        var ev=list.map(function(o){
-          var area=(o.customer&&o.customer.address&&o.customer.address.area)||'Hyderabad';
-          var item=(o.items&&o.items[0]&&o.items[0].name||'').split(' · ')[0]||'an order';
-          return {area:area, item:item};
-        }).filter(function(e){return e.item;});
-        if(!ev.length) return;
-        var i=0;
-        function show(){
-          var e=ev[i%ev.length]; i++;
-          var t=document.createElement('div');
-          t.innerHTML='🛍️ Someone in <strong>'+e.area+'</strong> just ordered '+e.item;
-          t.style.cssText='position:fixed;left:1rem;bottom:5.2rem;z-index:1090;max-width:78vw;background:rgba(16,8,4,0.94);border:1px solid rgba(212,160,23,0.3);color:#F6EDD8;border-radius:12px;padding:0.6rem 0.9rem;font-size:0.78rem;box-shadow:0 6px 20px rgba(0,0,0,0.4);opacity:0;transform:translateY(10px);transition:all 0.4s;';
-          document.body.appendChild(t);
-          requestAnimationFrame(function(){ t.style.opacity='1'; t.style.transform='translateY(0)'; });
-          setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateY(10px)'; setTimeout(function(){t.remove();},500); },5000);
-        }
-        setTimeout(function(){ show(); setInterval(show, 22000); }, 6000);
-      }).catch(function(){});
+    // Live-order popup removed — read as spam, not premium. (Also: the
+    // orders table is no longer publicly readable, by design.)
   }
 
   function run(){

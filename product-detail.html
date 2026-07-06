@@ -22,6 +22,10 @@ html{scroll-behavior:smooth;}
   --ink-3:#1A0E06;
   --border:rgba(196,98,45,0.2);
   --border-gold:rgba(212,160,23,0.25);
+  --amber:#E0902E;
+  --maroon:#8C2433;
+  --card:#19110A;
+  --line:rgba(245,239,227,0.1);
 }
 body{
   font-family:'DM Sans',sans-serif;
@@ -463,52 +467,53 @@ nav.scrolled{height:60px;}
   padding:4rem 4rem;
 }
 .section-eyebrow{
-  display:inline-flex;align-items:center;gap:0.5rem;
-  font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--clay);
-  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1rem;
+  display:inline-flex;align-items:center;gap:0.55rem;
+  font-size:0.64rem;font-weight:600;color:var(--amber);
+  letter-spacing:0.24em;text-transform:uppercase;margin-bottom:0.9rem;
 }
-.section-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--clay);}
+.section-eyebrow::before{content:'';display:block;width:22px;height:1px;background:var(--amber);}
 .section-title{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;
-  color:var(--cream);margin-bottom:2rem;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,6vw,2.6rem);font-weight:400;line-height:0.98;letter-spacing:0.01em;
+  color:var(--cream);margin-bottom:1.6rem;
 }
-.section-title em{font-style:italic;color:var(--gold);}
+.section-title em{font-style:normal;color:var(--amber);font-weight:400;}
 .related-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;
 }
 .related-card{
-  background:var(--ink-3);border:1px solid var(--border);
-  border-radius:14px;overflow:hidden;text-decoration:none;
-  transition:all 0.35s;display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:18px;overflow:hidden;text-decoration:none;
+  transition:transform 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease;
+  display:flex;flex-direction:column;
 }
 .related-card:hover{
-  border-color:rgba(196,98,45,0.5);
+  border-color:rgba(224,144,46,0.4);
   transform:translateY(-5px);
-  box-shadow:0 16px 48px rgba(0,0,0,0.4);
+  box-shadow:0 18px 44px rgba(0,0,0,0.5);
 }
-.related-img{height:180px;overflow:hidden;position:relative;}
+.related-img{position:relative;overflow:hidden;aspect-ratio:1/1;}
 .related-img img{
   width:100%;height:100%;object-fit:cover;
-  transition:transform 0.5s;filter:brightness(0.88) saturate(1.1);
+  transition:transform 0.6s ease;filter:brightness(0.96);
 }
-.related-card:hover .related-img img{transform:scale(1.06);}
+.related-card:hover .related-img img{transform:scale(1.05);}
 .related-img video{
   width:100%;height:100%;object-fit:cover;position:absolute;inset:0;
 }
-.related-body{padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;flex:1;}
-.related-name-te{font-size:0.65rem;font-weight:500;color:var(--clay-l);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.2rem;}
-.related-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:0.8rem;}
-.related-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
-.related-price{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);}
-.related-price-unit{font-size:0.65rem;color:rgba(246,237,216,0.35);display:block;margin-top:0.1rem;}
+.related-body{padding:0.95rem 1rem 1.05rem;display:flex;flex-direction:column;flex:1;}
+.related-name-te{font-size:0.6rem;font-weight:600;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.25rem;}
+.related-name{font-family:'DM Sans',sans-serif;font-size:1.02rem;font-weight:600;color:var(--cream);line-height:1.15;margin-bottom:0.6rem;}
+.related-footer{display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;}
+.related-price{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;line-height:0.9;letter-spacing:0.02em;color:var(--amber);}
+.related-price-unit{font-size:0.62rem;color:rgba(246,237,216,0.4);display:block;margin-top:0.2rem;}
 .btn-add-small{
-  background:rgba(196,98,45,0.12);border:1px solid var(--border);
-  color:var(--clay-l);width:34px;height:34px;border-radius:8px;
+  background:var(--maroon);border:1px solid var(--maroon);
+  color:#fff;width:34px;height:34px;border-radius:100px;
   font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all 0.3s;
+  transition:all 0.25s;
 }
-.btn-add-small:hover{background:var(--clay);border-color:var(--clay);color:var(--cream);transform:scale(1.1);}
+.btn-add-small:hover{background:#a32c3e;border-color:#a32c3e;transform:translateY(-1px);}
 
 /* ── FOOTER ── */
 footer{
@@ -565,7 +570,7 @@ footer{
   .trust-bar{grid-template-columns:repeat(2,1fr);}
   .sourcing-steps{grid-template-columns:repeat(2,1fr);}
   .nutrition-grid{grid-template-columns:repeat(2,1fr);}
-  .related-grid{grid-template-columns:repeat(2,1fr);}
+  .related-grid{grid-template-columns:repeat(3,1fr);}
   .tabs-inner,.related-section{padding:2rem;}
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
@@ -581,8 +586,8 @@ footer{
   .btn-primary,.btn-whatsapp{flex:none;width:100%;}
   .sourcing-steps{grid-template-columns:1fr;}
   .nutrition-grid{grid-template-columns:repeat(2,1fr);}
-  .related-grid{grid-template-columns:1fr;}
-  .related-section{padding:2.5rem 1.5rem;}
+  .related-grid{grid-template-columns:repeat(2,1fr);gap:0.9rem;}
+  .related-section{padding:2.5rem 1.2rem;}
   .tabs-inner{padding:0 1.5rem;}
   .footer-grid{grid-template-columns:1fr;}
   footer{padding:3rem 1.5rem 2rem;}
@@ -743,7 +748,7 @@ const PRODUCTS = {
     nameTE: 'Meka Mamsam',
     name: 'Village Goat Meat',
     category: 'goat',
-    badge: '⭐ Bestseller',
+    badge: 'Bestseller',
     freshLabel: 'FRESH\nTODAY',
     price: 680,
     unit: 'kg',
@@ -803,7 +808,7 @@ const PRODUCTS = {
     nameTE: 'Nati Kodi',
     name: 'Country Chicken',
     category: 'chicken',
-    badge: '🌿 Nati',
+    badge: 'Free-range',
     freshLabel: 'FRESH\nTODAY',
     price: 520,
     unit: 'kg',
@@ -863,7 +868,7 @@ const PRODUCTS = {
     nameTE: 'Chepa Mukkalu',
     name: 'Fresh River Fish',
     category: 'fish',
-    badge: '🐟 River Fresh',
+    badge: "Today's catch",
     freshLabel: null,
     price: 450,
     unit: 'kg',
@@ -923,7 +928,7 @@ const PRODUCTS = {
     nameTE: 'Pilla Meka Kalu',
     name: 'Baby Goat Legs',
     category: 'goat',
-    badge: '🏆 Premium',
+    badge: 'Limited',
     freshLabel: 'LIMITED',
     price: 980,
     unit: 'kg',
@@ -981,7 +986,7 @@ const PRODUCTS = {
     nameTE: 'Nati Kodi Gudlu',
     name: 'Country Eggs',
     category: 'eggs',
-    badge: '🥚 Farm Fresh',
+    badge: 'Farm fresh',
     freshLabel: null,
     price: 12,
     unit: 'egg',
@@ -1037,7 +1042,7 @@ const PRODUCTS = {
     nameTE: 'Meka Kalu',
     name: 'Goat Legs',
     category: 'goat',
-    badge: '🦵 Village Fresh',
+    badge: 'Fresh cut',
     freshLabel: 'FRESH\nTODAY',
     price: 400,
     unit: '4 pieces',
@@ -1095,7 +1100,7 @@ const PRODUCTS = {
     nameTE: 'Meka Kalleja',
     name: 'Goat Liver',
     category: 'goat',
-    badge: '💎 Premium Offal',
+    badge: 'Fresh cut',
     freshLabel: 'FRESH\nTODAY',
     price: 1000,
     unit: 'kg',
@@ -1151,7 +1156,7 @@ const PRODUCTS = {
     nameTE: 'Meka Tala',
     name: 'Goat Head',
     category: 'goat',
-    badge: '🐐 Whole',
+    badge: 'Pre-order',
     freshLabel: 'ORDER\nAHEAD',
     price: 520,
     unit: 'head',
@@ -1208,7 +1213,7 @@ const PRODUCTS = {
     nameTE: 'Poora Meka',
     name: 'Full Goat',
     category: 'goat',
-    badge: '👑 Whole',
+    badge: 'Pre-order',
     freshLabel: 'ORDER\nAHEAD',
     price: 8500,
     unit: 'goat',
@@ -1686,8 +1691,8 @@ function initReviewForm(slug){
     const comment=document.getElementById('rvComment').value.trim();
     btn.disabled=true; msg.textContent='Submitting…'; msg.style.color='';
     try{
-      const r=await fetch(RV_URL+'/rest/v1/reviews',{method:'POST',headers:{apikey:RV_KEY,Authorization:'Bearer '+RV_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({product_slug:slug,name,rating:_rvRating,comment,status:'approved'})});
-      if(r.ok){ msg.textContent='✓ Thanks for your review!'; msg.style.color='#7BC67E'; document.getElementById('rvComment').value=''; _rvRating=0; paint(); loadReviews(slug); }
+      const r=await fetch(RV_URL+'/rest/v1/reviews',{method:'POST',headers:{apikey:RV_KEY,Authorization:'Bearer '+RV_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({product_slug:slug,name,rating:_rvRating,comment,status:'pending'})});
+      if(r.ok){ msg.textContent='✓ Thanks! Your review will appear once approved.'; msg.style.color='#7BC67E'; document.getElementById('rvComment').value=''; _rvRating=0; paint(); }
       else { msg.textContent='Could not submit'; msg.style.color='#E57373'; }
     }catch(e){ msg.textContent='Could not submit'; msg.style.color='#E57373'; }
     btn.disabled=false;

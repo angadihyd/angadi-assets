@@ -209,7 +209,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
   .side-panel{width:100%;right:-100%;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-api.js"></script>
 </head>
 <body>
 
@@ -348,11 +348,7 @@ var allOrders    = [];
 var orderFilter  = 'all';
 const NO_ACCEPT_ALERT_MS = 3 * 60 * 1000;  // alert admin if ready & unclaimed > 3 min
 
-// ── Supabase ──
-const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-let sb = null;
-try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
+// ── Data goes through the guarded /api/admin (see admin-api.js) ──
 const boyKey = b => b.code || b.id;
 function fromDb(r){
   return { orderId:r.order_id, customer:r.customer, items:r.items, total:r.total,
@@ -360,23 +356,15 @@ function fromDb(r){
     readyAt:r.ready_at, placedAt:r.placed_at };
 }
 
-function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
+function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'; }
 
-const IS_ADMIN = sessionStorage.getItem('angadi_admin') === '1';
+const IS_ADMIN = AdminAPI.isAdmin();
 if (!IS_ADMIN) {
   document.getElementById('guard').classList.remove('hidden');
   document.getElementById('adminLayout').style.display = 'none';
 }
 
-// Seed demo delivery boys if empty
-if (deliveryBoys.length === 0) {
-  deliveryBoys = [
-    { id:'db1', name:'Raju Kumar',    phone:'9876501234', vehicle:'Bike', area:'Banjara Hills / Jubilee Hills', status:'available', deliveredToday:4, totalDelivered:47 },
-    { id:'db2', name:'Suresh Babu',   phone:'9876502345', vehicle:'Bike', area:'Gachibowli / Madhapur',         status:'busy',      deliveredToday:3, totalDelivered:62, activeOrderId:'ANG-003' },
-    { id:'db3', name:'Praveen Yadav', phone:'9876503456', vehicle:'Bike', area:'Kondapur / Kukatpally',         status:'offline',   deliveredToday:0, totalDelivered:31 },
-  ];
-  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
-}
+// (demo delivery-boys seed removed — roster lives in the delivery_boys table)
 
 // ─────────────────────────────────────────────
 //  HELPERS
@@ -409,37 +397,15 @@ function buildMapsNavUrl(address){
 //  LOAD DATA
 // ─────────────────────────────────────────────
 async function loadData(){
-  if (sb){
-    try {
-      const [ord, boys] = await Promise.all([
-        sb.from('orders').select('*').order('placed_at',{ascending:false}),
-        sb.from('delivery_boys').select('*'),
-      ]);
-      if (!ord.error && ord.data) allOrders = ord.data.map(fromDb);
-      else allOrders = loadOrdersLocal();
-      if (!boys.error && boys.data && boys.data.length) deliveryBoys = boys.data;
-      return;
-    } catch(e){ console.warn('load failed', e); }
-  }
-  allOrders = loadOrdersLocal();
+  const [ord, boys] = await Promise.all([
+    AdminAPI.db('orders', 'select', { order: 'placed_at.desc', limit: 500 }),
+    AdminAPI.db('delivery_boys', 'select', {}),
+  ]);
+  if (!ord.error && ord.data) allOrders = ord.data.map(fromDb);
+  if (!boys.error && boys.data && boys.data.length) deliveryBoys = boys.data;
 }
 
-function loadOrdersLocal(){
-  let stored = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
-  if(stored.length < 5){
-    const demos = [
-      {orderId:'ANG-001',customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 4B, Lakshmi Residency',area:'Banjara Hills',pincode:'500034',city:'Hyderabad'}},items:[{name:'Village Goat Meat · 1kg',price:680,qty:2}],total:1360,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-1800000).toISOString()},
-      {orderId:'ANG-002',customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)',address:{flat:'Apt 12, Green Park',area:'Jubilee Hills',pincode:'500033',city:'Hyderabad'}},items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],total:1144,payment:'cod',status:'processing',placedAt:new Date(Date.now()-4320000).toISOString()},
-      {orderId:'ANG-003',customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)',address:{flat:'H.No 45, Srinagar Colony',area:'Madhapur',pincode:'500081',city:'Hyderabad'}},items:[{name:'Country Chicken · 1kg',price:520,qty:2}],total:1040,payment:'razorpay',status:'out_for_delivery',placedAt:new Date(Date.now()-7200000).toISOString(),assignedTo:'db2'},
-      {orderId:'ANG-004',customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)',address:{flat:'Villa 7, Amrutha Hills',area:'Kondapur',pincode:'500084',city:'Hyderabad'}},items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],total:2040,payment:'cod',status:'delivered',placedAt:new Date(Date.now()-86400000).toISOString()},
-      {orderId:'ANG-005',customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 2A, Prashanti Nagar',area:'Gachibowli',pincode:'500032',city:'Hyderabad'}},items:[{name:'Full Goat',price:8500,qty:1}],total:8500,payment:'razorpay',status:'confirmed',placedAt:new Date(Date.now()-360000).toISOString()},
-    ];
-    const merged=[...stored,...demos.filter(d=>!stored.find(s=>s.orderId===d.orderId))];
-    localStorage.setItem('angadi_all_orders',JSON.stringify(merged));
-    return merged;
-  }
-  return stored;
-}
+// (local demo orders removed — the guarded API is the only data source)
 
 // ─────────────────────────────────────────────
 //  RENDER
@@ -449,12 +415,6 @@ async function init(){
   renderStats();
   renderOrders();
   renderDBoys();
-  if (sb){
-    sb.channel('orders-delivery')
-      .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => {
-        await loadData(); renderStats(); renderOrders(); renderDBoys();
-      }).subscribe();
-  }
   setInterval(async ()=>{ await loadData(); renderStats(); renderOrders(); renderDBoys(); }, 8000);
 }
 
@@ -660,13 +620,12 @@ function buildDBoyCard(b, idx){
 //  ORDER ACTIONS
 // ─────────────────────────────────────────────
 async function persistOrder(orderId, patch){
-  if (sb){
-    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
-    if (error){ console.warn('order update failed', error); showToast('⚠ Save failed'); }
-  } else { saveAll(); }
+  const { error } = await AdminAPI.db('orders', 'update', { match: { order_id: orderId }, values: patch });
+  if (error){ console.warn('order update failed', error); showToast('⚠ Save failed — ' + error); }
 }
 async function persistBoy(code, patch){
-  if (sb && code){ try { await sb.from('delivery_boys').update(patch).eq('code', code); } catch(e){} }
+  if (!code) return;
+  try { await AdminAPI.db('delivery_boys', 'update', { match: { code }, values: patch }); } catch(e){}
 }
 async function reload(){ await loadData(); renderStats(); renderOrders(); renderDBoys(); }
 
@@ -871,7 +830,7 @@ function closeMapModal() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal(); });
 
-// ── INIT (after all definitions; sb is ready) ──
+// ── INIT (after all definitions) ──
 if (IS_ADMIN) init();
 </script>
 </body>

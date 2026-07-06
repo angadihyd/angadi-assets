@@ -11,7 +11,7 @@
 <title>Delivery Partner — Angadi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-api.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -179,26 +179,17 @@ body{
 </div>
 
 <script>
-// ── AUTH CHECK ──
+// ── AUTH CHECK — identity comes from the signed partner token ──
 const partnerUsername = sessionStorage.getItem('angadi_delivery');
-if (!partnerUsername) { window.location.href = 'delivery-login.html'; }
+if (!partnerUsername || !AdminAPI.ptoken()) { window.location.href = 'delivery-login.html'; }
 
-// Partner data — id === delivery_boys.code
-const PARTNERS = {
-  'raju':    { name:'Raju Kumar',    phone:'9876501234', id:'db1' },
-  'suresh':  { name:'Suresh Babu',   phone:'9876502345', id:'db2' },
-  'praveen': { name:'Praveen Yadav', phone:'9876503456', id:'db3' },
+const partner = {
+  name: sessionStorage.getItem('angadi_partner_name') || partnerUsername,
+  id:   sessionStorage.getItem('angadi_partner_code') || partnerUsername,
 };
-const partner = PARTNERS[partnerUsername] || { name: partnerUsername, phone:'', id:partnerUsername };
 const CODE = partner.id;
 window.ANGADI_PUSH_ROLE = 'partner';
 window.ANGADI_PUSH_CODE = CODE;
-
-// ── Supabase ──
-const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-let sb = null;
-try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
 
 let allOrders = [];
 function fromDb(r){
@@ -207,13 +198,9 @@ function fromDb(r){
     readyAt:r.ready_at, placedAt:r.placed_at };
 }
 async function loadOrders(){
-  if (sb){
-    try {
-      const { data, error } = await sb.from('orders').select('*').order('placed_at',{ascending:false});
-      if (!error && data){ allOrders = data.map(fromDb); return; }
-    } catch(e){ console.warn('load failed', e); }
-  }
-  allOrders = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
+  const r = await AdminAPI.partner('partner-orders', {});
+  if (!r.error && r.data){ allOrders = r.data.map(fromDb); return; }
+  if (r.status === 401){ window.location.href = 'delivery-login.html'; }
 }
 
 function getMyStatus(){ return localStorage.getItem('angadi_partner_status_'+partnerUsername)||'available'; }
@@ -246,7 +233,7 @@ async function setStatus(s){
   const txt = document.getElementById('statusText');
   if (txt) txt.textContent = s === 'available' ? '🟢 Available' : s === 'busy' ? '🟡 On Delivery' : '⚫ Offline';
   renderOffers();
-  if (sb){ try { await sb.from('delivery_boys').update({status:s}).eq('code', CODE); } catch(e){} }
+  try { await AdminAPI.partner('partner-status', { status: s }); } catch(e){}
 }
 
 // ── AVAILABLE OFFERS (broadcast) ──
@@ -291,16 +278,11 @@ function renderOffers(){
   }).join('');
 }
 
-// Race-safe claim — only succeeds if still ready & unassigned
+// Race-safe claim — only succeeds if still ready & unassigned (checked server-side)
 async function acceptOffer(orderId){
-  if (!sb){ showToast('⚠ Offline — cannot accept'); return; }
-  const now = new Date().toISOString();
-  const { data, error } = await sb.from('orders')
-    .update({ assigned_to:CODE, accepted_by:partner.name, status:'assigned', accepted_at:now })
-    .eq('order_id', orderId).eq('status','ready').is('assigned_to', null)
-    .select();
-  if (error){ showToast('⚠ '+error.message); return; }
-  if (!data || !data.length){ showToast('😕 Order already taken by another partner'); await refresh(); return; }
+  const r = await AdminAPI.partner('partner-accept', { orderId });
+  if (r.error){ showToast('⚠ '+r.error); return; }
+  if (r.taken){ showToast('😕 Order already taken by another partner'); await refresh(); return; }
   showToast('✅ You accepted '+orderId+'!');
   await refresh();
 }
@@ -364,19 +346,9 @@ function renderOrders(){
 }
 
 async function advance(orderId, newStatus){
-  const now = new Date().toISOString();
-  const patch = { status:newStatus };
-  if (newStatus==='picked_up')        patch.picked_up_at = now;
-  if (newStatus==='delivered')        patch.delivered_at = now;
-  if (sb){
-    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
-    if (error){ showToast('⚠ '+error.message); return; }
-    // keep delivery_boys status in sync
-    try {
-      if (newStatus==='out_for_delivery') await sb.from('delivery_boys').update({status:'busy', active_order_id:orderId}).eq('code',CODE);
-      if (newStatus==='delivered')        await sb.from('delivery_boys').update({status:'available', active_order_id:null}).eq('code',CODE);
-    } catch(e){}
-  }
+  // status timestamps + delivery_boys sync happen server-side
+  const r = await AdminAPI.partner('partner-advance', { orderId, status: newStatus });
+  if (r.error){ showToast('⚠ '+r.error); return; }
   if (newStatus==='delivered') showToast('🎉 Order '+orderId+' delivered!');
   else showToast('✓ '+orderId+' → '+(STAGE_LABEL[newStatus]||newStatus));
   await refresh();
@@ -435,8 +407,8 @@ function showToast(msg){
 
 // ── LOGOUT ──
 function logout(){
-  sessionStorage.removeItem('angadi_delivery');
-  window.location.href='../login.html';
+  AdminAPI.partnerLogout();
+  window.location.href='delivery-login.html';
 }
 
 // ── INIT ──
@@ -448,12 +420,7 @@ async function init(){
   setStatus(currentStatus);        // also persists status + renders offers
   renderStats(); renderOrders();
   try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch(e){}
-  if (sb){
-    sb.channel('orders-partner')
-      .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => { await refresh(); })
-      .subscribe();
-  }
-  setInterval(refresh, 8000);      // polling = live updates (proxy has no websocket)
+  setInterval(refresh, 8000);      // polling through the guarded API = live updates
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();

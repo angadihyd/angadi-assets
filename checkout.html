@@ -796,11 +796,48 @@ async function placeOrder(){
   renderSummary();
 }
 
+// ── CASH ON DELIVERY (server-authorised, same price validation as online) ──
 async function placeCOD(order){
-  await saveOrder({ ...order, status:'pending' });
-  localStorage.setItem('angadi_last_order', JSON.stringify(order));
+  const savedUser = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const promoCode = localStorage.getItem('angadi_promo_code') || null;
+  let data;
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment:   'cod',
+        items:     order.items,
+        slot:      order.customer.slot,
+        promoCode: promoCode,
+        customer:  order.customer,
+        userId:    savedUser.id || null,
+      }),
+    });
+    data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Could not place your order. Please try again or order on WhatsApp.');
+      document.getElementById('btnPay').disabled = false;
+      renderSummary();
+      return;
+    }
+  } catch (e) {
+    alert('Network error. Please check your connection and try again.');
+    document.getElementById('btnPay').disabled = false;
+    renderSummary();
+    return;
+  }
+  // Use the server-confirmed order id and totals for the confirmation page
+  localStorage.setItem('angadi_last_order', JSON.stringify({
+    ...order, orderId: data.orderId,
+    subtotal: data.subtotal, delivery: data.delivery,
+    discount: data.discount, total: data.total,
+    status: 'confirmed_cod',
+  }));
   localStorage.removeItem('angadi_cart');
-  window.location.href = 'order-confirm.html?method=cod';
+  localStorage.removeItem('angadi_promo_code');
+  localStorage.removeItem('angadi_promo_discount');
+  window.location.href = 'order-confirm.html?method=cod&order=' + encodeURIComponent(data.orderId);
 }
 
 // ── ONLINE PAYMENT (server-authorised, signature + webhook confirmed) ──
@@ -893,41 +930,8 @@ function genOrderId(){
   return `ANG-${r}-${s}`;
 }
 
-// Map UI (camelCase) order → DB (snake_case) columns
-function toDb(o){
-  return {
-    order_id:   o.orderId,
-    customer:   o.customer,
-    items:      o.items,
-    subtotal:   o.subtotal,
-    delivery:   o.delivery,
-    discount:   o.discount,
-    total:      o.total,
-    payment:    o.payment,
-    payment_id: o.paymentId || null,
-    status:     o.status || 'pending',
-    placed_at:  o.placedAt,
-  };
-}
-
-async function saveOrder(order){
-  if (!supabaseClient) return;
-  try {
-    const { error } = await supabaseClient.from('orders').insert([toDb(order)]);
-    if (error){
-      console.warn('Supabase save failed', error);
-      // Keep a local backup so the admin can recover the order
-      const pending = JSON.parse(localStorage.getItem('angadi_pending_orders') || '[]');
-      pending.push(toDb(order));
-      localStorage.setItem('angadi_pending_orders', JSON.stringify(pending));
-    }
-  } catch(e){
-    console.warn('Supabase save failed', e);
-    const pending = JSON.parse(localStorage.getItem('angadi_pending_orders') || '[]');
-    pending.push(toDb(order));
-    localStorage.setItem('angadi_pending_orders', JSON.stringify(pending));
-  }
-}
+// (Direct browser inserts removed — every order, COD included, is created
+//  by /api/create-order with server-validated prices.)
 
 // ─────────────────────────────────────────────
 //  AUTO-FILL FROM SAVED USER PROFILE

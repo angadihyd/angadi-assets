@@ -44,15 +44,13 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
   </div>
   <div id="list"></div>
 </div>
+<script src="admin-api.js"></script>
 <script>
-const URL='https://www.angadi.farm/api/supabase';
-const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
 let all=[], editId=null;
-if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
 else { document.getElementById('app').style.display='block'; load(); }
 function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,"\\'"); }
-async function load(){ try{ const r=await fetch(URL+'/rest/v1/coupons?select=*&order=created_at.desc',{headers:H}); all=r.ok?await r.json():[]; }catch(e){ all=[]; } render(); }
+async function load(){ const r=await AdminAPI.db('coupons','select',{order:'created_at.desc'}); all=r.data||[]; if(r.error) alert('Load failed: '+r.error); render(); }
 function descOf(c){ return (c.type==='percent'?c.value+'% off':'₹'+c.value+' off') + (c.min_order?` · min ₹${c.min_order}`:'') + (c.expires_at?` · till ${c.expires_at}`:''); }
 function render(){
   const list=document.getElementById('list');
@@ -73,9 +71,9 @@ async function saveCoupon(){
   if(!code || !val('f-value')){ alert('Code and value are required'); return; }
   const row={ code, type:val('f-type'), value:Number(val('f-value')), min_order:Number(val('f-min')||0), label:val('f-label'), expires_at: val('f-exp')||null, active:true };
   let r;
-  if(editId){ r=await fetch(URL+'/rest/v1/coupons?id=eq.'+editId,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify(row)}); }
-  else { r=await fetch(URL+'/rest/v1/coupons?on_conflict=code',{method:'POST',headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)}); }
-  if(!r.ok){ alert('Save failed: '+(await r.text())); return; }
+  if(editId){ r=await AdminAPI.db('coupons','update',{match:{id:editId},values:row}); }
+  else { r=await AdminAPI.db('coupons','upsert',{values:row}); }
+  if(r.error){ alert('Save failed: '+r.error); return; }
   editId=null; document.getElementById('saveBtn').textContent='＋ Add coupon';
   ['f-code','f-value','f-min','f-label','f-exp'].forEach(i=>document.getElementById(i).value='');
   load();
@@ -86,8 +84,8 @@ function edit(id){ const c=all.find(x=>x.id===id); if(!c) return; editId=id;
   document.getElementById('f-label').value=c.label||''; document.getElementById('f-exp').value=c.expires_at||'';
   document.getElementById('saveBtn').textContent='✓ Save changes'; window.scrollTo({top:0,behavior:'smooth'});
 }
-async function toggle(id,active){ await fetch(URL+'/rest/v1/coupons?id=eq.'+id,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify({active})}); const c=all.find(x=>x.id===id); if(c)c.active=active; render(); }
-async function del(id){ if(!confirm('Delete this coupon?'))return; await fetch(URL+'/rest/v1/coupons?id=eq.'+id,{method:'DELETE',headers:H}); all=all.filter(x=>x.id!==id); render(); }
+async function toggle(id,active){ await AdminAPI.db('coupons','update',{match:{id},values:{active}}); const c=all.find(x=>x.id===id); if(c)c.active=active; render(); }
+async function del(id){ if(!confirm('Delete this coupon?'))return; await AdminAPI.db('coupons','delete',{match:{id}}); all=all.filter(x=>x.id!==id); render(); }
 </script>
 </body>
 </html>

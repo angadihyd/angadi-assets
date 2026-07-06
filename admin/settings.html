@@ -83,17 +83,15 @@ textarea.in{resize:vertical;min-height:60px;}
   <button class="btn" onclick="saveAll()">💾 Save All Settings</button>
   <span id="status"></span>
 </div>
+<script src="admin-api.js"></script>
 <script>
-const URL='https://www.angadi.farm/api/supabase';
-const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
 else { document.getElementById('app').style.display='block'; load(); }
 function g(id){return document.getElementById(id);}
 async function load(){
   try{
-    const r=await fetch(URL+'/rest/v1/site_settings?select=*',{headers:H});
-    const rows=r.ok?await r.json():[];
+    const r=await AdminAPI.db('site_settings','select',{});
+    const rows=r.data||[];
     const map={}; rows.forEach(x=>map[x.key]=x.value||{});
     const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{};
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
@@ -104,7 +102,9 @@ async function load(){
   }catch(e){}
 }
 async function put(key,value){
-  return fetch(URL+'/rest/v1/site_settings?on_conflict=key',{method:'POST',headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key,value,updated_at:new Date().toISOString()})});
+  const r=await AdminAPI.db('site_settings','upsert',{values:{key,value,updated_at:new Date().toISOString()}});
+  if(r.error) throw new Error(r.error);
+  return r;
 }
 async function saveAll(){
   const st=g('status'); st.textContent='Saving…'; st.style.color='';

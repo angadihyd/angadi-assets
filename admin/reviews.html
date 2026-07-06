@@ -44,28 +44,28 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
   </div>
   <div class="filters" id="filters">
     <button class="fb active" data-f="all">All <span id="c-all">0</span></button>
+    <button class="fb" data-f="pending">Pending <span id="c-pending">0</span></button>
     <button class="fb" data-f="approved">Approved <span id="c-approved">0</span></button>
     <button class="fb" data-f="hidden">Hidden <span id="c-hidden">0</span></button>
   </div>
   <div id="list"></div>
 </div>
+<script src="admin-api.js"></script>
 <script>
-const URL='https://www.angadi.farm/api/supabase';
-const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
 let all=[], filter='all';
-if(sessionStorage.getItem('angadi_admin')!=='1'){ document.getElementById('guard').classList.remove('hidden'); }
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
 else { document.getElementById('app').style.display='block'; load(); }
 function stars(r){ r=Math.round(r||0); let s=''; for(let i=1;i<=5;i++) s+=(i<=r?'★':'☆'); return s; }
 function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 async function load(){
-  try{ const r=await fetch(URL+'/rest/v1/reviews?select=*&order=created_at.desc',{headers:H}); all=r.ok?await r.json():[]; }catch(e){ all=[]; }
+  const r=await AdminAPI.db('reviews','select',{order:'created_at.desc'});
+  all=r.data||[];
   render();
 }
 function render(){
-  const counts={all:all.length,approved:0,hidden:0};
+  const counts={all:all.length,pending:0,approved:0,hidden:0};
   all.forEach(r=>{ counts[r.status]=(counts[r.status]||0)+1; });
-  ['all','approved','hidden'].forEach(k=>{ const el=document.getElementById('c-'+k); if(el) el.textContent=counts[k]||0; });
+  ['all','pending','approved','hidden'].forEach(k=>{ const el=document.getElementById('c-'+k); if(el) el.textContent=counts[k]||0; });
   const rows=all.filter(r=> filter==='all'||r.status===filter);
   const list=document.getElementById('list');
   if(!rows.length){ list.innerHTML='<div class="empty">No reviews here yet.</div>'; return; }
@@ -87,12 +87,12 @@ function render(){
     </div>`).join('');
 }
 async function setStatus(id,status){
-  await fetch(URL+'/rest/v1/reviews?id=eq.'+id,{method:'PATCH',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify({status})});
+  await AdminAPI.db('reviews','update',{match:{id},values:{status}});
   const r=all.find(x=>x.id===id); if(r) r.status=status; render();
 }
 async function del(id){
   if(!confirm('Delete this review permanently?')) return;
-  await fetch(URL+'/rest/v1/reviews?id=eq.'+id,{method:'DELETE',headers:H});
+  await AdminAPI.db('reviews','delete',{match:{id}});
   all=all.filter(x=>x.id!==id); render();
 }
 document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',()=>{

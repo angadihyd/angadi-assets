@@ -1,23 +1,25 @@
 // ═══════════════════════════════════════════════════════════════
 //  POST /api/create-order
-//  Securely creates a Razorpay order from server-validated prices,
-//  then stores a PENDING order in Supabase. The browser NEVER sets
-//  the amount — we recompute it here from the source-of-truth price
-//  list so a user cannot pay ₹1 for a goat.
+//  The ONLY way an order is created (online payment AND cash on
+//  delivery). Prices are validated server-side against the Supabase
+//  products table, so the browser can never set the amount.
 //
-//  Returns: { keyId, razorpayOrderId, amount, orderId }
+//  Body: { items, slot, promoCode, customer, userId, payment }
+//    payment: 'razorpay' (default) | 'cod'
 //
-//  Required environment variables (set in Vercel → Settings → Env):
-//    RAZORPAY_KEY_ID            (e.g. rzp_live_xxx or rzp_test_xxx)
-//    RAZORPAY_KEY_SECRET
-//    SUPABASE_URL               https://ijvkvgmzjjhwvrwtladj.supabase.co
-//    SUPABASE_SERVICE_ROLE_KEY  (Supabase → Settings → API → service_role)
+//  Razorpay → creates a Razorpay order, stores a PENDING order,
+//             returns { keyId, razorpayOrderId, amount, orderId }
+//  COD      → stores a CONFIRMED_COD order (limit ₹5,000),
+//             returns { cod:true, orderId, subtotal, delivery,
+//                       discount, total }
+//
+//  Required env vars:
+//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+//    RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET   (online payment only)
 // ═══════════════════════════════════════════════════════════════
 
-// ── SOURCE-OF-TRUTH PRICES (₹) ──
-// Keep in sync with shop.html / product-detail.html. (TODO: move to a
-// Supabase `products` table so there's only one place to update.)
-const PRICES = {
+// ── Fallback prices if the products table is unreachable ──
+const FALLBACK_PRICES = {
   'Village Goat Meat': 680,
   'Country Chicken':   520,
   'Fresh River Fish':  450,
@@ -29,14 +31,16 @@ const PRICES = {
   'Goat Head':         520,
 };
 
-// ── PROMO CODES (must match cart.html) ──
-const PROMOS = {
-  'ANGADI10': { type: 'percent', value: 10 },
-  'FIRST100': { type: 'flat',    value: 100 },
-  'VILLAGE':  { type: 'percent', value: 5 },
+// ── Fallback promo codes (DB coupons are checked first) ──
+const FALLBACK_PROMOS = {
+  'ANGADI10': { type: 'percent', value: 10, min_order: 0 },
+  'FIRST100': { type: 'flat',    value: 100, min_order: 499 },
+  'VILLAGE':  { type: 'percent', value: 5,  min_order: 0 },
 };
 
 const EXPRESS_SLOT = 'Express (2 hrs, +₹99)';
+const COD_LIMIT = 5000;          // ₹ — matches the note shown at checkout
+const PRICE_TOLERANCE = 2;       // ₹ rounding slack on computed line prices
 
 function readJson(req) {
   return new Promise((resolve, reject) => {
@@ -55,6 +59,28 @@ function newOrderId() {
   return `ANG-${r()}-${r()}`;
 }
 
+function sbHeaders(key) {
+  return { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
+}
+
+// Parse a quantity factor out of the item name suffix, e.g.
+//   "Village Goat Meat · 500 g"  → 0.5   (of the per-kg price)
+//   "Goat Liver · 1.5kg · Curry Cut" → 1.5
+//   "Country Eggs · 12 eggs"     → 12    (of the per-egg price)
+//   "Full Goat"                  → 1
+function parseFactor(name) {
+  const parts = String(name).split(' · ').slice(1);
+  for (const part of parts) {
+    const kg = part.match(/^([\d.]+)\s*kg$/i);
+    if (kg) return parseFloat(kg[1]);
+    const g = part.match(/^([\d.]+)\s*g$/i);
+    if (g) return parseFloat(g[1]) / 1000;
+    const count = part.match(/^([\d.]+)\s*(eggs?|pcs?|pieces?|heads?|goats?)$/i);
+    if (count) return parseFloat(count[1]);
+  }
+  return 1;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -68,8 +94,8 @@ module.exports = async (req, res) => {
     SUPABASE_SERVICE_ROLE_KEY,
   } = process.env;
 
-  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    res.status(500).json({ error: 'Payment not configured. Missing server environment variables.' });
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    res.status(500).json({ error: 'Ordering not configured. Missing server environment variables.' });
     return;
   }
 
@@ -78,34 +104,65 @@ module.exports = async (req, res) => {
   catch { res.status(400).json({ error: 'Invalid request body' }); return; }
 
   const { items, slot, promoCode, customer, userId } = payload;
+  const isCOD = payload.payment === 'cod';
 
+  if (!isCOD && (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET)) {
+    res.status(500).json({ error: 'Online payment not configured.' });
+    return;
+  }
   if (!Array.isArray(items) || items.length === 0) {
     res.status(400).json({ error: 'Cart is empty' });
     return;
   }
 
-  // ── Recompute every line ──
-  // For products in our known catalog we use the SERVER price (anti-tamper).
-  // For dynamic DB products not in the map we fall back to the client price
-  // (validated as a sane positive number) so they aren't blocked at checkout.
+  // ── Load the live catalog (source of truth for prices) ──
+  const catalog = { ...FALLBACK_PRICES };
+  const stockOut = new Set();
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?select=name,price,in_stock&active=eq.true`,
+      { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
+    );
+    if (r.ok) {
+      const rows = await r.json();
+      for (const p of rows) {
+        catalog[p.name] = Number(p.price);
+        if (p.in_stock === false) stockOut.add(p.name);
+      }
+    }
+  } catch (e) { /* fall back to the hardcoded list */ }
+
+  // ── Validate & recompute every line ──
   let subtotal = 0;
   const validatedItems = [];
   for (const it of items) {
     const baseName = String(it.name || '').split(' · ')[0].trim();
-    const known = PRICES[baseName];
-    const clientPrice = Number(it.price);
-    const unitPrice = known != null ? known : clientPrice;
-    const qty = parseInt(it.qty, 10);
-    if (!Number.isFinite(unitPrice) || unitPrice <= 0 || unitPrice > 1000000) {
-      res.status(400).json({ error: `Invalid price for ${baseName}` });
+    const unitPrice = catalog[baseName];
+    if (unitPrice == null) {
+      res.status(400).json({ error: `"${baseName}" is not in our catalog. Please refresh the page and try again.` });
       return;
     }
+    if (stockOut.has(baseName)) {
+      res.status(400).json({ error: `"${baseName}" is out of stock right now. Please remove it from your cart.` });
+      return;
+    }
+    const qty = parseInt(it.qty, 10);
     if (!Number.isInteger(qty) || qty < 1 || qty > 99) {
       res.status(400).json({ error: `Invalid quantity for ${baseName}` });
       return;
     }
-    subtotal += unitPrice * qty;
-    validatedItems.push({ name: it.name, price: unitPrice, qty });
+    const factor = parseFactor(it.name);
+    if (!Number.isFinite(factor) || factor <= 0 || factor > 200) {
+      res.status(400).json({ error: `Invalid weight for ${baseName}` });
+      return;
+    }
+    const expected = Math.round(unitPrice * factor);
+    const clientPrice = Math.round(Number(it.price));
+    // The client's line price must match what we compute from the
+    // catalog (± rounding). Anything else is stale or tampered.
+    const linePrice = Math.abs(clientPrice - expected) <= PRICE_TOLERANCE ? clientPrice : expected;
+    subtotal += linePrice * qty;
+    validatedItems.push({ name: it.name, price: linePrice, qty });
   }
 
   // ── Delivery (admin-configurable via site_settings 'delivery') ──
@@ -113,7 +170,7 @@ module.exports = async (req, res) => {
   try {
     const sr = await fetch(
       `${SUPABASE_URL}/rest/v1/site_settings?key=eq.delivery&select=value`,
-      { headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } }
+      { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
     );
     if (sr.ok) {
       const rows = await sr.json();
@@ -130,24 +187,78 @@ module.exports = async (req, res) => {
     ? dcfg.express_fee
     : (subtotal >= dcfg.free_above ? 0 : dcfg.standard_fee);
 
-  // ── Discount (server-validated promo) ──
+  // ── Discount — check admin-managed DB coupons first ──
   let discount = 0;
   if (promoCode) {
-    const p = PROMOS[String(promoCode).toUpperCase()];
-    if (p) discount = p.type === 'percent' ? Math.round(subtotal * p.value / 100) : p.value;
+    const code = String(promoCode).toUpperCase();
+    let promo = null;
+    try {
+      const cr = await fetch(
+        `${SUPABASE_URL}/rest/v1/coupons?code=eq.${encodeURIComponent(code)}&active=eq.true&select=type,value,min_order,expires_at`,
+        { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
+      );
+      if (cr.ok) {
+        const rows = await cr.json();
+        if (rows.length) promo = rows[0];
+      }
+    } catch (e) { /* fall through */ }
+    if (!promo) promo = FALLBACK_PROMOS[code] || null;
+    if (promo) {
+      const expired = promo.expires_at && new Date(promo.expires_at) < new Date();
+      const belowMin = Number(promo.min_order || 0) > subtotal;
+      if (!expired && !belowMin) {
+        discount = promo.type === 'percent'
+          ? Math.round(subtotal * Number(promo.value) / 100)
+          : Math.round(Number(promo.value));
+      }
+    }
   }
   discount = Math.min(discount, subtotal); // never below zero
 
   const total = subtotal - discount + delivery;
-  const amountPaise = total * 100;
-  if (amountPaise < 100) {
+  if (total < 1) {
     res.status(400).json({ error: 'Order total must be at least ₹1' });
     return;
   }
 
   const orderId = newOrderId();
 
-  // ── Create the Razorpay order (amount locked here) ──
+  // ═══ CASH ON DELIVERY — insert directly as confirmed_cod ═══
+  if (isCOD) {
+    if (total > COD_LIMIT) {
+      res.status(400).json({ error: `Cash on Delivery is available for orders up to ₹${COD_LIMIT.toLocaleString('en-IN')}. Please pay online for this order.` });
+      return;
+    }
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: 'POST',
+        headers: { ...sbHeaders(SUPABASE_SERVICE_ROLE_KEY), 'Prefer': 'return=minimal' },
+        body: JSON.stringify([{
+          order_id: orderId,
+          user_id: userId || null,
+          customer: customer || {},
+          items: validatedItems,
+          subtotal, delivery, discount, total,
+          payment: 'cod',
+          status: 'confirmed_cod',
+        }]),
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        console.error('COD insert failed', r.status, txt);
+        res.status(500).json({ error: 'Could not save order. Please try again or order on WhatsApp.' });
+        return;
+      }
+    } catch (e) {
+      console.error('COD insert error', e);
+      res.status(500).json({ error: 'Could not save order. Please try again or order on WhatsApp.' });
+      return;
+    }
+    res.status(200).json({ cod: true, orderId, subtotal, delivery, discount, total });
+    return;
+  }
+
+  // ═══ ONLINE — create the Razorpay order (amount locked here) ═══
   let rzpOrder;
   try {
     const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
@@ -155,7 +266,7 @@ module.exports = async (req, res) => {
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: amountPaise,
+        amount: total * 100,
         currency: 'INR',
         receipt: orderId,
         notes: { orderId, customerName: customer?.name || '', phone: customer?.phone || '' },
@@ -182,22 +293,14 @@ module.exports = async (req, res) => {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_SERVICE_ROLE_KEY,
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
-      },
+      headers: { ...sbHeaders(SUPABASE_SERVICE_ROLE_KEY), 'Prefer': 'return=minimal' },
       body: JSON.stringify([{
         order_id: orderId,
         razorpay_order_id: rzpOrder.id,
         user_id: userId || null,
         customer: customer || {},
         items: validatedItems,
-        subtotal,
-        delivery,
-        discount,
-        total,
+        subtotal, delivery, discount, total,
         payment: 'razorpay',
         status: 'pending',
       }]),
@@ -217,7 +320,7 @@ module.exports = async (req, res) => {
   res.status(200).json({
     keyId: RAZORPAY_KEY_ID,
     razorpayOrderId: rzpOrder.id,
-    amount: amountPaise,
+    amount: total * 100,
     orderId,
   });
 };

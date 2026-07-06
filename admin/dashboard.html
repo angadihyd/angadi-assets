@@ -6,7 +6,7 @@
 <title>Admin Dashboard — Angadi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
+<script src="admin-api.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -235,14 +235,11 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 <div class="admin-login" id="adminLogin">
   <div class="admin-login-box">
     <div class="admin-login-logo">ANGADI <span>ADMIN</span></div>
-    <div class="admin-login-sub">Enter your admin credentials to continue</div>
-    <label class="admin-login-label" for="adminUser">Username</label>
-    <input class="admin-login-input" id="adminUser" type="text" placeholder="admin" autocomplete="username">
-    <label class="admin-login-label" for="adminPass">Password</label>
+    <div class="admin-login-sub">Enter the admin password to continue</div>
+    <label class="admin-login-label" for="adminPass">Admin password</label>
     <input class="admin-login-input" id="adminPass" type="password" placeholder="••••••••" autocomplete="current-password">
-    <button class="admin-login-btn" onclick="adminLogin()">Sign In →</button>
+    <button class="admin-login-btn" id="adminLoginBtn" onclick="adminLogin()">Sign In →</button>
     <div class="admin-login-err" id="loginErr">Incorrect credentials. Try again.</div>
-    <p style="font-size:0.68rem;color:rgba(246,237,216,0.2);margin-top:1rem;">(Dev: username <strong style="color:rgba(246,237,216,0.4);">admin</strong> / password <strong style="color:rgba(246,237,216,0.4);">angadi123</strong>)</p>
   </div>
 </div>
 
@@ -410,16 +407,9 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 
 <script>
 // ─────────────────────────────────────────────
-//  CONFIG
+//  CONFIG — all data goes through /api/admin (see admin-api.js).
+//  No credentials or database keys live in this page.
 // ─────────────────────────────────────────────
-const SUPABASE_URL  = 'https://www.angadi.farm/api/supabase';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-const ADMIN_USER    = 'admin';
-const ADMIN_PASS    = 'Sunset@123'; // Change before going live!
-const DEV_MODE      = false; // Supabase connected
-
-let sb = null;
-try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
 let allOrders = [];
 function fromDb(r){
   return { orderId:r.order_id, customer:r.customer, items:r.items,
@@ -429,67 +419,47 @@ function fromDb(r){
 }
 
 // ─────────────────────────────────────────────
-//  ADMIN LOGIN
+//  ADMIN LOGIN — verified server-side against env ADMIN_TOKEN
 // ─────────────────────────────────────────────
-function adminLogin() {
-  const user = document.getElementById('adminUser').value.trim();
+async function adminLogin() {
   const pass = document.getElementById('adminPass').value;
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    sessionStorage.setItem('angadi_admin', '1');
+  const btn = document.getElementById('adminLoginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const r = await AdminAPI.login(pass);
+  btn.disabled = false; btn.textContent = 'Sign In →';
+  if (r.token) {
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminLayout').style.display = 'flex';
     initDashboard();
   } else {
+    document.getElementById('loginErr').textContent = r.error || 'Incorrect credentials. Try again.';
     document.getElementById('loginErr').classList.add('visible');
     document.getElementById('adminPass').value = '';
   }
 }
 document.getElementById('adminPass').addEventListener('keydown', e => { if (e.key === 'Enter') adminLogin(); });
-document.getElementById('adminUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adminPass').focus(); });
 
 function adminLogout() {
-  sessionStorage.removeItem('angadi_admin');
+  AdminAPI.logout();
   document.getElementById('adminLayout').style.display = 'none';
   document.getElementById('adminLogin').classList.remove('hidden');
 }
 
 // Check if already logged in
-if (sessionStorage.getItem('angadi_admin') === '1') {
+if (AdminAPI.isAdmin()) {
   document.getElementById('adminLogin').classList.add('hidden');
   document.getElementById('adminLayout').style.display = 'flex';
   initDashboard();
 }
 
 // ─────────────────────────────────────────────
-//  PRODUCTS DATA
+//  PRODUCTS — live from the products table via /api/admin
 // ─────────────────────────────────────────────
-const PRODUCTS = [
-  { id:'goat-meat',    name:'Village Goat Meat',  nameTE:'Meka Mamsam',   price:680,  unit:'kg',  img:'../product/mutton.png',          inStock:true  },
-  { id:'country-chicken', name:'Country Chicken', nameTE:'Nati Kodi',     price:520,  unit:'kg',  img:'../product/country chiken.png',  inStock:true  },
-  { id:'river-fish',   name:'Fresh River Fish',   nameTE:'Chepa Mukkalu', price:450,  unit:'kg',  img:'../product/fish.png',            inStock:true  },
-  { id:'goat-legs',    name:'Goat Legs',           nameTE:'Meka Kalu',    price:400,  unit:'4pcs',img:'../product/legs.png',            inStock:true  },
-  { id:'goat-liver',   name:'Goat Liver',          nameTE:'Meka Kalleja', price:1000, unit:'kg',  img:'../product/liver.png',           inStock:true  },
-  { id:'goat-head',    name:'Goat Head',           nameTE:'Meka Tala',    price:520,  unit:'head',img:'../product/head.png',            inStock:false },
-  { id:'baby-goat-legs',name:'Baby Goat Legs',     nameTE:'Pilla Meka Kalu',price:980,unit:'kg',  img:'../product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png',inStock:false},
-  { id:'country-eggs', name:'Country Eggs',        nameTE:'Nati Kodi Gudlu',price:12, unit:'egg', img:'../product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png',inStock:true  },
-  { id:'full-goat',    name:'Full Goat',           nameTE:'Poora Meka',   price:8500, unit:'goat',img:'../product/mutton.png',inStock:true  },
-];
-// Load from localStorage overrides
-let products = JSON.parse(localStorage.getItem('angadi_products') || JSON.stringify(PRODUCTS));
+let products = [];
 
-// ─────────────────────────────────────────────
-//  DEMO ORDERS (dev)
-// ─────────────────────────────────────────────
-function getDemoOrders() {
-  const now = new Date();
-  const ago = (h) => new Date(now - h*3600000).toISOString();
-  return [
-    { orderId:'ANG-001', customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)'}, items:[{name:'Village Goat Meat · 1kg',price:680,qty:2},{name:'Country Chicken',price:520,qty:1}], total:1880, payment:'razorpay', status:'confirmed',    placedAt:ago(0.5)  },
-    { orderId:'ANG-002', customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)'},    items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],            total:1144, payment:'cod',      status:'processing',   placedAt:ago(1.2)  },
-    { orderId:'ANG-003', customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)'},         items:[{name:'Country Chicken · 1kg',price:520,qty:2}],                                                total:1040, payment:'razorpay', status:'out_for_delivery',placedAt:ago(2) },
-    { orderId:'ANG-004', customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)'}, items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],                                             total:2040, payment:'cod',      status:'delivered',    placedAt:ago(5)    },
-    { orderId:'ANG-005', customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)'},  items:[{name:'Full Goat',price:8500,qty:1}],                                                           total:8500, payment:'razorpay', status:'confirmed',    placedAt:ago(0.1)  },
-  ];
+async function loadProducts() {
+  const r = await AdminAPI.db('products', 'select', { order: 'sort_order.asc' });
+  products = (r.data || []).filter(p => p.active !== false);
 }
 
 // ─────────────────────────────────────────────
@@ -497,7 +467,7 @@ function getDemoOrders() {
 // ─────────────────────────────────────────────
 async function initDashboard() {
   setTopbarInfo();
-  const orders = await loadOrders();
+  const [orders] = await Promise.all([loadOrders(), loadProducts()]);
   allOrders = orders;
   _lastOrderIds = new Set(orders.map(o => o.orderId)); // seed so we don't alert on existing orders
   renderStats(orders);
@@ -508,19 +478,9 @@ async function initDashboard() {
 }
 
 async function loadOrders() {
-  if (sb){
-    try {
-      const { data, error } = await sb.from('orders').select('*').order('placed_at', { ascending:false });
-      if (!error && data) return data.map(fromDb);
-    } catch(e){ console.warn('Supabase load failed', e); }
-  }
-  // fallback
-  const stored = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
-  if (DEV_MODE && stored.length < 5) {
-    const demos = getDemoOrders().filter(d => !stored.find(s => s.orderId === d.orderId));
-    return [...stored, ...demos];
-  }
-  return stored;
+  const r = await AdminAPI.db('orders', 'select', { order: 'placed_at.desc', limit: 500 });
+  if (r.error) { showToast('⚠ Could not load orders — ' + r.error); return allOrders; }
+  return (r.data || []).map(fromDb);
 }
 
 function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
@@ -633,16 +593,20 @@ function renderRecentOrders(orders) {
 }
 
 function renderStockList() {
-  document.getElementById('stockList').innerHTML = products.map((p, idx) => `
+  if (!products.length) {
+    document.getElementById('stockList').innerHTML = '<div style="padding:1.2rem;font-size:0.8rem;color:rgba(246,237,216,0.35);">Could not load products — check /api/admin configuration.</div>';
+    return;
+  }
+  document.getElementById('stockList').innerHTML = products.map((p) => `
     <div class="stock-item">
-      <div class="stock-img"><img src="${p.img}" alt="${p.name}"></div>
+      <div class="stock-img"><img src="../${p.image || 'product/mutton.png'}" alt="${p.name}"></div>
       <div class="stock-info">
         <div class="stock-name">${p.name}</div>
         <div class="stock-price">${fmt(p.price)} / ${p.unit}</div>
       </div>
       <div class="stock-status">
         <label class="stock-toggle">
-          <input type="checkbox" ${p.inStock?'checked':''} onchange="toggleStock(${idx},this.checked)">
+          <input type="checkbox" ${p.in_stock?'checked':''} onchange="toggleStock('${p.slug}',this.checked)">
           <span class="stock-slider"></span>
         </label>
       </div>
@@ -652,7 +616,7 @@ function renderStockList() {
 
 function renderAlerts(orders) {
   const pending = orders.filter(o => normaliseStatus(o.status) === 'confirmed').length;
-  const outOfStock = products.filter(p => !p.inStock).length;
+  const outOfStock = products.filter(p => !p.in_stock).length;
   const alerts = [];
   if (pending > 0) alerts.push({ type:'warning', icon:'⏳', text:`<strong>${pending} order${pending>1?'s':''}</strong> confirmed and awaiting processing. Review them now.` });
   if (outOfStock > 0) alerts.push({ type:'warning', icon:'📦', text:`<strong>${outOfStock} product${outOfStock>1?'s':''}</strong> currently marked out of stock. Update in Products.` });
@@ -674,26 +638,22 @@ async function updateOrderStatus(orderId, newStatus) {
   const patch = { status: newStatus };
   if (newStatus === 'ready')     patch.ready_at = now;
   if (newStatus === 'delivered') patch.delivered_at = now;
-  if (sb) {
-    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
-    if (error) { showToast('⚠ Save failed — ' + error.message); return; }
-  } else {
-    const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
-    const idx = orders.findIndex(o => o.orderId === orderId);
-    if (idx !== -1) { orders[idx].status = newStatus; localStorage.setItem('angadi_all_orders', JSON.stringify(orders)); }
-  }
+  const { error } = await AdminAPI.db('orders', 'update', { match: { order_id: orderId }, values: patch });
+  if (error) { showToast('⚠ Save failed — ' + error); return; }
   showToast(`Order ${orderId} → ${statusLabel(newStatus)}`);
   setTimeout(() => initDashboard(), 300);
 }
 
-function toggleStock(idx, val) {
-  products[idx].inStock = val;
-  localStorage.setItem('angadi_products', JSON.stringify(products));
-  showToast(`${products[idx].name} marked ${val ? 'In Stock' : 'Out of Stock'}`);
+async function toggleStock(slug, val) {
+  const p = products.find(x => x.slug === slug);
+  const { error } = await AdminAPI.db('products', 'update', { match: { slug }, values: { in_stock: val } });
+  if (error) { showToast('⚠ Save failed — ' + error); renderStockList(); return; }
+  if (p) p.in_stock = val;
+  showToast(`${p ? p.name : slug} marked ${val ? 'In Stock' : 'Out of Stock'} — live on the shop`);
 }
 
 function exportCSV() {
-  const orders = JSON.parse(localStorage.getItem('angadi_all_orders') || '[]');
+  const orders = allOrders;
   const rows = [['Order ID','Customer','Phone','Items','Total','Payment','Status','Date']];
   orders.forEach(o => rows.push([
     o.orderId, o.customer?.name||'', o.customer?.phone||'',
@@ -725,8 +685,7 @@ function showToast(msg) {
 }
 
 // ── NEW ORDER ALERT SYSTEM ──
-let _lastOrderCount = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]').length;
-let _lastOrderIds   = new Set(JSON.parse(localStorage.getItem('angadi_all_orders')||'[]').map(o=>o.orderId));
+let _lastOrderIds = new Set();
 
 function showNewOrderAlert(order) {
   // Browser notification
@@ -776,7 +735,7 @@ function showNewOrderAlert(order) {
 }
 
 async function pollNewOrders() {
-  if (sessionStorage.getItem('angadi_admin') !== '1') return;
+  if (!AdminAPI.isAdmin()) return;
   const orders = await loadOrders();
   let isNew = false;
   orders.forEach(o => {

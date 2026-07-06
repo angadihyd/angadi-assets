@@ -93,6 +93,10 @@ html{scroll-behavior:smooth;}
   --ink-3:#1A0E06;
   --border:rgba(196,98,45,0.2);
   --border-gold:rgba(212,160,23,0.25);
+  --amber:#E0902E;
+  --maroon:#8C2433;
+  --card:#19110A;
+  --line:rgba(245,239,227,0.1);
 }
 body{
   font-family:'DM Sans',sans-serif;
@@ -349,44 +353,44 @@ nav.scrolled{height:60px;}
 /* ── PRODUCT GRID ── */
 .shop-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.5rem;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2rem;
 }
 
 /* Product card */
 .product-card{
-  background:var(--ink-3);
-  border:1px solid var(--border);
-  border-radius:16px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
   overflow:hidden;
   cursor:pointer;
-  transition:all 0.4s ease;
+  transition:transform 0.35s ease,border-color 0.35s ease,box-shadow 0.35s ease;
   position:relative;
   text-decoration:none;
   display:flex;
   flex-direction:column;
 }
 .product-card:hover{
-  border-color:rgba(196,98,45,0.5);
-  transform:translateY(-6px);
-  box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(196,98,45,0.2);
+  border-color:rgba(224,144,46,0.4);
+  transform:translateY(-5px);
+  box-shadow:0 18px 44px rgba(0,0,0,0.5);
 }
 .product-card.hidden{
   display:none;
 }
 .product-img-wrap{
   position:relative;overflow:hidden;
-  height:240px;
+  aspect-ratio:1/1;
   flex-shrink:0;
 }
 .product-img-wrap img.main-img{
   width:100%;height:100%;
   object-fit:cover;
   transition:transform 0.6s ease;
-  filter:brightness(0.9) saturate(1.1);
+  filter:brightness(0.96);
 }
 .product-card:hover .product-img-wrap img.main-img{
-  transform:scale(1.06);
+  transform:scale(1.05);
 }
 /* Video cards */
 .product-img-wrap.has-video video{
@@ -422,53 +426,41 @@ nav.scrolled{height:60px;}
   transform:scale(1.06);
 }
 .product-badge{
-  position:absolute;top:1rem;left:1rem;
-  background:rgba(8,5,3,0.75);
-  backdrop-filter:blur(8px);
-  border:1px solid var(--border-gold);
+  position:absolute;top:0.7rem;left:0.7rem;
+  background:rgba(8,5,3,0.7);
+  backdrop-filter:blur(6px);
+  border:1px solid var(--line);
   border-radius:100px;
-  padding:0.28rem 0.75rem;
-  font-family:'Space Mono',monospace;
-  font-size:0.62rem;color:var(--gold);
+  padding:0.22rem 0.6rem;
+  font-size:0.58rem;font-weight:600;color:var(--cream);
   letter-spacing:0.1em;text-transform:uppercase;
   z-index:5;
 }
-.product-fresh{
-  position:absolute;top:1rem;right:1rem;
-  width:40px;height:40px;
-  background:linear-gradient(135deg,var(--clay),var(--clay-d));
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.55rem;font-weight:700;color:var(--cream);
-  letter-spacing:0.04em;text-transform:uppercase;
-  text-align:center;line-height:1.2;
-  z-index:5;
-}
 .product-body{
-  padding:1.3rem 1.4rem 1.4rem;
+  padding:0.95rem 1rem 1.05rem;
   display:flex;
   flex-direction:column;
   flex:1;
 }
 .product-name-te{
-  font-size:0.68rem;font-weight:500;
-  color:var(--clay-l);letter-spacing:0.08em;
+  font-size:0.6rem;font-weight:600;
+  color:var(--amber);letter-spacing:0.1em;
   text-transform:uppercase;
-  margin-bottom:0.2rem;
+  margin-bottom:0.25rem;
 }
 .product-name{
-  font-family:'Playfair Display',serif;
-  font-size:1.15rem;font-weight:700;
-  color:var(--cream);
-  margin-bottom:0.45rem;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.02rem;font-weight:600;
+  color:var(--cream);line-height:1.15;
+  margin-bottom:0.35rem;
 }
 .product-desc{
-  font-size:0.8rem;color:rgba(246,237,216,0.5);
-  line-height:1.6;margin-bottom:1rem;
+  font-size:0.74rem;color:rgba(246,237,216,0.5);
+  line-height:1.5;margin-bottom:0.9rem;
   flex:1;
 }
 .product-footer{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:flex-end;justify-content:space-between;
   margin-top:auto;
 }
 .product-price{
@@ -476,28 +468,27 @@ nav.scrolled{height:60px;}
 }
 .product-price-main{
   font-family:'Bebas Neue',sans-serif;
-  font-size:1.65rem;line-height:1;
-  color:var(--gold);
+  font-size:1.5rem;line-height:0.9;letter-spacing:0.02em;
+  color:var(--amber);
 }
 .product-price-unit{
-  font-size:0.68rem;color:rgba(246,237,216,0.38);
-  margin-top:0.15rem;
+  font-size:0.62rem;color:rgba(246,237,216,0.4);
+  margin-top:0.2rem;
 }
 .btn-add{
-  background:rgba(196,98,45,0.12);
-  border:1px solid var(--border);
-  color:var(--clay-l);
-  width:38px;height:38px;border-radius:10px;
+  background:var(--maroon);
+  border:1px solid var(--maroon);
+  color:#fff;
+  width:38px;height:38px;border-radius:100px;
   font-size:1.2rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:all 0.3s;
+  transition:all 0.25s;
   flex-shrink:0;
 }
 .btn-add:hover{
-  background:var(--clay);
-  border-color:var(--clay);
-  color:var(--cream);
-  transform:scale(1.1);
+  background:#a32c3e;
+  border-color:#a32c3e;
+  transform:translateY(-1px);
 }
 
 /* ── EMPTY STATE ── */
@@ -559,15 +550,14 @@ nav.scrolled{height:60px;}
 
 /* ── SECTION BASE ── */
 .section-eyebrow{
-  display:inline-flex;align-items:center;gap:0.5rem;
-  font-family:'Space Mono',monospace;
-  font-size:0.7rem;color:var(--clay);
-  letter-spacing:0.15em;text-transform:uppercase;
-  margin-bottom:1rem;
+  display:inline-flex;align-items:center;gap:0.55rem;
+  font-size:0.64rem;font-weight:600;color:var(--amber);
+  letter-spacing:0.24em;text-transform:uppercase;
+  margin-bottom:0.9rem;
 }
 .section-eyebrow::before{
   content:'';display:block;
-  width:20px;height:1px;background:var(--clay);
+  width:22px;height:1px;background:var(--amber);
 }
 
 /* ── WHY ANGADI ── */
@@ -658,13 +648,13 @@ nav.scrolled{height:60px;}
   line-height:1.6;
 }
 .section-title{
-  font-family:'Fraunces',serif;
-  font-size:clamp(2rem,4.2vw,3.2rem);
-  font-weight:360;line-height:1.07;letter-spacing:-0.01em;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,8vw,3.4rem);
+  font-weight:400;line-height:0.98;letter-spacing:0.01em;
   color:var(--cream);
   margin-bottom:1rem;
 }
-.section-title em{font-style:italic;color:var(--clay-l);font-weight:360;}
+.section-title em{font-style:normal;color:var(--amber);font-weight:400;}
 .section-sub{
   font-size:1rem;font-weight:300;
   color:rgba(246,237,216,0.6);
@@ -855,7 +845,7 @@ footer{
 
 /* ── RESPONSIVE ── */
 @media(max-width:1024px){
-  .shop-grid{grid-template-columns:repeat(2,1fr);}
+  .shop-grid{grid-template-columns:repeat(3,1fr);}
   .footer-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:768px){
@@ -865,7 +855,8 @@ footer{
   .nav-hamburger{display:flex;}
   .shop-hero{padding:7rem 1.5rem 3rem;min-height:360px;}
   .shop-body{padding:2rem 1.5rem 4rem;}
-  .shop-grid{grid-template-columns:1fr;}
+  .shop-grid{grid-template-columns:repeat(2,1fr);gap:0.9rem;}
+  .product-body{padding:0.85rem 0.9rem 0.95rem;}
   .why-section,.story-section{padding:4rem 1.5rem;}
   .why-grid,.story-grid{grid-template-columns:1fr;gap:3rem;}
   .why-image-accent{display:none;}
@@ -1016,8 +1007,7 @@ footer{
           <source src="product/gaot farmer animated video.mp4" type="video/mp4">
         </video>
         <img src="product/mutton.png" alt="Village Goat Meat" class="pip-product-img">
-        <div class="product-badge">⭐ Bestseller</div>
-        <div class="product-fresh">FRESH<br>TODAY</div>
+        <div class="product-badge">Bestseller</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Meka Mamsam</div>
@@ -1040,7 +1030,7 @@ footer{
           <source src="product/country chiken animated video.mp4" type="video/mp4">
         </video>
         <img src="product/country chiken.png" alt="Country Chicken" class="pip-product-img">
-        <div class="product-badge">🌿 Nati</div>
+        <div class="product-badge">Free-range</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Nati Kodi</div>
@@ -1063,7 +1053,7 @@ footer{
           <source src="product/fisher man animated video.mp4" type="video/mp4">
         </video>
         <img src="product/fish.png" alt="Fresh River Fish" class="pip-product-img">
-        <div class="product-badge">🐟 River Fresh</div>
+        <div class="product-badge">Today's catch</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Chepa Mukkalu</div>
@@ -1083,8 +1073,7 @@ footer{
     <a href="product-detail.html?id=baby-goat-legs" class="product-card fade-up" data-category="goat" data-price="980" data-name="Baby Goat Legs" data-order="4">
       <div class="product-img-wrap">
         <img src="product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png" alt="Baby Goat Legs" class="main-img">
-        <div class="product-badge">🏆 Premium</div>
-        <div class="product-fresh">LIMITED</div>
+        <div class="product-badge">Limited</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Pilla Meka Kalu</div>
@@ -1104,7 +1093,7 @@ footer{
     <a href="product-detail.html?id=country-eggs" class="product-card fade-up" data-category="eggs" data-price="12" data-name="Country Eggs" data-order="5">
       <div class="product-img-wrap">
         <img src="product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png" alt="Country Eggs" class="main-img">
-        <div class="product-badge">🥚 Farm Fresh</div>
+        <div class="product-badge">Farm fresh</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Nati Kodi Gudlu</div>
@@ -1124,8 +1113,7 @@ footer{
     <a href="product-detail.html?id=full-goat" class="product-card fade-up" data-category="goat" data-price="8500" data-name="Full Goat" data-order="6">
       <div class="product-img-wrap">
         <img src="product/mutton.png" alt="Full Goat" class="main-img">
-        <div class="product-badge">👑 Whole</div>
-        <div class="product-fresh">ORDER<br>AHEAD</div>
+        <div class="product-badge">Pre-order</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Poora Meka</div>
@@ -1145,8 +1133,7 @@ footer{
     <a href="product-detail.html?id=goat-legs" class="product-card fade-up" data-category="goat" data-price="400" data-name="Goat Legs" data-order="7">
       <div class="product-img-wrap">
         <img src="product/legs.png" alt="Goat Legs" class="main-img">
-        <div class="product-badge">🦵 Village Fresh</div>
-        <div class="product-fresh">FRESH<br>TODAY</div>
+        <div class="product-badge">Fresh cut</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Meka Kalu</div>
@@ -1166,8 +1153,7 @@ footer{
     <a href="product-detail.html?id=goat-liver" class="product-card fade-up" data-category="goat" data-price="1000" data-name="Goat Liver" data-order="8">
       <div class="product-img-wrap">
         <img src="product/liver.png" alt="Goat Liver" class="main-img">
-        <div class="product-badge">💎 Premium Offal</div>
-        <div class="product-fresh">FRESH<br>TODAY</div>
+        <div class="product-badge">Fresh cut</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Meka Kalleja</div>
@@ -1187,8 +1173,7 @@ footer{
     <a href="product-detail.html?id=goat-head" class="product-card fade-up" data-category="goat" data-price="520" data-name="Goat Head" data-order="9">
       <div class="product-img-wrap">
         <img src="product/head.png" alt="Goat Head" class="main-img">
-        <div class="product-badge">🐐 Whole</div>
-        <div class="product-fresh">ORDER<br>AHEAD</div>
+        <div class="product-badge">Pre-order</div>
       </div>
       <div class="product-body">
         <div class="product-name-te">Meka Tala</div>
@@ -1206,7 +1191,7 @@ footer{
 
     <!-- EMPTY STATE -->
     <div class="empty-state" id="emptyState">
-      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
       <p>No products in this category yet.</p>
     </div>
 
@@ -1511,7 +1496,6 @@ function productCardHTML(p){
       ${p.video?`<video autoplay muted loop playsinline><source src="${p.video}" type="video/mp4"></video>`:''}
       <img src="${p.image}" alt="${p.name}" class="pip-product-img"${sold?' style="filter:grayscale(0.7);opacity:0.6;"':''}>
       ${p.badge?`<div class="product-badge">${p.badge}</div>`:''}
-      ${p.fresh_label?`<div class="product-fresh">${p.fresh_label.replace(' ','<br>')}</div>`:''}
       ${sold?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,5,3,0.45);"><span style="background:#7A3318;color:#F6EDD8;padding:0.35rem 1rem;border-radius:100px;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;">SOLD OUT</span></div>`:''}
     </div>
     <div class="product-body">
@@ -1536,7 +1520,7 @@ function renderProductCards(list){
   list.forEach(p => { PRODUCTS_BY_SLUG[p.slug] = p; });
   const grid = document.getElementById('shopGrid');
   const cards = list.map(productCardHTML).join('');
-  grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon">🔍</div><p>No products in this category yet.</p></div>`;
+  grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><p>No products in this category yet.</p></div>`;
   updateCategoryCounts();
   applyFiltersAndSort();
 }

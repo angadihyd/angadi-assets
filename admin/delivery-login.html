@@ -109,13 +109,10 @@ body{
   <a href="../login.html" class="back-link">← Customer Login</a>
 </div>
 
+<script src="admin-api.js"></script>
 <script>
-const PARTNERS = {
-  'raju':    { pass:'raju123',    name:'Raju Kumar',    id:'db1' },
-  'suresh':  { pass:'suresh123',  name:'Suresh Babu',   id:'db2' },
-  'praveen': { pass:'praveen123', name:'Praveen Yadav', id:'db3' },
-};
-
+// Credentials are verified server-side (/api/admin, env PARTNER_CREDS).
+// No passwords live in this page.
 document.getElementById('password').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
@@ -123,7 +120,7 @@ document.getElementById('username').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('password').focus();
 });
 
-function doLogin() {
+async function doLogin() {
   const user = document.getElementById('username').value.trim().toLowerCase();
   const pass = document.getElementById('password').value;
   const err  = document.getElementById('errMsg');
@@ -139,14 +136,18 @@ function doLogin() {
     return;
   }
 
-  if (PARTNERS[user] && PARTNERS[user].pass === pass) {
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const r = await AdminAPI.partnerLogin(user, pass);
+  btn.disabled = false;
+
+  if (r.token) {
     btn.textContent = '✅ Logging in...';
-    sessionStorage.setItem('angadi_delivery', user);
-    setTimeout(() => { window.location.href = 'delivery-partner.html'; }, 500);
+    setTimeout(() => { window.location.href = 'delivery-partner.html'; }, 400);
   } else {
+    btn.textContent = '🚚 Sign In';
     document.getElementById('username').classList.add('error');
     document.getElementById('password').classList.add('error');
-    err.textContent = 'Invalid username or password. Contact admin.';
+    err.textContent = r.error || 'Invalid username or password. Contact admin.';
     err.classList.add('show');
     document.getElementById('password').value = '';
   }

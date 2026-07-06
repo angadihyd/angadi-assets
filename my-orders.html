@@ -449,60 +449,70 @@ function normaliseStatus(s){
 // ─────────────────────────────────────────────
 let allOrders = [];
 
+// The Supabase client is used ONLY for the phone-OTP auth session.
+// Order data comes from /api/my-orders (the orders table is not
+// publicly readable any more).
+async function getAccessToken(){
+  try {
+    if (!window._sb) window._sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const { data } = await window._sb.auth.getSession();
+    return data && data.session ? data.session.access_token : null;
+  } catch(e){ return null; }
+}
+
+async function fetchMyOrders(){
+  // 1) Logged in with phone OTP → full order history for the verified phone
+  const token = await getAccessToken();
+  if (token){
+    try {
+      const r = await fetch('/api/my-orders', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ action:'list', accessToken: token }),
+      });
+      if (r.ok){ const j = await r.json(); return (j.data || []).map(fromDb); }
+    } catch(e){ /* fall through */ }
+  }
+  // 2) Guest → live-track the last order placed on this device
+  const last = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const phone = (last && last.customer && last.customer.phone) || user.phone;
+  if (last && last.orderId && phone){
+    try {
+      const r = await fetch('/api/my-orders', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ action:'track', orderId: last.orderId, phone }),
+      });
+      if (r.ok){ const j = await r.json(); if (j.data && j.data.length) return j.data.map(fromDb); }
+    } catch(e){ /* fall through */ }
+  }
+  return null;
+}
+
 // Background poll — re-renders ONLY when an order's status actually changes,
 // so an expanded card stays open while nothing is happening.
 async function pollCustomer(){
-  if (!window._sb) return;
-  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
-  if (!user.phone) return;
-  try {
-    const { data, error } = await window._sb
-      .from('orders').select('*')
-      .eq('customer->>phone', user.phone)
-      .order('placed_at', { ascending: false });
-    if (error || !data) return;
-    const mapped = data.map(fromDb);
-    const sig = JSON.stringify(mapped.map(o => [o.orderId, o.status]));
-    if (sig !== window._lastSig){
-      window._lastSig = sig;
-      allOrders = mapped;
-      renderOrders();
-    }
-  } catch(e){ /* keep last view on transient errors */ }
+  const mapped = await fetchMyOrders();
+  if (!mapped) return;
+  const sig = JSON.stringify(mapped.map(o => [o.orderId, o.status]));
+  if (sig !== window._lastSig){
+    window._lastSig = sig;
+    allOrders = mapped;
+    renderOrders();
+  }
 }
 
 async function loadOrders(){
-  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
-
-  // 1. Last order from localStorage (always show this)
-  const lastOrder = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
-
-  if (!DEV_MODE && user.phone) {
-    // PRODUCTION: fetch from Supabase + subscribe for live tracking
-    try {
-      if (!window._sb) window._sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      const sb = window._sb;
-      const { data, error } = await sb
-        .from('orders')
-        .select('*')
-        .eq('customer->>phone', user.phone)
-        .order('placed_at', { ascending: false });
-      if (!error && data) {
-        allOrders = data.map(fromDb);
-        window._lastSig = JSON.stringify(allOrders.map(o => [o.orderId, o.status]));
-        renderOrders();
-        if (!window._sbSub){
-          window._sbSub = sb.channel('orders-customer')
-            .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, () => loadOrders())
-            .subscribe();
-        }
-        if (!window._poll) window._poll = setInterval(pollCustomer, 8000);  // live without manual refresh
-        return;
-      }
-    } catch(e){ console.warn('Supabase fetch failed', e); }
+  const live = await fetchMyOrders();
+  if (live){
+    allOrders = live;
+    window._lastSig = JSON.stringify(allOrders.map(o => [o.orderId, o.status]));
+    renderOrders();
+    if (!window._poll) window._poll = setInterval(pollCustomer, 8000);  // live without manual refresh
+    return;
   }
 
   // Fallback: only show the last real order from localStorage (no fake demo data)
+  const lastOrder = JSON.parse(localStorage.getItem('angadi_last_order') || 'null');
   let stored = [];
   if (lastOrder) {
     if (!lastOrder.orderId) lastOrder.orderId = 'ANG-' + Date.now().toString(36).toUpperCase();
@@ -736,15 +746,21 @@ function reorder(idx) {
 
 async function cancelOrder(orderId, idx) {
   if (!confirm(`Cancel order ${orderId}?`)) return;
+  const token = await getAccessToken();
+  const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const order = allOrders[idx];
+  const phone = (order && order.customer && order.customer.phone) || user.phone || '';
+  try {
+    const r = await fetch('/api/my-orders', {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ action:'cancel', orderId, accessToken: token, phone }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok){ showToast(j.error || 'Could not cancel — please message us on WhatsApp'); return; }
+  } catch(e){ showToast('Network error — please try again'); return; }
   allOrders[idx].status = 'cancelled';
   renderOrders();
   showToast(`Order ${orderId} cancelled`);
-  if (window._sb){
-    const { error } = await window._sb.from('orders').update({ status:'cancelled' }).eq('order_id', orderId);
-    if (error) console.warn('cancel failed', error);
-  } else {
-    localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
-  }
 }
 
 function downloadInvoice(orderId) {

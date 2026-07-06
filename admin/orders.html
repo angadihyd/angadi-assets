@@ -169,7 +169,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
   .search-input{width:140px;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-api.js"></script>
 </head>
 <body>
 
@@ -283,24 +283,18 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 // ─────────────────────────────────────────────
 //  AUTH GUARD
 // ─────────────────────────────────────────────
-const IS_ADMIN = sessionStorage.getItem('angadi_admin') === '1';
+const IS_ADMIN = AdminAPI.isAdmin();
 if (!IS_ADMIN) {
   document.getElementById('guard').classList.remove('hidden');
   document.getElementById('adminLayout').style.display = 'none';
 }
-// init() is invoked at the very end of the script, after `sb` is initialised
-function adminLogout(){ sessionStorage.removeItem('angadi_admin'); window.location.href='dashboard.html'; }
+// init() is invoked at the very end of the script
+function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'; }
 
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
-
-// ── Supabase ──
-const SUPABASE_URL = 'https://www.angadi.farm/api/supabase';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-let sb = null;
-try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e){ console.warn('Supabase init failed', e); }
 
 // DB row (snake_case) → UI order (camelCase)
 function fromDb(r){
@@ -344,29 +338,16 @@ function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../pr
 // ─────────────────────────────────────────────
 let allOrders=[], activeFilter='all', searchQuery='', dateFilter='', seenIds=new Set();
 
-const DEMOS=[
-  {orderId:'ANG-001',customer:{name:'Ravi Shankar',phone:'+91 9876543210',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 4B',area:'Banjara Hills',pincode:'500034'}},items:[{name:'Village Goat Meat · 1kg',price:680,qty:2},{name:'Country Chicken',price:520,qty:1}],subtotal:1880,delivery:0,discount:0,total:1880,payment:'razorpay',status:'pending',placedAt:new Date(Date.now()-1800000).toISOString()},
-  {orderId:'ANG-002',customer:{name:'Padmaja Nair',phone:'+91 9845123456',slot:'Afternoon (12–5 PM)',address:{flat:'Apt 12',area:'Jubilee Hills',pincode:'500033'}},items:[{name:'Goat Liver · 500g',price:1000,qty:1},{name:'Country Eggs',price:12,qty:12}],subtotal:1144,delivery:0,discount:0,total:1144,payment:'cod',status:'preparing',placedAt:new Date(Date.now()-4320000).toISOString()},
-  {orderId:'ANG-003',customer:{name:'Venkat Rao',phone:'+91 9001234567',slot:'Evening (5–8 PM)',address:{flat:'H.No 45',area:'Madhapur',pincode:'500081'}},items:[{name:'Country Chicken · 1kg',price:520,qty:2}],subtotal:1040,delivery:0,discount:0,total:1040,payment:'razorpay',status:'out_for_delivery',placedAt:new Date(Date.now()-7200000).toISOString()},
-  {orderId:'ANG-004',customer:{name:'Sravanthi M.',phone:'+91 9123456789',slot:'Morning (7 AM – 12 PM)',address:{flat:'Villa 7',area:'Kondapur',pincode:'500084'}},items:[{name:'Village Goat Meat · 2kg',price:680,qty:3}],subtotal:2040,delivery:0,discount:0,total:2040,payment:'cod',status:'delivered',placedAt:new Date(Date.now()-86400000).toISOString()},
-  {orderId:'ANG-005',customer:{name:'Kiran Kumar',phone:'+91 9988776655',slot:'Morning (7 AM – 12 PM)',address:{flat:'Flat 2A',area:'Gachibowli',pincode:'500032'}},items:[{name:'Full Goat',price:8500,qty:1}],subtotal:8500,delivery:0,discount:0,total:8500,payment:'razorpay',status:'pending',placedAt:new Date(Date.now()-360000).toISOString()},
-];
+// (demo orders removed — the guarded API is the only data source)
 
 async function loadOrders(notifyNew){
-  let rows = null, loadErr = null;
-  if (sb){
-    try {
-      const { data, error } = await sb.from('orders').select('*').order('placed_at',{ascending:false});
-      if (error) loadErr = error;
-      else rows = (data||[]).map(fromDb);   // empty array is a valid result — do NOT show demos
-    } catch(e){ loadErr = e; }
+  const r = await AdminAPI.db('orders', 'select', { order: 'placed_at.desc', limit: 1000 });
+  if (r.error){
+    console.error('Order load failed:', r.error);
+    showToast('⚠ Could not load orders — ' + r.error);
+    return; // keep whatever we already have on screen
   }
-  if (rows === null){
-    // Supabase truly unavailable or errored — surface it instead of hiding behind demos
-    if (loadErr){ console.error('Supabase read failed:', loadErr); showToast('⚠ DB read failed: '+(loadErr.message||loadErr)); }
-    rows = JSON.parse(localStorage.getItem('angadi_all_orders')||'[]');
-    if (rows.length < DEMOS.length) rows = DEMOS;
-  }
+  const rows = (r.data || []).map(fromDb);
   // detect newly-arrived pending orders for notification
   if (notifyNew){
     rows.forEach(o=>{
@@ -391,16 +372,11 @@ async function init(){
   await loadOrders(false);
   renderStats();
   renderTable();
-  // Live updates across devices
-  if (sb){
-    sb.channel('orders-admin')
-      .on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => {
-        await loadOrders(true); renderStats(); renderTable();
-        if (document.getElementById('detailPanel').classList.contains('open') && currentDetailId) openDetail(currentDetailId);
-      }).subscribe();
-  }
-  // Polling fallback (in case realtime isn't enabled)
-  setInterval(async ()=>{ await loadOrders(true); renderStats(); renderTable(); }, 8000);
+  // Live updates: poll through the guarded API
+  setInterval(async ()=>{
+    await loadOrders(true); renderStats(); renderTable();
+    if (document.getElementById('detailPanel').classList.contains('open') && currentDetailId) openDetail(currentDetailId);
+  }, 8000);
 }
 async function refreshOrders(){ await loadOrders(false); renderStats(); renderTable(); showToast('Orders refreshed'); }
 
@@ -574,12 +550,8 @@ async function setOrderStatus(orderId, newStatus){
   if(document.getElementById('detailPanel').classList.contains('open') && currentDetailId===orderId) openDetail(orderId);
   showToast(`✓ ${orderId} → ${statusLabel(newStatus)}`);
   // persist
-  if (sb){
-    const { error } = await sb.from('orders').update(patch).eq('order_id', orderId);
-    if (error){ console.warn('update failed', error); showToast('⚠ Save failed — check connection'); }
-  } else {
-    localStorage.setItem('angadi_all_orders', JSON.stringify(allOrders));
-  }
+  const { error } = await AdminAPI.db('orders', 'update', { match: { order_id: orderId }, values: patch });
+  if (error){ console.warn('update failed', error); showToast('⚠ Save failed — ' + error); }
 }
 
 function exportCSV(){
@@ -614,7 +586,7 @@ function showToast(msg){
   document.body.appendChild(toast); setTimeout(()=>toast.remove(),2600);
 }
 
-// ── INIT (after all definitions; `sb` is initialised) ──
+// ── INIT (after all definitions) ──
 if (IS_ADMIN) init();
 </script>
 <script>window.ANGADI_PUSH_ROLE='admin';</script>
