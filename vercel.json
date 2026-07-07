@@ -3,6 +3,10 @@
     {
       "source": "/api/supabase/:path*",
       "destination": "https://ijvkvgmzjjhwvrwtladj.supabase.co/:path*"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/api/share?slug=:slug"
     }
   ],
   "headers": [

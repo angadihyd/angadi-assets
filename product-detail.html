@@ -6,6 +6,14 @@
 <title>Product — Angadi Village Meat</title>
 <meta name="description" content="Farm-fresh village meat delivered same-day in Hyderabad — goat, country chicken, river fish and country eggs, sourced directly from Telangana farmers.">
 <link rel="canonical" href="https://www.angadi.farm/product-detail.html">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="Angadi">
+<meta property="og:title" content="Angadi — Village Meat Delivery Hyderabad">
+<meta property="og:description" content="Farm-fresh village meat delivered same-day in Hyderabad, sourced directly from Telangana farmers.">
+<meta property="og:image" content="https://www.angadi.farm/ux%20ui%20design/hero-shepherd-sunset.png">
+<meta property="og:url" content="https://www.angadi.farm/product-detail.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.angadi.farm/ux%20ui%20design/hero-shepherd-sunset.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -1455,6 +1463,7 @@ function renderProduct(p) {
         <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20${encodeURIComponent(p.name)}"
            target="_blank" class="btn-whatsapp">Order on WhatsApp</a>
         <button class="btn-ghost" id="wishlistBtn" title="Save for later">♡</button>
+        <button class="btn-ghost" id="shareBtn" title="Share this product" aria-label="Share this product"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.7" x2="15.4" y2="6.3"/><line x1="8.6" y1="13.3" x2="15.4" y2="17.7"/></svg></button>
       </div>
 
       <div class="delivery-info">
@@ -1625,6 +1634,17 @@ function bindInteractions(p) {
   document.getElementById('wishlistBtn')?.addEventListener('click', function() {
     this.textContent = this.textContent === '♡' ? '♥' : '♡';
     this.style.color = this.textContent === '♥' ? '#E8956A' : '';
+  });
+
+  // SHARE — /p/:slug serves per-product WhatsApp/social previews
+  document.getElementById('shareBtn')?.addEventListener('click', async function() {
+    const shareUrl = `https://www.angadi.farm/p/${encodeURIComponent(p.id)}`;
+    const text = `${p.name} — ₹${p.price}/${p.unit} from Angadi, farm-fresh village meat delivered in Hyderabad`;
+    if (navigator.share) {
+      try { await navigator.share({ title: p.name, text, url: shareUrl }); } catch { /* user cancelled */ }
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + shareUrl)}`, '_blank');
+    }
   });
 
   // THUMBS — only for static image cards
