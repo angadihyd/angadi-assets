@@ -521,7 +521,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
   </ul>
   <div class="nav-right">
     <button class="nav-cart" onclick="window.location.href='cart.html'">
-      🛒<span class="cart-badge" id="cartBadge">0</span>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg><span class="cart-badge" id="cartBadge">0</span>
     </button>
     <a href="login.html" class="btn-nav" id="navLoginBtn">Login</a>
     <a href="checkout.html" class="btn-nav">Checkout →</a>
@@ -558,7 +558,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
           <h1 class="cart-title">Your <span>Cart</span></h1>
           <p class="cart-subtitle" id="cartSubtitle">Loading…</p>
         </div>
-        <button class="btn-clear-cart" id="clearCartBtn">🗑 Clear Cart</button>
+        <button class="btn-clear-cart" id="clearCartBtn">Clear Cart</button>
       </div>
       <!-- ORDER PROGRESS -->
       <div class="order-steps">
@@ -656,8 +656,8 @@ const PRODUCT_META = {
   'Village Goat Meat':    { img:'product/mutton.png',       nameTE:'Meka Mamsam',   id:'goat-meat' },
   'Country Chicken':      { img:'product/country chiken.png', nameTE:'Nati Kodi',   id:'country-chicken' },
   'Fresh River Fish':     { img:'product/fish.png',          nameTE:'Chepa Mukkalu', id:'river-fish' },
-  'Baby Goat Legs':       { img:'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png', nameTE:'Pilla Meka Kalu', id:'baby-goat-legs' },
-  'Country Eggs':         { img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', nameTE:'Nati Kodi Gudlu', id:'country-eggs' },
+  'Baby Goat Legs':       { img:'product/baby-goat-legs.png', nameTE:'Pilla Meka Kalu', id:'baby-goat-legs' },
+  'Country Eggs':         { img:'product/country-eggs.png', nameTE:'Nati Kodi Gudlu', id:'country-eggs' },
   'Full Goat':            { img:'product/mutton.png', nameTE:'Poora Meka',      id:'full-goat' },
   'Goat Legs':            { img:'product/legs.png',          nameTE:'Meka Kalu',    id:'goat-legs' },
   'Goat Liver':           { img:'product/liver.png',         nameTE:'Meka Kalleja', id:'goat-liver' },
@@ -670,7 +670,7 @@ const PRODUCT_META = {
 const UPSELLS = [
   { id:'goat-legs',   nameTE:'Meka Kalu',    name:'Goat Legs',     price:400,  unit:'4 pcs', img:'product/legs.png',          video:null },
   { id:'goat-liver',  nameTE:'Meka Kalleja', name:'Goat Liver',    price:1000, unit:'kg',    img:'product/liver.png',          video:null },
-  { id:'country-eggs',nameTE:'Nati Kodi Gudlu', name:'Country Eggs', price:12, unit:'egg',   img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png', video:null },
+  { id:'country-eggs',nameTE:'Nati Kodi Gudlu', name:'Country Eggs', price:12, unit:'egg',   img:'product/country-eggs.png', video:null },
   { id:'country-chicken', nameTE:'Nati Kodi', name:'Country Chicken', price:520, unit:'kg', img:'product/country chiken.png', video:'product/country chiken animated video.mp4' },
 ];
 
@@ -775,10 +775,10 @@ function render() {
 function renderEmpty() {
   document.getElementById('cartBody').innerHTML = `
     <div class="empty-cart">
-      <div class="empty-cart-icon">🛒</div>
+      <div class="empty-cart-icon"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="rgba(246,237,216,0.35)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg></div>
       <h2>Your cart is empty</h2>
       <p>Looks like you haven't added any village-fresh products yet.</p>
-      <a href="shop.html" class="btn-primary">🌾 Browse Products</a>
+      <a href="shop.html" class="btn-primary">Browse Products</a>
     </div>
   `;
   document.getElementById('clearCartBtn').style.display = 'none';
@@ -794,14 +794,14 @@ function renderCartBody() {
   // Delivery nudge HTML
   const nudgeHTML = remaining > 0
     ? `<div class="delivery-nudge">
-        <div class="nudge-icon">🚚</div>
+        <div class="nudge-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
         <div style="flex:1;">
           <div class="nudge-text">Add <strong>${fmt(remaining)} more</strong> to get <strong style="color:var(--green);">FREE standard delivery</strong></div>
           <div class="nudge-bar-wrap"><div class="nudge-bar" style="width:${progress}%"></div></div>
         </div>
       </div>`
     : `<div class="delivery-nudge" style="border-color:rgba(76,175,80,0.3);background:rgba(76,175,80,0.06);">
-        <div class="nudge-icon">✅</div>
+        <div class="nudge-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg></div>
         <div class="nudge-text"><strong style="color:var(--green);">You've unlocked FREE delivery!</strong> Your order qualifies for free standard delivery.</div>
       </div>`;
 
@@ -899,20 +899,19 @@ function renderCartBody() {
         ${delivLine}
         <div class="price-row total"><span>Total</span><span class="val">${fmt(total())}</span></div>
 
-        <a href="checkout.html" class="btn-checkout">🛒 Proceed to Checkout</a>
-        <a href="https://wa.me/919949950743?text=${buildWAText()}" target="_blank" class="btn-whatsapp-checkout">💬 Order via WhatsApp</a>
+        <a href="checkout.html" class="btn-checkout">Proceed to Checkout</a>
+        <a href="https://wa.me/919949950743?text=${buildWAText()}" target="_blank" class="btn-whatsapp-checkout">Order via WhatsApp</a>
 
         <div class="trust-mini">
-          <div class="trust-mini-item">🔒 Secure Checkout</div>
-          <div class="trust-mini-item">❄️ Cold Chain</div>
-          <div class="trust-mini-item">✅ FSSAI Certified</div>
+          <div class="trust-mini-item">Secure Checkout</div>
+          <div class="trust-mini-item">Cold Chain</div>
         </div>
 
         <!-- REFER & EARN -->
         <div style="margin-top:1.2rem;background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(196,98,45,0.08));border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:14px;padding:1rem;">
-          <div style="font-weight:700;color:var(--cream);font-size:0.95rem;">🎁 Refer &amp; Earn</div>
+          <div style="font-weight:700;color:var(--cream);font-size:0.95rem;">Refer &amp; Earn</div>
           <div style="font-size:0.82rem;color:rgba(246,237,216,0.55);margin:0.3rem 0 0.7rem;">Invite friends — they get <strong style="color:var(--gold);">₹100 off</strong> their first order with code <strong style="color:var(--gold);">FIRST100</strong>.</div>
-          <a href="https://wa.me/?text=${encodeURIComponent('Try Angadi — fresh village goat, country chicken & farm eggs delivered in Hyderabad! 🐐 Use code FIRST100 for ₹100 off your first order: https://www.angadi.farm')}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#25D366;color:#fff;border-radius:100px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;text-decoration:none;">💬 Share on WhatsApp</a>
+          <a href="https://wa.me/?text=${encodeURIComponent('Try Angadi — fresh village goat, country chicken & farm eggs delivered in Hyderabad. Use code FIRST100 for ₹100 off your first order: https://www.angadi.farm')}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#25D366;color:#fff;border-radius:100px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;text-decoration:none;">Share on WhatsApp</a>
         </div>
       </div>
 
@@ -1088,7 +1087,7 @@ loadDeliveryConfig();
   const u = JSON.parse(localStorage.getItem('angadi_user')||'{}');
   const btn = document.getElementById('navLoginBtn');
   if(btn && u.loggedIn){
-    btn.textContent = '👤 ' + (u.name ? u.name.split(' ')[0] : 'Account');
+    btn.textContent = (u.name ? u.name.split(' ')[0] : 'Account');
     btn.href = 'my-profile.html';
   }
 })();

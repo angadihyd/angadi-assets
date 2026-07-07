@@ -30,6 +30,16 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
 .btn.red{color:var(--red);border-color:rgba(229,115,115,0.3);}
 .empty{text-align:center;color:rgba(246,237,216,0.4);padding:3rem;}
 #guard{text-align:center;padding:4rem 1rem;}
+.addbox{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1.2rem;}
+.addbox h2{font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:0.2rem;}
+.addbox .hint{font-size:0.75rem;color:rgba(246,237,216,0.45);margin-bottom:0.8rem;}
+.addgrid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.addgrid .full{grid-column:1/-1;}
+.addbox label{display:block;font-size:0.72rem;color:rgba(246,237,216,0.55);margin-bottom:0.25rem;}
+.addbox input,.addbox select,.addbox textarea{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.85rem;font-family:inherit;}
+.addbox textarea{min-height:70px;resize:vertical;}
+.addmsg{font-size:0.78rem;margin-top:0.5rem;}
+.addmsg.ok{color:var(--green);} .addmsg.err{color:var(--red);}
 </style>
 </head>
 <body>
@@ -39,8 +49,43 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
 </div>
 <div id="app" style="display:none;">
   <div class="top">
-    <h1>⭐ Product Reviews</h1>
+    <h1>Product Reviews</h1>
     <a class="back" href="dashboard.html">← Dashboard</a>
+  </div>
+  <div class="addbox">
+    <h2>Add a customer review</h2>
+    <div class="hint">For reviews received on WhatsApp or in person. Copy the customer's own words — it goes live on the site immediately.</div>
+    <form id="addForm">
+      <div class="addgrid">
+        <div>
+          <label for="af-name">Customer name</label>
+          <input id="af-name" required maxlength="60" placeholder="e.g. Srinivas, Kukatpally">
+        </div>
+        <div>
+          <label for="af-rating">Rating</label>
+          <select id="af-rating">
+            <option value="5" selected>5 — Excellent</option>
+            <option value="4">4 — Good</option>
+            <option value="3">3 — Okay</option>
+            <option value="2">2 — Poor</option>
+            <option value="1">1 — Bad</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="af-product">Product (optional)</label>
+          <input id="af-product" list="af-slugs" placeholder="general">
+          <datalist id="af-slugs"></datalist>
+        </div>
+        <div class="full">
+          <label for="af-comment">Review text (customer's words)</label>
+          <textarea id="af-comment" required maxlength="600" placeholder="Paste the WhatsApp message here"></textarea>
+        </div>
+      </div>
+      <div class="acts" style="margin-top:0.8rem;">
+        <button type="submit" class="btn green">Add review</button>
+        <span class="addmsg" id="addMsg"></span>
+      </div>
+    </form>
   </div>
   <div class="filters" id="filters">
     <button class="fb active" data-f="all">All <span id="c-all">0</span></button>
@@ -61,7 +106,33 @@ async function load(){
   const r=await AdminAPI.db('reviews','select',{order:'created_at.desc'});
   all=r.data||[];
   render();
+  loadSlugs();
 }
+async function loadSlugs(){
+  try{
+    const r=await AdminAPI.db('products','select',{select:'slug',order:'slug.asc'});
+    const dl=document.getElementById('af-slugs');
+    dl.innerHTML=(r.data||[]).map(p=>`<option value="${esc(p.slug)}">`).join('');
+  }catch(e){}
+}
+document.getElementById('addForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const msg=document.getElementById('addMsg');
+  const name=document.getElementById('af-name').value.trim();
+  const comment=document.getElementById('af-comment').value.trim();
+  const rating=parseInt(document.getElementById('af-rating').value,10);
+  const product=document.getElementById('af-product').value.trim()||'general';
+  if(!name||!comment) return;
+  msg.className='addmsg'; msg.textContent='Saving…';
+  const r=await AdminAPI.db('reviews','insert',{values:{name,comment,rating,product_slug:product,status:'approved'}});
+  if(r&&r.data&&r.data.length){
+    msg.className='addmsg ok'; msg.textContent='Added — live on the site.';
+    document.getElementById('addForm').reset();
+    all.unshift(r.data[0]); render();
+  }else{
+    msg.className='addmsg err'; msg.textContent=(r&&r.error)||'Could not save. Try again.';
+  }
+});
 function render(){
   const counts={all:all.length,pending:0,approved:0,hidden:0};
   all.forEach(r=>{ counts[r.status]=(counts[r.status]||0)+1; });
@@ -81,8 +152,8 @@ function render(){
       <div class="meta">${new Date(r.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
       <div class="acts">
         ${r.status!=='approved'?`<button class="btn green" onclick="setStatus('${r.id}','approved')">✓ Approve</button>`:''}
-        ${r.status!=='hidden'?`<button class="btn" onclick="setStatus('${r.id}','hidden')">🚫 Hide</button>`:''}
-        <button class="btn red" onclick="del('${r.id}')">🗑 Delete</button>
+        ${r.status!=='hidden'?`<button class="btn" onclick="setStatus('${r.id}','hidden')">Hide</button>`:''}
+        <button class="btn red" onclick="del('${r.id}')">Delete</button>
       </div>
     </div>`).join('');
 }

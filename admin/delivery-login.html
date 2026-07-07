@@ -89,7 +89,7 @@ body{
 
 <div class="login-card">
   <div class="logo-area">
-    <div class="logo-icon">🚚</div>
+    <div class="logo-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
     <div class="logo-title">ANGADI <span>DELIVERY</span></div>
     <div class="logo-sub">Partner Login</div>
   </div>
@@ -103,7 +103,7 @@ body{
   <input class="form-input" id="password" type="password" placeholder="Enter your password" autocomplete="current-password">
 
   <button class="btn-login" id="loginBtn" onclick="doLogin()">
-    🚚 Sign In
+    Sign In
   </button>
 
   <a href="../login.html" class="back-link">← Customer Login</a>
@@ -141,10 +141,10 @@ async function doLogin() {
   btn.disabled = false;
 
   if (r.token) {
-    btn.textContent = '✅ Logging in...';
+    btn.textContent = 'Logging in…';
     setTimeout(() => { window.location.href = 'delivery-partner.html'; }, 400);
   } else {
-    btn.textContent = '🚚 Sign In';
+    btn.textContent = 'Sign In';
     document.getElementById('username').classList.add('error');
     document.getElementById('password').classList.add('error');
     err.textContent = r.error || 'Invalid username or password. Contact admin.';

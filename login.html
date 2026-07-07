@@ -49,7 +49,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 .login-page{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
 @media(max-width:768px){.login-page{grid-template-columns:1fr;}.brand-panel{display:none;}}
 .brand-panel{position:relative;overflow:hidden;display:flex;flex-direction:column;padding:3rem;}
-.brand-bg{position:absolute;inset:0;background:url('ux ui design/ChatGPT Image Jun 2, 2026, 10_49_18 PM.png') center/cover no-repeat;}
+.brand-bg{position:absolute;inset:0;background:url('ux ui design/hero-shepherd-sunset.png') center/cover no-repeat;}
 .brand-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,5,3,0.9) 0%,rgba(8,5,3,0.6) 60%,rgba(8,5,3,0.85) 100%);}
 .brand-content{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;}
 .brand-logo{display:flex;align-items:center;text-decoration:none;margin-bottom:auto;}
@@ -130,7 +130,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
   </div>
   <div class="role-grid">
     <div class="role-card customer" onclick="showCustomerLogin()">
-      <div class="role-icon">🛒</div>
+      <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg></div>
       <div>
         <div class="role-name">Customer</div>
         <div class="role-desc">Order fresh village meat delivered to your door</div>
@@ -138,7 +138,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
       <div class="role-btn">Sign In / Sign Up</div>
     </div>
     <a class="role-card admin" href="admin/dashboard.html">
-      <div class="role-icon">⚙️</div>
+      <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
       <div>
         <div class="role-name">Admin</div>
         <div class="role-desc">Manage orders, products and the business</div>
@@ -146,7 +146,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
       <div class="role-btn">Admin Dashboard</div>
     </a>
     <a class="role-card delivery" href="admin/delivery-login.html">
-      <div class="role-icon">🚚</div>
+      <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
       <div>
         <div class="role-name">Delivery Partner</div>
         <div class="role-desc">View your assigned orders and deliveries</div>
@@ -169,10 +169,9 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <h2 class="brand-title">Login to <span>Angadi</span></h2>
         <p class="brand-sub">Order <strong>free-range goat, country chicken</strong> & farm eggs sourced directly from Telangana villages.</p>
         <div class="brand-pills">
-          <span class="brand-pill">🌾 Village Sourced</span>
-          <span class="brand-pill">❄️ Cold Chain</span>
-          <span class="brand-pill">✂️ Cut to Order</span>
-          <span class="brand-pill">✅ FSSAI</span>
+          <span class="brand-pill">Village Sourced</span>
+          <span class="brand-pill">Cold Chain</span>
+          <span class="brand-pill">Cut to Order</span>
         </div>
       </div>
     </div>
@@ -188,8 +187,8 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
       </div>
 
       <div class="method-tabs" id="methodTabs">
-        <div class="method-tab active" data-method="email" onclick="switchMethod('email')">✉️ Email</div>
-        <div class="method-tab" data-method="phone" onclick="switchMethod('phone')">📱 Phone OTP</div>
+        <div class="method-tab active" data-method="email" onclick="switchMethod('email')">Email</div>
+        <div class="method-tab" data-method="phone" onclick="switchMethod('phone')">Phone OTP</div>
       </div>
 
       <!-- SIGN IN -->
@@ -206,7 +205,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
           </div>
           <div class="form-group">
             <label class="form-label" style="display:flex;justify-content:space-between;">Password <a href="#" onclick="showView('forgot-password');return false;" style="color:rgba(246,237,216,0.35);font-size:0.7rem;text-decoration:none;">Forgot?</a></label>
-            <div class="pw-wrap"><input class="form-input" id="siPass" type="password" placeholder="Your password"><button type="button" class="pw-toggle" onclick="togglePw('siPass',this)">👁</button></div>
+            <div class="pw-wrap"><input class="form-input" id="siPass" type="password" placeholder="Your password"><button type="button" class="pw-toggle" onclick="togglePw('siPass',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div>
             <span class="field-error" id="siPassErr">Password is required</span>
           </div>
           <button type="submit" class="btn-primary" id="siBtn">Sign In →</button>
@@ -222,9 +221,9 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <form id="signupForm" novalidate>
           <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="suName" type="text" placeholder="Your full name"><span class="field-error" id="suNameErr">Please enter your name</span></div>
           <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="suEmail" type="email" placeholder="you@email.com"><span class="field-error" id="suEmailErr">Enter a valid email</span></div>
-          <div class="form-group"><label class="form-label">Phone (optional)</label><div class="phone-wrap" id="suPhoneWrap"><span class="phone-prefix">🇮🇳 +91</span><input class="phone-input" id="suPhone" type="tel" placeholder="9876543210"></div><span class="field-error" id="suPhoneErr">Enter valid 10-digit number</span></div>
-          <div class="form-group"><label class="form-label">Password</label><div class="pw-wrap"><input class="form-input" id="suPass" type="password" placeholder="Min 8 characters"><button type="button" class="pw-toggle" onclick="togglePw('suPass',this)">👁</button></div><span class="field-error" id="suPassErr">Min 8 characters</span></div>
-          <div class="form-group"><label class="form-label">Confirm Password</label><div class="pw-wrap"><input class="form-input" id="suPass2" type="password" placeholder="Repeat password"><button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)">👁</button></div><span class="field-error" id="suPass2Err">Passwords do not match</span></div>
+          <div class="form-group"><label class="form-label">Phone (optional)</label><div class="phone-wrap" id="suPhoneWrap"><span class="phone-prefix">+91</span><input class="phone-input" id="suPhone" type="tel" placeholder="9876543210"></div><span class="field-error" id="suPhoneErr">Enter valid 10-digit number</span></div>
+          <div class="form-group"><label class="form-label">Password</label><div class="pw-wrap"><input class="form-input" id="suPass" type="password" placeholder="Min 8 characters"><button type="button" class="pw-toggle" onclick="togglePw('suPass',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPassErr">Min 8 characters</span></div>
+          <div class="form-group"><label class="form-label">Confirm Password</label><div class="pw-wrap"><input class="form-input" id="suPass2" type="password" placeholder="Repeat password"><button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPass2Err">Passwords do not match</span></div>
           <button type="submit" class="btn-primary" id="suBtn">Create Account →</button>
         </form>
         <p class="terms-note">By signing up you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a></p>
@@ -245,7 +244,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 
       <!-- EMAIL VERIFY -->
       <div class="auth-view" id="view-email-verify">
-        <div class="success-icon">📧</div>
+        <div class="success-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 7l9.5 6.5L21.5 7"/></svg></div>
         <div class="view-eyebrow">Check Your Email</div>
         <h1 class="view-title">Verify <span>Email</span></h1>
         <p class="view-sub">We sent a link to <strong id="verifyEmailDisplay"></strong>. Click it to activate.</p>
@@ -258,7 +257,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <h1 class="view-title">Enter <span>Phone</span></h1>
         <p class="view-sub">We'll send a one-time OTP. No password needed.</p>
         <div class="auth-status" id="phone-status"></div>
-        <div class="form-group"><label class="form-label">Phone Number</label><div class="phone-wrap" id="phoneWrap"><span class="phone-prefix">🇮🇳 +91</span><input class="phone-input" id="phoneInput" type="tel" placeholder="9876543210" maxlength="10"></div><span class="field-error" id="phoneErr">Enter valid 10-digit number</span></div>
+        <div class="form-group"><label class="form-label">Phone Number</label><div class="phone-wrap" id="phoneWrap"><span class="phone-prefix">+91</span><input class="phone-input" id="phoneInput" type="tel" placeholder="9876543210" maxlength="10"></div><span class="field-error" id="phoneErr">Enter valid 10-digit number</span></div>
         <button class="btn-primary" id="sendOtpBtn" onclick="sendOTP()">Send OTP →</button>
       </div>
 
@@ -291,7 +290,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 
       <!-- SUCCESS -->
       <div class="auth-view" id="view-success">
-        <div class="success-icon">🎉</div>
+        <div class="success-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--green,#4CAF50)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></svg></div>
         <div class="view-eyebrow">Welcome!</div>
         <h1 class="view-title">You're <span>In!</span></h1>
         <p class="view-sub"><span id="redirectMsg">Taking you to the shop…</span></p>
@@ -317,7 +316,9 @@ function switchMethod(method){document.querySelectorAll('.method-tab').forEach(t
 function setStatus(id,type,msg){const el=document.getElementById(id);el.className='auth-status '+type+' visible';el.textContent=msg;}
 function clearStatus(id){const el=document.getElementById(id);el.className='auth-status';el.textContent='';}
 function setLoading(btnId,loading,label){const btn=document.getElementById(btnId);btn.disabled=loading;if(loading)btn.textContent='Please wait…';else if(label)btn.textContent=label;}
-function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈';}
+const PW_EYE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+const PW_EYE_OFF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><line x1="4" y1="4" x2="20" y2="20"/></svg>';
+function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.innerHTML=i.type==='password'?PW_EYE:PW_EYE_OFF;}
 function getRedirect(){const p=new URLSearchParams(window.location.search).get('redirect');if(p)return p;const r=document.referrer;if(r.includes('checkout'))return 'checkout.html';if(r.includes('cart'))return 'cart.html';return 'shop.html';}
 function saveLocalUser(d){const e=JSON.parse(localStorage.getItem('angadi_user')||'{}');localStorage.setItem('angadi_user',JSON.stringify({...e,...d,loggedIn:true}));}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}

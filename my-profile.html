@@ -229,8 +229,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <li><a href="my-profile.html" class="active">My Profile</a></li>
   </ul>
   <div class="nav-right">
-    <a href="cart.html" class="nav-cart">🛒<span class="cart-badge" id="cartBadge">0</span></a>
-    <a href="my-orders.html" class="btn-nav">📦 My Orders</a>
+    <a href="cart.html" class="nav-cart"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg><span class="cart-badge" id="cartBadge">0</span></a>
+    <a href="my-orders.html" class="btn-nav">My Orders</a>
     <a href="shop.html" class="btn-nav">Shop Now</a>
     <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
   </div>
@@ -263,9 +263,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
         <div class="profile-eyebrow">My Account</div>
         <div class="profile-name" id="profileName">Loading…</div>
         <div class="profile-contact">
-          <div class="profile-contact-item"><span>📱</span><span id="profilePhone">—</span></div>
-          <div class="profile-contact-item"><span>✉️</span><span id="profileEmail">—</span></div>
-          <div class="profile-contact-item"><span>📍</span><span id="profileCity">Hyderabad</span></div>
+          <div class="profile-contact-item"><span id="profilePhone">—</span></div>
+          <div class="profile-contact-item"><span id="profileEmail">—</span></div>
+          <div class="profile-contact-item"><span id="profileCity">Hyderabad</span></div>
         </div>
       </div>
       <div class="profile-stats" id="profileStats">
@@ -283,23 +283,23 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <div class="sidebar-nav">
       <div class="sidebar-menu">
         <a class="sidebar-item active" data-section="personal" onclick="showSection('personal');return false;" href="#">
-          <span class="icon">👤</span> Personal Info
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span> Personal Info
         </a>
         <a class="sidebar-item" data-section="addresses" onclick="showSection('addresses');return false;" href="#">
-          <span class="icon">📍</span> Addresses
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.3-6-10a6 6 0 1 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg></span> Addresses
         </a>
         <a class="sidebar-item" data-section="password" onclick="showSection('password');return false;" href="#">
-          <span class="icon">🔒</span> Password
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span> Password
         </a>
         <a class="sidebar-item" data-section="notifications" onclick="showSection('notifications');return false;" href="#">
-          <span class="icon">🔔</span> Notifications
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg></span> Notifications
         </a>
         <div class="sidebar-divider"></div>
         <a class="sidebar-item" href="my-orders.html">
-          <span class="icon">📦</span> My Orders
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span> My Orders
         </a>
         <a class="sidebar-item danger" onclick="logout();return false;" href="#">
-          <span class="icon">🚪</span> Logout
+          <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span> Logout
         </a>
       </div>
     </div>
@@ -335,7 +335,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
               <div class="form-group">
                 <label class="form-label">Date of Birth (optional)</label>
                 <input class="form-input" id="pDob" type="date">
-                <span class="form-hint">We'll send a birthday surprise 🎁</span>
+                <span class="form-hint">We'll send a birthday surprise</span>
               </div>
             </div>
             <div class="form-row full">
@@ -412,9 +412,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
                 <div class="form-group">
                   <label class="form-label">Address Type</label>
                   <select class="form-input form-select" id="aType">
-                    <option value="Home">🏠 Home</option>
-                    <option value="Work">🏢 Work</option>
-                    <option value="Other">📍 Other</option>
+                    <option value="Home">Home</option>
+                    <option value="Work">Work</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
@@ -441,7 +441,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
           <p class="section-card-sub">Update your account password. Leave blank if you signed up with Phone OTP only.</p>
 
           <div class="auth-status info visible" id="pwPhoneNote" style="background:rgba(196,98,45,0.08);border:1px solid var(--border);color:var(--clay-l);border-radius:10px;padding:0.8rem 1rem;font-size:0.82rem;margin-bottom:1.5rem;display:none;">
-            📱 You signed in with Phone OTP. To set a password, enter a new one below — no current password needed.
+            You signed in with Phone OTP. To set a password, enter a new one below — no current password needed.
           </div>
 
           <form id="passwordForm" novalidate>
@@ -450,7 +450,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
                 <label class="form-label">Current Password</label>
                 <div class="pw-wrap">
                   <input class="form-input" id="pwCurrent" type="password" placeholder="Your current password">
-                  <button type="button" class="pw-toggle" onclick="togglePw('pwCurrent',this)">👁</button>
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwCurrent',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button>
                 </div>
               </div>
             </div>
@@ -459,14 +459,14 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
                 <label class="form-label">New Password *</label>
                 <div class="pw-wrap">
                   <input class="form-input" id="pwNew" type="password" placeholder="Min. 8 characters">
-                  <button type="button" class="pw-toggle" onclick="togglePw('pwNew',this)">👁</button>
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwNew',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button>
                 </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Confirm New Password *</label>
                 <div class="pw-wrap">
                   <input class="form-input" id="pwConfirm" type="password" placeholder="Re-enter new password">
-                  <button type="button" class="pw-toggle" onclick="togglePw('pwConfirm',this)">👁</button>
+                  <button type="button" class="pw-toggle" onclick="togglePw('pwConfirm',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button>
                 </div>
               </div>
             </div>
@@ -512,7 +512,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
           <div class="notif-list">
             <div class="notif-item">
               <div class="notif-left">
-                <div class="notif-icon">💬</div>
+                <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.4-5.6A8.5 8.5 0 1 1 21 12z"/></svg></div>
                 <div>
                   <div class="notif-info-title">WhatsApp Order Updates</div>
                   <div class="notif-info-sub">Confirmed, out for delivery, delivered — on WhatsApp</div>
@@ -522,7 +522,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
             </div>
             <div class="notif-item">
               <div class="notif-left">
-                <div class="notif-icon">📱</div>
+                <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><line x1="11" y1="18.5" x2="13" y2="18.5"/></svg></div>
                 <div>
                   <div class="notif-info-title">SMS Alerts</div>
                   <div class="notif-info-sub">Order confirmation and delivery SMS</div>
@@ -532,7 +532,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
             </div>
             <div class="notif-item">
               <div class="notif-left">
-                <div class="notif-icon">✉️</div>
+                <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 7l9.5 6.5L21.5 7"/></svg></div>
                 <div>
                   <div class="notif-info-title">Email Receipts</div>
                   <div class="notif-info-sub">Order invoices and receipts by email</div>
@@ -542,7 +542,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
             </div>
             <div class="notif-item">
               <div class="notif-left">
-                <div class="notif-icon">🎁</div>
+                <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4"/><rect x="5" y="12" width="14" height="9"/><line x1="12" y1="8" x2="12" y2="21"/><path d="M12 8c-2 0-4.5-.8-4.5-2.8S10 2.5 12 8zM12 8c2 0 4.5-.8 4.5-2.8S14 2.5 12 8z"/></svg></div>
                 <div>
                   <div class="notif-info-title">Offers & Promotions</div>
                   <div class="notif-info-sub">Seasonal discounts and new product alerts</div>
@@ -552,7 +552,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
             </div>
             <div class="notif-item">
               <div class="notif-left">
-                <div class="notif-icon">🔔</div>
+                <div class="notif-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg></div>
                 <div>
                   <div class="notif-info-title">Fresh Stock Alerts</div>
                   <div class="notif-info-sub">When baby goat legs or seasonal items are available</div>
@@ -575,11 +575,11 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   <!-- DANGER ZONE (always shown below) -->
   <div style="max-width:1100px;margin:0 auto;padding:0 4rem 5rem;" id="dangerZoneWrap">
     <div class="danger-zone">
-      <div class="danger-zone-title">⚠️ Danger Zone</div>
+      <div class="danger-zone-title">Danger Zone</div>
       <p class="danger-zone-sub">These actions are permanent. Logging out ends your current session. Deleting your account removes all your data from our system.</p>
       <div class="danger-actions">
-        <button class="btn-danger" onclick="logout()">🚪 Logout</button>
-        <button class="btn-danger" onclick="deleteAccount()" style="opacity:0.7;">🗑 Delete Account</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+        <button class="btn-danger" onclick="deleteAccount()" style="opacity:0.7;">Delete Account</button>
       </div>
     </div>
   </div>
@@ -719,7 +719,7 @@ function renderAddresses() {
   grid.innerHTML = savedAddresses.map((addr, idx) => `
     <div class="address-card ${addr.is_default ? 'default' : ''}">
       ${addr.is_default ? '<div class="address-default-badge">Default</div>' : ''}
-      <div class="address-type">${addr.type === 'Home' ? '🏠' : addr.type === 'Work' ? '🏢' : '📍'} ${addr.type || 'Home'}</div>
+      <div class="address-type">${addr.type || 'Home'}</div>
       <div class="address-text">
         ${addr.flat}<br>
         ${addr.area}${addr.landmark ? ', ' + addr.landmark : ''}<br>
@@ -727,7 +727,7 @@ function renderAddresses() {
       </div>
       <div class="address-actions">
         <button class="btn-address-action" onclick="editAddress(${idx})">✎ Edit</button>
-        ${!addr.is_default ? `<button class="btn-address-action" onclick="setDefaultAddress(${idx})">⭐ Set Default</button>` : ''}
+        ${!addr.is_default ? `<button class="btn-address-action" onclick="setDefaultAddress(${idx})">Set Default</button>` : ''}
         ${savedAddresses.length > 1 ? `<button class="btn-address-action danger" onclick="deleteAddress(${idx})">✕ Remove</button>` : ''}
       </div>
     </div>
@@ -938,10 +938,12 @@ function deleteAccount() {
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
+const PW_EYE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+const PW_EYE_OFF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><line x1="4" y1="4" x2="20" y2="20"/></svg>';
 function togglePw(id, btn) {
   const inp = document.getElementById(id);
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  btn.innerHTML = inp.type === 'password' ? PW_EYE : PW_EYE_OFF;
 }
 function setLoading(btnId, loading, label='') {
   const btn = document.getElementById(btnId);

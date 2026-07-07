@@ -172,8 +172,8 @@ body{
     </div>
     <iframe id="mapFrame" src="" loading="lazy"></iframe>
     <div class="map-footer">
-      <a id="mapNav" href="#" target="_blank" class="map-btn btn-map">🧭 Directions</a>
-      <a id="mapOpen" href="#" target="_blank" class="map-btn" style="background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);">🗺 Open Maps</a>
+      <a id="mapNav" href="#" target="_blank" class="map-btn btn-map">Directions</a>
+      <a id="mapOpen" href="#" target="_blank" class="map-btn" style="background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);">Open Maps</a>
     </div>
   </div>
 </div>
@@ -210,7 +210,7 @@ function saveMyStatus(s){ localStorage.setItem('angadi_partner_status_'+partnerU
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN'); }
 function formatTime(iso){ const d=new Date(iso); return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
 function addrStr(a){ return [a?.flat,a?.area,a?.city||'Hyderabad'].filter(Boolean).join(', '); }
-const STAGE_LABEL = {assigned:'Assigned',picked_up:'Picked Up',out_for_delivery:'Out for Delivery',delivered:'✅ Delivered'};
+const STAGE_LABEL = {assigned:'Assigned',picked_up:'Picked Up',out_for_delivery:'Out for Delivery',delivered:'Delivered'};
 
 // ── STATS ──
 function renderStats(){
@@ -231,7 +231,7 @@ async function setStatus(s){
   saveMyStatus(s);
   document.querySelectorAll('.status-btn').forEach(b => b.classList.toggle('active', b.dataset.status === s));
   const txt = document.getElementById('statusText');
-  if (txt) txt.textContent = s === 'available' ? '🟢 Available' : s === 'busy' ? '🟡 On Delivery' : '⚫ Offline';
+  if (txt) txt.textContent = s === 'available' ? '● Available' : s === 'busy' ? '● On Delivery' : '● Offline';
   renderOffers();
   try { await AdminAPI.partner('partner-status', { status: s }); } catch(e){}
 }
@@ -243,11 +243,11 @@ function renderOffers(){
   const offers = allOrders.filter(o => o.status==='ready' && !o.assignedTo)
                           .sort((a,b)=> new Date(a.readyAt||a.placedAt) - new Date(b.readyAt||b.placedAt));
   if (currentStatus !== 'available'){
-    container.innerHTML = `<div class="empty"><div class="empty-icon">😴</div><h3>You're ${currentStatus==='busy'?'On Delivery':'Offline'}</h3><p>Switch to <strong>Available</strong> to receive new order offers.</p></div>`;
+    container.innerHTML = `<div class="empty"><h3>You're ${currentStatus==='busy'?'On Delivery':'Offline'}</h3><p>Switch to <strong>Available</strong> to receive new order offers.</p></div>`;
     return;
   }
   if (!offers.length){
-    container.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><h3>No Open Offers</h3><p>New orders ready for pickup will appear here.</p></div>`;
+    container.innerHTML = `<div class="empty"><h3>No Open Offers</h3><p>New orders ready for pickup will appear here.</p></div>`;
     return;
   }
   container.innerHTML = offers.map(o => {
@@ -259,20 +259,20 @@ function renderOffers(){
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
             <span class="order-id">${o.orderId}</span>
-            <span class="status-pill ready"><span class="dot"></span>📣 New Offer</span>
+            <span class="status-pill ready"><span class="dot"></span>New Offer</span>
           </div>
-          <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
-          <div class="order-address">📍 ${addr||'—'}</div>
-          <div class="order-slot">🚚 ${o.customer?.slot||'—'}</div>
+          <div class="order-customer">${o.customer?.name||'—'}</div>
+          <div class="order-address">${addr||'—'}</div>
+          <div class="order-slot">${o.customer?.slot||'—'}</div>
           <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
         </div>
         <div class="order-amount">
           <div class="order-total">${fmt(o.total||0)}</div>
-          <div class="order-pay">${o.payment==='cod'?'💵 COD':'✅ Paid'}</div>
+          <div class="order-pay">${o.payment==='cod'?'COD':'Paid'}</div>
         </div>
       </div>
       <div class="order-actions">
-        <button class="btn-action btn-deliver" style="flex:1;" onclick="acceptOffer('${o.orderId}')">✋ Accept Order</button>
+        <button class="btn-action btn-deliver" style="flex:1;" onclick="acceptOffer('${o.orderId}')">Accept Order</button>
       </div>
     </div>`;
   }).join('');
@@ -281,9 +281,9 @@ function renderOffers(){
 // Race-safe claim — only succeeds if still ready & unassigned (checked server-side)
 async function acceptOffer(orderId){
   const r = await AdminAPI.partner('partner-accept', { orderId });
-  if (r.error){ showToast('⚠ '+r.error); return; }
-  if (r.taken){ showToast('😕 Order already taken by another partner'); await refresh(); return; }
-  showToast('✅ You accepted '+orderId+'!');
+  if (r.error){ showToast(''+r.error); return; }
+  if (r.taken){ showToast('Order already taken by another partner'); await refresh(); return; }
+  showToast('You accepted '+orderId+'!');
   await refresh();
 }
 
@@ -296,7 +296,7 @@ function renderOrders(){
   if(!mine.length){
     container.innerHTML = `
       <div class="empty">
-        <div class="empty-icon">📦</div>
+        
         <h3>No Orders Assigned</h3>
         <p>Accept an offer above to start delivering.</p>
       </div>`;
@@ -309,14 +309,14 @@ function renderOrders(){
     const a = o.customer?.address||{};
     const addr = addrStr(a);
     const addrEnc = (a.lat && a.lng) ? `${a.lat},${a.lng}` : encodeURIComponent([a.flat, a.area, a.city||'Hyderabad','Telangana'].filter(Boolean).join(', '));
-    const waText = encodeURIComponent(`Hi ${o.customer?.name||''}! Your Angadi order ${o.orderId} is on the way. 🚚`);
+    const waText = encodeURIComponent(`Hi ${o.customer?.name||''}! Your Angadi order ${o.orderId} is on the way.`);
     const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' · ');
 
     let actionBtn = '';
-    if (o.status==='assigned')              actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','picked_up')">📍 Reached Store · Confirm Pickup</button>`;
-    else if (o.status==='picked_up')        actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','out_for_delivery')">🚚 Start Delivery</button>`;
-    else if (o.status==='out_for_delivery') actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','delivered')">✅ Mark Delivered</button>`;
-    else                                    actionBtn = `<div class="btn-action btn-delivered">✅ Delivered</div>`;
+    if (o.status==='assigned')              actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','picked_up')">Reached Store · Confirm Pickup</button>`;
+    else if (o.status==='picked_up')        actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','out_for_delivery')">Start Delivery</button>`;
+    else if (o.status==='out_for_delivery') actionBtn = `<button class="btn-action btn-deliver" onclick="advance('${o.orderId}','delivered')">Mark Delivered</button>`;
+    else                                    actionBtn = `<div class="btn-action btn-delivered">Delivered</div>`;
 
     return `
     <div class="order-card" id="card-${o.orderId}">
@@ -326,19 +326,19 @@ function renderOrders(){
             <span class="order-id">${o.orderId}</span>
             <span class="status-pill ${o.status}"><span class="dot"></span>${STAGE_LABEL[o.status]||o.status}</span>
           </div>
-          <div class="order-time">🕐 ${formatTime(o.placedAt||new Date().toISOString())}</div>
-          <div class="order-customer">👤 ${o.customer?.name||'—'}</div>
-          <div class="order-address">📍 ${addr||'—'}</div>
-          <div class="order-slot">🚚 ${o.customer?.slot||'—'}</div>
+          <div class="order-time">${formatTime(o.placedAt||new Date().toISOString())}</div>
+          <div class="order-customer">${o.customer?.name||'—'}</div>
+          <div class="order-address">${addr||'—'}</div>
+          <div class="order-slot">${o.customer?.slot||'—'}</div>
           <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
         </div>
         <div class="order-amount">
           <div class="order-total">${fmt(o.total||0)}</div>
-          <div class="order-pay">${o.payment==='cod'?'💵 COD':'✅ Paid'}</div>
+          <div class="order-pay">${o.payment==='cod'?'COD':'Paid'}</div>
         </div>
       </div>
       <div class="order-actions">
-        <button class="btn-action btn-map" onclick="openMap('${o.customer?.name||''}','${addr}','${addrEnc}','${addrEnc}')">🗺 Map</button>
+        <button class="btn-action btn-map" onclick="openMap('${o.customer?.name||''}','${addr}','${addrEnc}','${addrEnc}')">Map</button>
         ${actionBtn}
       </div>
     </div>`;
@@ -348,8 +348,8 @@ function renderOrders(){
 async function advance(orderId, newStatus){
   // status timestamps + delivery_boys sync happen server-side
   const r = await AdminAPI.partner('partner-advance', { orderId, status: newStatus });
-  if (r.error){ showToast('⚠ '+r.error); return; }
-  if (newStatus==='delivered') showToast('🎉 Order '+orderId+' delivered!');
+  if (r.error){ showToast(''+r.error); return; }
+  if (newStatus==='delivered') showToast('Order '+orderId+' delivered!');
   else showToast('✓ '+orderId+' → '+(STAGE_LABEL[newStatus]||newStatus));
   await refresh();
 }
@@ -369,11 +369,11 @@ function notifyNewOffers(){
   if (currentStatus !== 'available') return;
   if (!fresh.length) return;
   const o = fresh[0];
-  showToast(`🔔 New order available — ${o.customer?.name||''} · ${fmt(o.total||0)}`);
+  showToast(`New order available — ${o.customer?.name||''} · ${fmt(o.total||0)}`);
   beep();
   try {
     if ('Notification' in window && Notification.permission === 'granted'){
-      new Notification('🛵 New Angadi delivery!', {
+      new Notification('New Angadi delivery', {
         body: `${o.customer?.name||'Customer'} · ${addrStr(o.customer?.address)} · ${fmt(o.total||0)}`,
         icon: '../angadi/Andadi logo .png'
       });
@@ -385,7 +385,7 @@ async function refresh(){ await loadOrders(); notifyNewOffers(); renderStats(); 
 
 // ── MAP ──
 function openMap(name, addr, addrEnc){
-  document.getElementById('mapTitle').textContent = name ? '📍 '+name : 'Customer Location';
+  document.getElementById('mapTitle').textContent = name ? ''+name : 'Customer Location';
   document.getElementById('mapAddr').textContent = decodeURIComponent(addrEnc);
   document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${addrEnc}&output=embed&hl=en`;
   document.getElementById('mapNav').href = `https://www.google.com/maps/dir/?api=1&destination=${addrEnc}`;
@@ -445,7 +445,7 @@ else init();
 <!-- STATUS -->
 <div class="status-bar">
   <div class="status-label">
-    <strong id="statusText">🟢 Available</strong>
+    <strong id="statusText">● Available</strong>
     Your current status
   </div>
   <div class="status-btns">

@@ -157,18 +157,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
       <div class="sidebar-logo-sub">Admin Panel</div>
     </div>
     <nav class="sidebar-nav">
-      <a class="sidebar-link" href="dashboard.html"><span class="icon">📊</span> <span>Dashboard</span></a>
-      <a class="sidebar-link" href="orders.html"><span class="icon">📦</span> <span>Orders</span></a>
-      <a class="sidebar-link active" href="products.html"><span class="icon">🥩</span> <span>Products</span></a>
+      <a class="sidebar-link" href="dashboard.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="19" y1="20" x2="19" y2="9"/></svg></span> <span>Dashboard</span></a>
+      <a class="sidebar-link" href="orders.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span> <span>Orders</span></a>
+      <a class="sidebar-link active" href="products.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4L11 3.8H4v7l9.6 9.6a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8z"/><circle cx="8" cy="8" r="1.4"/></svg></span> <span>Products</span></a>
       <div class="sidebar-divider"></div>
-      <a class="sidebar-link" href="delivery.html"><span class="icon">🚚</span> <span>Delivery</span></a>
+      <a class="sidebar-link" href="delivery.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></span> <span>Delivery</span></a>
       <div class="sidebar-divider"></div>
-      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon">🛒</span> <span>View Shop</span></a>
-      <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon">🌐</span> <span>View Site</span></a>
+      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg></span> <span>View Shop</span></a>
+      <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.6 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3z"/></svg></span> <span>View Site</span></a>
     </nav>
     <div class="sidebar-bottom">
       <div class="sidebar-user">Logged in as<strong>Admin</strong></div>
-      <button class="btn-logout" onclick="adminLogout()">🚪 <span>Logout</span></button>
+      <button class="btn-logout" onclick="adminLogout()"><span>Logout</span></button>
     </div>
   </aside>
 
@@ -187,10 +187,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
       <div id="boardSection" style="margin-bottom:2rem;background:rgba(212,160,23,0.06);border:1px solid rgba(212,160,23,0.25);border-radius:16px;padding:1.2rem 1.3rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;margin-bottom:1rem;">
           <div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.08em;color:#F6EDD8;">🌅 Today's Market Board</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.08em;color:#F6EDD8;">Today's Market Board</div>
             <div style="font-size:0.78rem;color:rgba(246,237,216,0.45);margin-top:0.2rem;">Set today's cut time and stock for each product, then publish. Customers see this live.</div>
           </div>
-          <button onclick="publishBoard()" id="publishBtn" style="background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:none;border-radius:10px;padding:0.65rem 1.4rem;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;">📣 Publish Board</button>
+          <button onclick="publishBoard()" id="publishBtn" style="background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:none;border-radius:10px;padding:0.65rem 1.4rem;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;">Publish Board</button>
         </div>
         <div id="boardRows" style="display:flex;flex-direction:column;gap:0.5rem;">
           <div style="color:rgba(246,237,216,0.35);font-size:0.82rem;">Loading products…</div>
@@ -247,8 +247,8 @@ function productToRow(p){
 // ── IMAGE UPLOAD — goes through the guarded API (admin token required) ──
 async function uploadProductImage(file, statusEl, previewEl, pathInputEl){
   if (!file) return;
-  if (!file.type.startsWith('image/')) { showToast('⚠ Please pick an image file'); return; }
-  if (file.size > 4*1024*1024) { showToast('⚠ Image must be under 4MB'); return; }
+  if (!file.type.startsWith('image/')) { showToast('Please pick an image file'); return; }
+  if (file.size > 4*1024*1024) { showToast('Image must be under 4MB'); return; }
   const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
   const name = 'product-' + Date.now() + '.' + ext;
   if (statusEl) { statusEl.textContent = '⏳ Uploading…'; statusEl.classList.add('uploading'); }
@@ -267,7 +267,7 @@ async function uploadProductImage(file, statusEl, previewEl, pathInputEl){
     showToast('✓ Image uploaded');
   } catch(e){
     console.error('upload failed', e);
-    showToast('⚠ Upload failed: ' + (e.message||e));
+    showToast('Upload failed: ' + (e.message||e));
     if (statusEl){ statusEl.textContent = '✗ Failed'; statusEl.classList.remove('uploading'); }
   }
 }
@@ -278,7 +278,7 @@ function imgUploadHTML(currentImg){
   return `
     <div class="img-upload-wrap">
       <button type="button" class="img-upload-btn" id="ef-img-btn" onclick="document.getElementById('ef-img-file').click()">
-        📷 Tap to upload product image
+        Tap to upload product image
       </button>
       <input type="file" id="ef-img-file" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
       ${preview}
@@ -300,7 +300,7 @@ function handleImgUpload(input){
 
 async function persistProduct(p){
   const { error } = await AdminAPI.db('products', 'upsert', { values: productToRow(p) });
-  if(error){ console.warn('save failed', error); showToast('⚠ Save failed: '+error); }
+  if(error){ console.warn('save failed', error); showToast('Save failed: '+error); }
 }
 
 const IS_ADMIN = AdminAPI.isAdmin();
@@ -314,15 +314,15 @@ function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'
 //  DEFAULT PRODUCTS
 // ─────────────────────────────────────────────
 const DEFAULT_PRODUCTS = [
-  { id:'goat-meat',     name:'Village Goat Meat', nameTE:'Meka Mamsam',    price:680,  unit:'kg',   img:'../product/mutton.png',          category:'goat',    badge:'⭐ Bestseller', inStock:true,  featured:true  },
-  { id:'country-chicken',name:'Country Chicken',  nameTE:'Nati Kodi',      price:520,  unit:'kg',   img:'../product/country chiken.png',  category:'chicken', badge:'🌿 Nati',      inStock:true,  featured:true  },
-  { id:'river-fish',    name:'Fresh River Fish',  nameTE:'Chepa Mukkalu',  price:450,  unit:'kg',   img:'../product/fish.png',            category:'fish',    badge:'🐟 River Fresh',inStock:true,  featured:true  },
-  { id:'goat-legs',     name:'Goat Legs',         nameTE:'Meka Kalu',      price:400,  unit:'4 pcs',img:'../product/legs.png',            category:'goat',    badge:'🦵 Fresh',     inStock:true,  featured:false },
-  { id:'goat-liver',    name:'Goat Liver',        nameTE:'Meka Kalleja',   price:1000, unit:'kg',   img:'../product/liver.png',           category:'goat',    badge:'💎 Premium',   inStock:true,  featured:false },
-  { id:'goat-head',     name:'Goat Head',         nameTE:'Meka Tala',      price:520,  unit:'head', img:'../product/head.png',            category:'goat',    badge:'🐐 Whole',     inStock:false, featured:false },
-  { id:'baby-goat-legs',name:'Baby Goat Legs',    nameTE:'Pilla Meka Kalu',price:980,  unit:'kg',   img:'../product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png',category:'goat',badge:'🏆 Premium',inStock:false,featured:false},
-  { id:'country-eggs',  name:'Country Eggs',      nameTE:'Nati Kodi Gudlu',price:12,   unit:'egg',  img:'../product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png',category:'eggs',badge:'🥚 Farm Fresh',inStock:true,featured:false},
-  { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/mutton.png',category:'goat',badge:'👑 Whole',inStock:true,featured:false},
+  { id:'goat-meat',     name:'Village Goat Meat', nameTE:'Meka Mamsam',    price:680,  unit:'kg',   img:'../product/mutton.png',          category:'goat',    badge:'Bestseller', inStock:true,  featured:true  },
+  { id:'country-chicken',name:'Country Chicken',  nameTE:'Nati Kodi',      price:520,  unit:'kg',   img:'../product/country chiken.png',  category:'chicken', badge:'Nati',      inStock:true,  featured:true  },
+  { id:'river-fish',    name:'Fresh River Fish',  nameTE:'Chepa Mukkalu',  price:450,  unit:'kg',   img:'../product/fish.png',            category:'fish',    badge:'River Fresh',inStock:true,  featured:true  },
+  { id:'goat-legs',     name:'Goat Legs',         nameTE:'Meka Kalu',      price:400,  unit:'4 pcs',img:'../product/legs.png',            category:'goat',    badge:'Fresh',     inStock:true,  featured:false },
+  { id:'goat-liver',    name:'Goat Liver',        nameTE:'Meka Kalleja',   price:1000, unit:'kg',   img:'../product/liver.png',           category:'goat',    badge:'Premium',   inStock:true,  featured:false },
+  { id:'goat-head',     name:'Goat Head',         nameTE:'Meka Tala',      price:520,  unit:'head', img:'../product/head.png',            category:'goat',    badge:'Whole',     inStock:false, featured:false },
+  { id:'baby-goat-legs',name:'Baby Goat Legs',    nameTE:'Pilla Meka Kalu',price:980,  unit:'kg',   img:'../product/baby-goat-legs.png',category:'goat',badge:'Premium',inStock:false,featured:false},
+  { id:'country-eggs',  name:'Country Eggs',      nameTE:'Nati Kodi Gudlu',price:12,   unit:'egg',  img:'../product/country-eggs.png',category:'eggs',badge:'Farm Fresh',inStock:true,featured:false},
+  { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/mutton.png',category:'goat',badge:'Whole',inStock:true,featured:false},
 ];
 
 let products = [];
@@ -339,7 +339,7 @@ async function init(){
   if (!error && data && data.length) products = data.map(rowToProduct);
   else {
     products = JSON.parse(localStorage.getItem('angadi_products')||JSON.stringify(DEFAULT_PRODUCTS));
-    if (error) showToast('⚠ Could not load live products — ' + error);
+    if (error) showToast('Could not load live products — ' + error);
   }
   renderProducts();
   renderBoardRows();
@@ -393,7 +393,7 @@ function buildCard(p, idx){
           </div>
           <button class="btn-sm" onclick="openEditProduct(${idx})" style="margin-left:auto;">✎ Edit</button>
           <button class="btn-sm" onclick="toggleFeatured(${idx})" title="Toggle featured on homepage" style="${p.featured?'color:var(--gold);border-color:rgba(212,160,23,0.3);background:rgba(212,160,23,0.08);':''}">
-            ${p.featured?'⭐ Featured':'☆ Feature'}
+            ${p.featured?'★ Featured':'☆ Feature'}
           </button>
         </div>
       </div>
@@ -475,7 +475,7 @@ function openEditProduct(idx){
       </div>
       <div class="form-group">
         <label class="form-label">Badge Text</label>
-        <input class="form-input" id="ef-badge" type="text" value="${p.badge||''}" placeholder="e.g. ⭐ Bestseller">
+        <input class="form-input" id="ef-badge" type="text" value="${p.badge||''}" placeholder="e.g. Bestseller">
       </div>
       <div class="form-row-2">
         <div class="form-group">
@@ -537,7 +537,7 @@ function openAddProduct(){
       </div>
       <div class="form-group">
         <label class="form-label">Badge Text</label>
-        <input class="form-input" id="ef-badge" type="text" placeholder="e.g. 🆕 New">
+        <input class="form-input" id="ef-badge" type="text" placeholder="e.g. New">
       </div>
       <div class="form-row-2">
         <div class="form-group">
@@ -618,7 +618,7 @@ function renderBoardRows(){
   rows.innerHTML = active.map(p => {
     const isToday = p.boardDate === today;
     return `<div class="board-row">
-      <label title="${p.name}">${p.category==='goat'?'🐐':p.category==='chicken'?'🐓':p.category==='fish'?'🐟':p.category==='eggs'?'🥚':'🥩'} ${p.name}</label>
+      <label title="${p.name}">${p.name}</label>
       <input class="board-in" type="text" id="bt-${p.id}" placeholder="5:30 AM" value="${isToday&&p.cutTime?p.cutTime:''}" title="Cut / arrival time">
       <input class="board-in" type="number" id="bq-${p.id}" placeholder="kg / qty" value="${isToday&&p.stockQty?p.stockQty:''}" min="0" title="Stock qty today">
     </div>`;
@@ -648,9 +648,9 @@ async function publishBoard(){
     });
     showToast('✓ Today\'s market board published');
   } catch(e){
-    status.textContent = '⚠ Failed to publish. Check connection.'; status.style.color = '#E57373';
+    status.textContent = 'Failed to publish. Check connection.'; status.style.color = '#E57373';
   }
-  btn.textContent = '📣 Publish Board'; btn.disabled = false;
+  btn.textContent = 'Publish Board'; btn.disabled = false;
   setTimeout(() => { status.textContent = ''; }, 4000);
 }
 

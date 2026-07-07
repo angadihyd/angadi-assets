@@ -271,8 +271,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <li><a href="my-profile.html">My Profile</a></li>
   </ul>
   <div class="nav-right">
-    <a href="cart.html" class="nav-cart">🛒<span class="cart-badge" id="cartBadge">0</span></a>
-    <a href="my-profile.html" class="btn-nav" id="navLoginBtn">👤 Account</a>
+    <a href="cart.html" class="nav-cart"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg><span class="cart-badge" id="cartBadge">0</span></a>
+    <a href="my-profile.html" class="btn-nav" id="navLoginBtn">Account</a>
     <a href="shop.html" class="btn-nav">Shop Now</a>
     <button class="nav-hamburger" id="menuToggle"><span></span><span></span><span></span></button>
   </div>
@@ -324,7 +324,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
         <button class="filter-tab" data-status="cancelled">Cancelled <span class="count" id="cnt-cancelled">0</span></button>
       </div>
       <div class="search-wrap">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
         <input class="search-input" id="searchInput" type="text" placeholder="Search by ID or product…">
       </div>
     </div>
@@ -413,9 +413,9 @@ const PRODUCT_META = {
   'Village Goat Meat': { img:'product/mutton.png' },
   'Country Chicken':   { img:'product/country chiken.png' },
   'Fresh River Fish':  { img:'product/fish.png' },
-  'Baby Goat Legs':    { img:'product/ChatGPT Image Jun 3, 2026, 05_50_43 PM.png' },
-  'Country Eggs':      { img:'product/ChatGPT Image Jun 3, 2026, 05_24_46 PM.png' },
-  'Full Goat':         { img:'product/ChatGPT Image Jun 3, 2026, 05_43_10 PM.png' },
+  'Baby Goat Legs':    { img:'product/baby-goat-legs.png' },
+  'Country Eggs':      { img:'product/country-eggs.png' },
+  'Full Goat':         { img:'product/mutton.png' },
   'Goat Legs':         { img:'product/legs.png' },
   'Goat Liver':        { img:'product/liver.png' },
   'Goat Head':         { img:'product/head.png' },
@@ -584,10 +584,10 @@ function renderOrders(){
   if (filtered.length === 0) {
     list.innerHTML = `
       <div class="empty-orders">
-        <div class="empty-icon">${activeFilter === 'all' ? '📦' : '🔍'}</div>
+        <div class="empty-icon"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="rgba(246,237,216,0.35)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></div>
         <div class="empty-title">${activeFilter === 'all' ? 'No orders yet' : 'No orders found'}</div>
         <p class="empty-sub">${activeFilter === 'all' ? 'When you place your first order it will appear here.' : 'Try a different filter or search term.'}</p>
-        ${activeFilter === 'all' ? `<a href="shop.html" class="btn-primary">🌾 Start Shopping</a>` : ''}
+        ${activeFilter === 'all' ? `<a href="shop.html" class="btn-primary">Start Shopping</a>` : ''}
       </div>
     `;
     return;
@@ -608,12 +608,12 @@ function renderOrders(){
 //  TRACKING TIMELINE
 // ─────────────────────────────────────────────
 const MILESTONES = [
-  { icon:'📝', label:'Order Placed' },
-  { icon:'✓',  label:'Confirmed' },
-  { icon:'🔪', label:'Preparing' },
-  { icon:'📦', label:'Ready for Pickup' },
-  { icon:'🚚', label:'Out for Delivery' },
-  { icon:'🏁', label:'Delivered' },
+  { label:'Order Placed' },
+  { label:'Confirmed' },
+  { label:'Preparing' },
+  { label:'Ready for Pickup' },
+  { label:'Out for Delivery' },
+  { label:'Delivered' },
 ];
 function milestoneIndex(s){
   return { pending:0, confirmed:1, preparing:2, ready:3, assigned:3, picked_up:3,
@@ -625,7 +625,7 @@ function buildTimeline(order){
   const curr = milestoneIndex(s);
   return `<div class="track">${MILESTONES.map((m,i)=>{
     const cls = i < curr ? 'done' : i === curr ? 'done current' : '';
-    const mark = i < curr ? '✓' : m.icon;
+    const mark = i <= curr ? '✓' : '•';
     return `<div class="track-step ${cls}"><div class="track-dot">${mark}</div><div class="track-label">${m.label}${order.acceptedBy && i===3 ? ' · '+order.acceptedBy : ''}</div></div>`;
   }).join('')}</div>`;
 }
@@ -651,7 +651,7 @@ function buildOrderCard(order, idx){
         <div class="order-header-left">
           <div class="order-meta-row">
             <span class="order-id">${order.orderId || 'ANG-XXXXXX'}</span>
-            <span class="order-date">🕐 ${formatDate(order.placedAt)}</span>
+            <span class="order-date">${formatDate(order.placedAt)}</span>
           </div>
           <div class="order-name-row">${mainName}${extraCount}</div>
           <div class="order-items-preview">${itemsPreview}</div>
@@ -715,9 +715,9 @@ function buildOrderCard(order, idx){
 
             <!-- Actions -->
             <div class="order-footer-actions">
-              <button class="btn-action primary" onclick="reorder(${idx})">🔄 Reorder</button>
-              <a href="https://wa.me/919949950743?text=${waText}" target="_blank" class="btn-action wa">💬 Help</a>
-              ${['delivered','completed'].includes(status) ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">🧾 Invoice</button>` : ''}
+              <button class="btn-action primary" onclick="reorder(${idx})">Reorder</button>
+              <a href="https://wa.me/919949950743?text=${waText}" target="_blank" class="btn-action wa">Help</a>
+              ${['delivered','completed'].includes(status) ? `<button class="btn-action" onclick="downloadInvoice('${order.orderId}')">Invoice</button>` : ''}
               ${['pending','confirmed','preparing'].includes(status) ? `<button class="btn-action" style="color:var(--red);border-color:rgba(229,115,115,0.2);" onclick="cancelOrder('${order.orderId}',${idx})">✕ Cancel</button>` : ''}
             </div>
           </div>

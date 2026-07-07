@@ -29,10 +29,10 @@ textarea.in{resize:vertical;min-height:60px;}
 <body>
 <div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
 <div id="app" style="display:none;">
-  <div class="top"><h1>⚙ Site Settings</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="top"><h1>Site Settings</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
 
   <div class="card">
-    <h2>👨‍🌾 Farmer Spotlight</h2>
+    <h2>Farmer Spotlight</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Shown on the homepage to build trust. Update weekly.</p>
     <div class="row">
       <div><label>Farmer name</label><input class="in" id="f-name" placeholder="Rafi Bhai"></div>
@@ -54,7 +54,7 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
-    <h2>🚚 Delivery Charges</h2>
+    <h2>Delivery Charges</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Controls the delivery fee at checkout. Changes apply to new orders immediately.</p>
     <div class="row">
       <div><label>Standard fee (₹)</label><input class="in" id="d-standard" type="number" min="0" placeholder="49"></div>
@@ -65,22 +65,22 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
-    <h2>📣 Occasion Banner</h2>
+    <h2>Occasion Banner</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Top banner for functions, Sundays, festivals. Turn on when needed.</p>
     <div class="toggle"><input type="checkbox" id="b-active"> <span>Show banner</span></div>
     <label>Banner text</label>
-    <input class="in" id="b-text" placeholder="🎉 Pre-book whole goats for your function — order 1 day ahead">
+    <input class="in" id="b-text" placeholder="Pre-book whole goats for your function — order 1 day ahead">
   </div>
 
   <div class="card">
-    <h2>✨ Experience toggles</h2>
+    <h2>Experience toggles</h2>
     <div class="toggle"><input type="checkbox" id="x-ticker"> <span>"Just ordered near you" live ticker</span></div>
     <div class="toggle"><input type="checkbox" id="x-sound"> <span>Village ambient sound button</span></div>
     <div class="toggle"><input type="checkbox" id="x-golden"> <span>Golden-hour time-of-day theming</span></div>
     <div class="toggle"><input type="checkbox" id="x-bulk"> <span>Bulk / function pre-order section</span></div>
   </div>
 
-  <button class="btn" onclick="saveAll()">💾 Save All Settings</button>
+  <button class="btn" onclick="saveAll()">Save All Settings</button>
   <span id="status"></span>
 </div>
 <script src="admin-api.js"></script>
@@ -115,7 +115,7 @@ async function saveAll(){
     await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});
     await put('features',{ticker:g('x-ticker').checked,sound:g('x-sound').checked,goldenHour:g('x-golden').checked,bulkOrder:g('x-bulk').checked});
     st.textContent='✓ Saved! Changes are live on the site.'; st.style.color='#7BC67E';
-  }catch(e){ st.textContent='⚠ Save failed'; st.style.color='#E57373'; }
+  }catch(e){ st.textContent='Save failed'; st.style.color='#E57373'; }
   setTimeout(()=>{st.textContent='';},4000);
 }
 </script>

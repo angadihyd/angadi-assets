@@ -32,7 +32,7 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
 <body>
 <div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
 <div id="app" style="display:none;">
-  <div class="top"><h1>🎟 Coupons</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="top"><h1>Coupons</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
   <div class="form">
     <div><label>Code</label><input class="in" id="f-code" placeholder="FIRST100"></div>
     <div><label>Type</label><select class="in" id="f-type"><option value="percent">Percent %</option><option value="flat">Flat ₹</option></select></div>
@@ -62,7 +62,7 @@ function render(){
       <span class="pill ${c.active?'on':'off'}">${c.active?'Active':'Off'}</span>
       <button class="btn" onclick="toggle('${c.id}',${!c.active})">${c.active?'Disable':'Enable'}</button>
       <button class="btn" onclick="edit('${c.id}')">✎ Edit</button>
-      <button class="btn red" onclick="del('${c.id}')">🗑</button>
+      <button class="btn red" onclick="del('${c.id}')">Delete</button>
     </div>`).join('');
 }
 function val(id){ return document.getElementById(id).value.trim(); }

@@ -160,7 +160,7 @@
   function setLoc(text) {
     if (!text) return;
     document.querySelectorAll('.angadi-brand-tag').forEach(function (el) {
-      el.textContent = '📍 ' + text;
+      el.textContent = text;
       el.classList.add('loc');
     });
   }
@@ -305,9 +305,9 @@
     document.body.appendChild(btn);
 
     // Android / Chrome: capture the native install prompt.
-    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; show('📲 Install App'); });
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; show('Install App'); });
     // iOS Safari has no beforeinstallprompt — show the hint button directly.
-    if (isIOS && isSafari) show('📲 Install App');
+    if (isIOS && isSafari) show('Install App');
     // Hide once installed.
     window.addEventListener('appinstalled', function () { btn.classList.remove('show'); });
   }
