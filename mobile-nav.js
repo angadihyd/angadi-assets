@@ -9,7 +9,7 @@
 
   var page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   // depth-correct path to the logo (customer pages are at site root)
-  var LOGO = 'angadi/Andadi logo .png';
+  var LOGO = 'angadi/logo.webp';
 
   var TABS = [
     { id: 'index.html',      label: 'Home',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>', match: ['', 'index.html'] },

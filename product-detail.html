@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product — Angadi Village Meat</title>
+<meta name="description" content="Farm-fresh village meat delivered same-day in Hyderabad — goat, country chicken, river fish and country eggs, sourced directly from Telangana farmers.">
+<link rel="canonical" href="https://www.angadi.farm/product-detail.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -599,13 +601,14 @@ footer{
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html" class="active">Shop</a></li>
@@ -694,7 +697,7 @@ footer{
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="index.html" style="display:inline-block;text-decoration:none;">
-        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+        <img src="angadi/logo.webp" alt="Angadi" style="height:56px;object-fit:contain;">
       </a>
       <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
     </div>
@@ -753,9 +756,9 @@ const PRODUCTS = {
     price: 680,
     unit: 'kg',
     video: 'product/gaot farmer animated video.mp4',
-    mainImg: 'product/mutton.png',
+    mainImg: 'product/mutton.webp',
     thumbs: [
-      { src: 'product/mutton.png', label: 'Curry Cut' },
+      { src: 'product/mutton.webp', label: 'Curry Cut' },
     ],
     weights: ['250g', '500g', '1 kg', '2 kg', '5 kg'],
     cuts: ['Curry Cut', 'Biryani Cut', 'Boneless', 'Keema', 'Mixed'],
@@ -813,10 +816,10 @@ const PRODUCTS = {
     price: 520,
     unit: 'kg',
     video: 'product/country chiken animated video.mp4',
-    mainImg: 'product/country chiken.png',
+    mainImg: 'product/country chiken.webp',
     thumbs: [
-      { src: 'product/country chiken.png', label: 'Full Chicken' },
-      { src: 'product/county chiken.png', label: 'Curry Cut' },
+      { src: 'product/country chiken.webp', label: 'Full Chicken' },
+      { src: 'product/county chiken.webp', label: 'Curry Cut' },
     ],
     weights: ['500g', '1 kg', '1.5 kg', '2 kg'],
     cuts: ['Curry Cut', 'Biryani Cut', 'Whole', 'Boneless Breast', 'Leg Pieces'],
@@ -873,11 +876,11 @@ const PRODUCTS = {
     price: 450,
     unit: 'kg',
     video: 'product/fisher man animated video.mp4',
-    mainImg: 'product/fish.png',
+    mainImg: 'product/fish.webp',
     thumbs: [
-      { src: 'product/fish.png', label: 'Curry Cut' },
-      { src: 'product/fish 2.png', label: 'Whole Fish' },
-      { src: 'product/fisherman.png', label: 'From the River' },
+      { src: 'product/fish.webp', label: 'Curry Cut' },
+      { src: 'product/fish 2.webp', label: 'Whole Fish' },
+      { src: 'product/fisherman.webp', label: 'From the River' },
     ],
     weights: ['500g', '1 kg', '2 kg'],
     cuts: ['Curry Cut', 'Whole', 'Fillet', 'Steaks'],
@@ -933,10 +936,10 @@ const PRODUCTS = {
     price: 980,
     unit: 'kg',
     video: null,
-    mainImg: 'product/baby-goat-legs.png',
+    mainImg: 'product/baby-goat-legs.webp',
     thumbs: [
-      { src: 'product/baby-goat-legs.png', label: 'Leg Pieces' },
-      { src: 'product/legs.png', label: 'Full Legs' },
+      { src: 'product/baby-goat-legs.webp', label: 'Leg Pieces' },
+      { src: 'product/legs.webp', label: 'Full Legs' },
     ],
     weights: ['500g', '1 kg', '2 kg'],
     cuts: ['Full Legs', 'Split', 'Curry Cut'],
@@ -991,9 +994,9 @@ const PRODUCTS = {
     price: 12,
     unit: 'egg',
     video: null,
-    mainImg: 'product/country-eggs.png',
+    mainImg: 'product/country-eggs.webp',
     thumbs: [
-      { src: 'product/country-eggs.png', label: 'Tray of 12' },
+      { src: 'product/country-eggs.webp', label: 'Tray of 12' },
     ],
     weights: ['12 pack', '24 pack', '30 pack'],
     cuts: [],
@@ -1047,9 +1050,9 @@ const PRODUCTS = {
     price: 400,
     unit: '4 pieces',
     video: null,
-    mainImg: 'product/legs.png',
+    mainImg: 'product/legs.webp',
     thumbs: [
-      { src: 'product/legs.png', label: 'Goat Legs' },
+      { src: 'product/legs.webp', label: 'Goat Legs' },
     ],
     weights: ['4 pieces', '8 pieces', '12 pieces'],
     cuts: ['Full Legs', 'Split into 2', 'Curry Cut'],
@@ -1105,9 +1108,9 @@ const PRODUCTS = {
     price: 1000,
     unit: 'kg',
     video: null,
-    mainImg: 'product/liver.png',
+    mainImg: 'product/liver.webp',
     thumbs: [
-      { src: 'product/liver.png', label: 'Goat Liver' },
+      { src: 'product/liver.webp', label: 'Goat Liver' },
     ],
     weights: ['250g', '500g', '1 kg'],
     cuts: ['Thin Sliced', 'Cubed (Fry)', 'Curry Cut'],
@@ -1161,9 +1164,9 @@ const PRODUCTS = {
     price: 520,
     unit: 'head',
     video: null,
-    mainImg: 'product/head.png',
+    mainImg: 'product/head.webp',
     thumbs: [
-      { src: 'product/head.png', label: 'Goat Head' },
+      { src: 'product/head.webp', label: 'Goat Head' },
     ],
     weights: ['1 Head', '2 Heads', '4 Heads'],
     cuts: ['Whole (Split)', 'Curry Cut Pieces', 'Brain Separate'],
@@ -1218,10 +1221,10 @@ const PRODUCTS = {
     price: 8500,
     unit: 'goat',
     video: null,
-    mainImg: 'product/mutton.png',
+    mainImg: 'product/mutton.webp',
     thumbs: [
-      { src: 'product/mutton.png', label: 'Full Goat' },
-      { src: 'product/mutton.png', label: 'Cuts' },
+      { src: 'product/mutton.webp', label: 'Full Goat' },
+      { src: 'product/mutton.webp', label: 'Cuts' },
     ],
     weights: ['Full Goat (~8–10 kg)', 'Half Goat (~4–5 kg)'],
     cuts: ['Curry Cut (all)', 'Mixed Cut', 'Biryani Cut', 'Custom Split'],
@@ -1331,6 +1334,31 @@ function renderProduct(p) {
   // Page title
   document.title = `${p.name} — Angadi Village Meat`;
 
+  // ── SEO: per-product description, canonical, Product schema
+  const seoDesc = (p.shortDesc || '').replace(/\s+/g, ' ').trim();
+  if (seoDesc) document.querySelector('meta[name="description"]').setAttribute('content', seoDesc);
+  const canonicalUrl = `https://www.angadi.farm/product-detail.html?id=${encodeURIComponent(p.id)}`;
+  document.querySelector('link[rel="canonical"]').setAttribute('href', canonicalUrl);
+  const ld = document.createElement('script');
+  ld.type = 'application/ld+json';
+  ld.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.name,
+    image: `https://www.angadi.farm/${p.mainImg}`,
+    description: seoDesc,
+    brand: { '@type': 'Brand', name: 'Angadi' },
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'INR',
+      price: p.price,
+      availability: 'https://schema.org/InStock',
+      areaServed: 'Hyderabad, India'
+    }
+  });
+  document.head.appendChild(ld);
+
   // Breadcrumb
   document.getElementById('bcProduct').textContent = p.name;
 
@@ -1338,7 +1366,7 @@ function renderProduct(p) {
   const hasVideo = !!p.video;
   const thumbsHTML = p.thumbs.map((t,i) => `
     <div class="product-thumb ${i===0?'active':''}" data-src="${t.src}" data-label="${t.label}">
-      <img src="${t.src}" alt="${t.label}">
+      <img loading="lazy" decoding="async" src="${t.src}" alt="${t.label}">
     </div>
   `).join('');
 
@@ -1483,7 +1511,7 @@ function renderProduct(p) {
     if (!rp) return '';
     const mediaHTML = rp.video
       ? `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"><source src="${rp.video}" type="video/mp4"></video>`
-      : `<img src="${rp.mainImg}" alt="${rp.name}">`;
+      : `<img loading="lazy" decoding="async" src="${rp.mainImg}" alt="${rp.name}">`;
     return `
       <a href="product-detail.html?id=${rp.id}" class="related-card fade-up">
         <div class="related-img" style="position:relative;">${mediaHTML}</div>

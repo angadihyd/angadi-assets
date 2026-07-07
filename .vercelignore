@@ -1,0 +1,19 @@
+# Design sources, previews and docs — not part of the live site
+preview-*.html
+angadi_v2.html
+*.sql
+*.md
+package-lock.json
+
+# Raw design/source assets (536MB) — only the logo + icons are used by the site
+angadi/*
+!angadi/logo.webp
+!angadi/icon-180.png
+!angadi/icon-192.png
+!angadi/icon-512.png
+
+# Design folder — only the optimized webp, the two og:images, and nothing else
+ux ui design/*
+!ux ui design/*.webp
+!ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg
+!ux ui design/hero-shepherd-sunset.png

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Angadi">
-<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>Cart — Angadi Village Meat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -505,13 +505,14 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
   .upsell-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html">Shop</a></li>
@@ -604,7 +605,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="index.html" style="display:inline-block;text-decoration:none;">
-        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+        <img src="angadi/logo.webp" alt="Angadi" style="height:56px;object-fit:contain;">
       </a>
       <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
     </div>
@@ -653,25 +654,25 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
 //  PRODUCT LOOKUP (for images + Telugu names)
 // ─────────────────────────────────────────────
 const PRODUCT_META = {
-  'Village Goat Meat':    { img:'product/mutton.png',       nameTE:'Meka Mamsam',   id:'goat-meat' },
-  'Country Chicken':      { img:'product/country chiken.png', nameTE:'Nati Kodi',   id:'country-chicken' },
-  'Fresh River Fish':     { img:'product/fish.png',          nameTE:'Chepa Mukkalu', id:'river-fish' },
-  'Baby Goat Legs':       { img:'product/baby-goat-legs.png', nameTE:'Pilla Meka Kalu', id:'baby-goat-legs' },
-  'Country Eggs':         { img:'product/country-eggs.png', nameTE:'Nati Kodi Gudlu', id:'country-eggs' },
-  'Full Goat':            { img:'product/mutton.png', nameTE:'Poora Meka',      id:'full-goat' },
-  'Goat Legs':            { img:'product/legs.png',          nameTE:'Meka Kalu',    id:'goat-legs' },
-  'Goat Liver':           { img:'product/liver.png',         nameTE:'Meka Kalleja', id:'goat-liver' },
-  'Goat Head':            { img:'product/head.png',          nameTE:'Meka Tala',    id:'goat-head' },
+  'Village Goat Meat':    { img:'product/mutton.webp',       nameTE:'Meka Mamsam',   id:'goat-meat' },
+  'Country Chicken':      { img:'product/country chiken.webp', nameTE:'Nati Kodi',   id:'country-chicken' },
+  'Fresh River Fish':     { img:'product/fish.webp',          nameTE:'Chepa Mukkalu', id:'river-fish' },
+  'Baby Goat Legs':       { img:'product/baby-goat-legs.webp', nameTE:'Pilla Meka Kalu', id:'baby-goat-legs' },
+  'Country Eggs':         { img:'product/country-eggs.webp', nameTE:'Nati Kodi Gudlu', id:'country-eggs' },
+  'Full Goat':            { img:'product/mutton.webp', nameTE:'Poora Meka',      id:'full-goat' },
+  'Goat Legs':            { img:'product/legs.webp',          nameTE:'Meka Kalu',    id:'goat-legs' },
+  'Goat Liver':           { img:'product/liver.webp',         nameTE:'Meka Kalleja', id:'goat-liver' },
+  'Goat Head':            { img:'product/head.webp',          nameTE:'Meka Tala',    id:'goat-head' },
 };
 
 // ─────────────────────────────────────────────
 //  UPSELL PRODUCTS (shown below cart)
 // ─────────────────────────────────────────────
 const UPSELLS = [
-  { id:'goat-legs',   nameTE:'Meka Kalu',    name:'Goat Legs',     price:400,  unit:'4 pcs', img:'product/legs.png',          video:null },
-  { id:'goat-liver',  nameTE:'Meka Kalleja', name:'Goat Liver',    price:1000, unit:'kg',    img:'product/liver.png',          video:null },
-  { id:'country-eggs',nameTE:'Nati Kodi Gudlu', name:'Country Eggs', price:12, unit:'egg',   img:'product/country-eggs.png', video:null },
-  { id:'country-chicken', nameTE:'Nati Kodi', name:'Country Chicken', price:520, unit:'kg', img:'product/country chiken.png', video:'product/country chiken animated video.mp4' },
+  { id:'goat-legs',   nameTE:'Meka Kalu',    name:'Goat Legs',     price:400,  unit:'4 pcs', img:'product/legs.webp',          video:null },
+  { id:'goat-liver',  nameTE:'Meka Kalleja', name:'Goat Liver',    price:1000, unit:'kg',    img:'product/liver.webp',          video:null },
+  { id:'country-eggs',nameTE:'Nati Kodi Gudlu', name:'Country Eggs', price:12, unit:'egg',   img:'product/country-eggs.webp', video:null },
+  { id:'country-chicken', nameTE:'Nati Kodi', name:'Country Chicken', price:520, unit:'kg', img:'product/country chiken.webp', video:'product/country chiken animated video.mp4' },
 ];
 
 // ─────────────────────────────────────────────
@@ -745,7 +746,7 @@ function getItemMeta(name) {
   if (PRODUCT_META[name]) return PRODUCT_META[name];
   // Try matching base product name (before ' · ')
   const base = name.split(' · ')[0].trim();
-  return PRODUCT_META[base] || { img:'product/mutton.png', nameTE:'', id:'shop' };
+  return PRODUCT_META[base] || { img:'product/mutton.webp', nameTE:'', id:'shop' };
 }
 
 // ─────────────────────────────────────────────
@@ -814,7 +815,7 @@ function renderCartBody() {
     return `
       <div class="cart-item" id="cart-item-${idx}">
         <a href="product-detail.html?id=${meta.id}" class="cart-item-img">
-          <img src="${meta.img}" alt="${displayName}">
+          <img loading="lazy" decoding="async" src="${meta.img}" alt="${displayName}">
         </a>
         <div class="cart-item-details">
           <div class="cart-item-name-te">${meta.nameTE}</div>
@@ -932,7 +933,7 @@ function renderUpsells() {
       <div class="upsell-img">
         ${u.video
           ? `<video autoplay muted loop playsinline><source src="${u.video}" type="video/mp4"></video>`
-          : `<img src="${u.img}" alt="${u.name}">`}
+          : `<img loading="lazy" decoding="async" src="${u.img}" alt="${u.name}">`}
       </div>
       <div class="upsell-body">
         <div class="upsell-name-te">${u.nameTE}</div>

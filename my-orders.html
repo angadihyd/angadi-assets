@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Angadi">
-<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>My Orders — Angadi Village Meat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -257,13 +257,14 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   .page-header-inner{flex-direction:column;align-items:flex-start;}
 }
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html">Shop</a></li>
@@ -353,7 +354,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="index.html" style="display:inline-block;text-decoration:none;">
-        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+        <img src="angadi/logo.webp" alt="Angadi" style="height:56px;object-fit:contain;">
       </a>
       <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
     </div>
@@ -410,17 +411,17 @@ function fromDb(r){
 //  PRODUCT IMAGE MAP
 // ─────────────────────────────────────────────
 const PRODUCT_META = {
-  'Village Goat Meat': { img:'product/mutton.png' },
-  'Country Chicken':   { img:'product/country chiken.png' },
-  'Fresh River Fish':  { img:'product/fish.png' },
-  'Baby Goat Legs':    { img:'product/baby-goat-legs.png' },
-  'Country Eggs':      { img:'product/country-eggs.png' },
-  'Full Goat':         { img:'product/mutton.png' },
-  'Goat Legs':         { img:'product/legs.png' },
-  'Goat Liver':        { img:'product/liver.png' },
-  'Goat Head':         { img:'product/head.png' },
+  'Village Goat Meat': { img:'product/mutton.webp' },
+  'Country Chicken':   { img:'product/country chiken.webp' },
+  'Fresh River Fish':  { img:'product/fish.webp' },
+  'Baby Goat Legs':    { img:'product/baby-goat-legs.webp' },
+  'Country Eggs':      { img:'product/country-eggs.webp' },
+  'Full Goat':         { img:'product/mutton.webp' },
+  'Goat Legs':         { img:'product/legs.webp' },
+  'Goat Liver':        { img:'product/liver.webp' },
+  'Goat Head':         { img:'product/head.webp' },
 };
-function getImg(name){ return (PRODUCT_META[name.split(' · ')[0].trim()] || { img:'product/mutton.png' }).img; }
+function getImg(name){ return (PRODUCT_META[name.split(' · ')[0].trim()] || { img:'product/mutton.webp' }).img; }
 function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
 function formatDate(iso){
   const d = new Date(iso);
@@ -675,7 +676,7 @@ function buildOrderCard(order, idx){
           ${items.map(item => `
             <div class="order-item">
               <div class="order-item-img">
-                <img src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}">
+                <img loading="lazy" decoding="async" src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}">
               </div>
               <div class="order-item-details">
                 <div class="order-item-name">${item.name.split(' · ')[0]}</div>

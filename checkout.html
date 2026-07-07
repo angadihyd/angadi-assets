@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Angadi">
-<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>Checkout — Angadi Village Meat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -281,13 +281,14 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 .loc-eta{display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.6rem;font-size:0.78rem;color:var(--gold,#D4A017);background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:100px;padding:0.3rem 0.8rem;}
 .leaflet-container{background:#0d0502;}
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html">Shop</a></li>
@@ -593,15 +594,15 @@ const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID';
 //  PRODUCT IMAGE MAP
 // ─────────────────────────────────────────────
 const PRODUCT_META = {
-  'Village Goat Meat': { img:'product/mutton.png',       nameTE:'Meka Mamsam' },
-  'Country Chicken':   { img:'product/country chiken.png', nameTE:'Nati Kodi' },
-  'Fresh River Fish':  { img:'product/fish.png',          nameTE:'Chepa Mukkalu' },
-  'Baby Goat Legs':    { img:'product/baby-goat-legs.png', nameTE:'Pilla Meka Kalu' },
-  'Country Eggs':      { img:'product/country-eggs.png', nameTE:'Nati Kodi Gudlu' },
-  'Full Goat':         { img:'product/mutton.png', nameTE:'Poora Meka' },
-  'Goat Legs':         { img:'product/legs.png',          nameTE:'Meka Kalu' },
-  'Goat Liver':        { img:'product/liver.png',         nameTE:'Meka Kalleja' },
-  'Goat Head':         { img:'product/head.png',          nameTE:'Meka Tala' },
+  'Village Goat Meat': { img:'product/mutton.webp',       nameTE:'Meka Mamsam' },
+  'Country Chicken':   { img:'product/country chiken.webp', nameTE:'Nati Kodi' },
+  'Fresh River Fish':  { img:'product/fish.webp',          nameTE:'Chepa Mukkalu' },
+  'Baby Goat Legs':    { img:'product/baby-goat-legs.webp', nameTE:'Pilla Meka Kalu' },
+  'Country Eggs':      { img:'product/country-eggs.webp', nameTE:'Nati Kodi Gudlu' },
+  'Full Goat':         { img:'product/mutton.webp', nameTE:'Poora Meka' },
+  'Goat Legs':         { img:'product/legs.webp',          nameTE:'Meka Kalu' },
+  'Goat Liver':        { img:'product/liver.webp',         nameTE:'Meka Kalleja' },
+  'Goat Head':         { img:'product/head.webp',          nameTE:'Meka Tala' },
 };
 
 // ─────────────────────────────────────────────
@@ -628,7 +629,7 @@ function total(){ return subtotal() - promoDiscount + deliveryCost(); }
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
 function getItemMeta(name){
   const base = name.split(' · ')[0].trim();
-  return PRODUCT_META[base] || { img:'product/mutton.png', nameTE:'' };
+  return PRODUCT_META[base] || { img:'product/mutton.webp', nameTE:'' };
 }
 
 // ─────────────────────────────────────────────
@@ -643,7 +644,7 @@ function renderSummary(){
     const metaInfo = item.name.split(' · ').slice(1).join(' · ');
     return `
       <div class="summary-item">
-        <div class="summary-item-img"><img src="${meta.img}" alt="${displayName}"></div>
+        <div class="summary-item-img"><img loading="lazy" decoding="async" src="${meta.img}" alt="${displayName}"></div>
         <div class="summary-item-details">
           <div class="summary-item-name">${displayName}</div>
           <div class="summary-item-meta">${metaInfo ? metaInfo + ' · ' : ''}×${item.qty}</div>
@@ -881,7 +882,7 @@ async function placeRazorpay(order){
     currency:    'INR',
     name:        'Angadi',
     description: `Order · ${cart.length} item${cart.length>1?'s':''}`,
-    image:       'angadi/Andadi logo .png',
+    image:       'angadi/logo.webp',
     prefill:     { name: order.customer.name, contact: order.customer.phone },
     theme:       { color: '#C4622D' },
     handler: async (response) => {

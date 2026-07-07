@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Angadi Admin">
-<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>Orders — Angadi Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -324,14 +324,14 @@ function formatDate(iso){
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 }
 const PRODUCT_IMGS = {
-  'Village Goat Meat':'../product/mutton.png','Country Chicken':'../product/country chiken.png',
-  'Fresh River Fish':'../product/fish.png','Goat Legs':'../product/legs.png',
-  'Goat Liver':'../product/liver.png','Goat Head':'../product/head.png',
-  'Country Eggs':'../product/country-eggs.png',
-  'Full Goat':'../product/mutton.png',
-  'Baby Goat Legs':'../product/baby-goat-legs.png',
+  'Village Goat Meat':'../product/mutton.webp','Country Chicken':'../product/country chiken.webp',
+  'Fresh River Fish':'../product/fish.webp','Goat Legs':'../product/legs.webp',
+  'Goat Liver':'../product/liver.webp','Goat Head':'../product/head.webp',
+  'Country Eggs':'../product/country-eggs.webp',
+  'Full Goat':'../product/mutton.webp',
+  'Baby Goat Legs':'../product/baby-goat-legs.webp',
 };
-function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../product/mutton.png'; }
+function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../product/mutton.webp'; }
 
 // ─────────────────────────────────────────────
 //  STATE

@@ -298,13 +298,14 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   .confirm-ctas a,.confirm-ctas button{justify-content:center;}
 }
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html">Shop</a></li>
@@ -474,7 +475,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="index.html" style="display:inline-block;text-decoration:none;">
-        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+        <img src="angadi/logo.webp" alt="Angadi" style="height:56px;object-fit:contain;">
       </a>
       <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
     </div>
@@ -521,20 +522,20 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
 //  PRODUCT IMAGE MAP
 // ─────────────────────────────────────────────
 const PRODUCT_META = {
-  'Village Goat Meat': { img:'product/mutton.png' },
-  'Country Chicken':   { img:'product/country chiken.png' },
-  'Fresh River Fish':  { img:'product/fish.png' },
-  'Baby Goat Legs':    { img:'product/baby-goat-legs.png' },
-  'Country Eggs':      { img:'product/country-eggs.png' },
-  'Full Goat':         { img:'product/mutton.png' },
-  'Goat Legs':         { img:'product/legs.png' },
-  'Goat Liver':        { img:'product/liver.png' },
-  'Goat Head':         { img:'product/head.png' },
+  'Village Goat Meat': { img:'product/mutton.webp' },
+  'Country Chicken':   { img:'product/country chiken.webp' },
+  'Fresh River Fish':  { img:'product/fish.webp' },
+  'Baby Goat Legs':    { img:'product/baby-goat-legs.webp' },
+  'Country Eggs':      { img:'product/country-eggs.webp' },
+  'Full Goat':         { img:'product/mutton.webp' },
+  'Goat Legs':         { img:'product/legs.webp' },
+  'Goat Liver':        { img:'product/liver.webp' },
+  'Goat Head':         { img:'product/head.webp' },
 };
 
 function getImg(name){
   const base = name.split(' · ')[0].trim();
-  return (PRODUCT_META[base] || { img:'product/mutton.png' }).img;
+  return (PRODUCT_META[base] || { img:'product/mutton.webp' }).img;
 }
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
 
@@ -636,7 +637,7 @@ function render(){
   // ── Order items
   document.getElementById('orderItemsList').innerHTML = items.map(item => `
     <div class="order-item">
-      <div class="order-item-img"><img src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}"></div>
+      <div class="order-item-img"><img loading="lazy" decoding="async" src="${getImg(item.name)}" alt="${item.name.split(' · ')[0]}"></div>
       <div class="order-item-details">
         <div class="order-item-name">${item.name.split(' · ')[0]}</div>
         <div class="order-item-meta">${item.name.split(' · ').slice(1).join(' · ')}</div>

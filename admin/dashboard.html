@@ -599,7 +599,7 @@ function renderStockList() {
   }
   document.getElementById('stockList').innerHTML = products.map((p) => `
     <div class="stock-item">
-      <div class="stock-img"><img src="../${p.image || 'product/mutton.png'}" alt="${p.name}"></div>
+      <div class="stock-img"><img src="../${p.image || 'product/mutton.webp'}" alt="${p.name}"></div>
       <div class="stock-info">
         <div class="stock-name">${p.name}</div>
         <div class="stock-price">${fmt(p.price)} / ${p.unit}</div>
@@ -692,7 +692,7 @@ function showNewOrderAlert(order) {
   if (Notification.permission === 'granted') {
     new Notification('New Angadi order', {
       body: `${order.customer?.name||'Customer'} — ₹${order.total||0} · ${order.payment==='cod'?'COD':'Paid Online'}`,
-      icon: '../angadi/Andadi logo .png'
+      icon: '../angadi/icon-192.png'
     });
   }
   // In-page popup

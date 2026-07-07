@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Angadi">
-<link rel="apple-touch-icon" href="/angadi/Andadi logo .png">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>Buy Village Meat Online Hyderabad — Goat, Chicken, Fish | Angadi</title>
 <meta name="description" content="Order free-range goat meat, country chicken (nati kodi) & fresh river fish online in Hyderabad. Farm-direct from Telangana villages. Same-day delivery.">
 <meta name="keywords" content="buy goat meat online Hyderabad, order chicken online Hyderabad, nati kodi order online, meka mamsam online, fresh fish delivery Hyderabad, village chicken Hyderabad, angadi shop, free range meat online India">
@@ -32,7 +32,7 @@
         "@type": "Product",
         "name": "Village Goat Meat (Meka Mamsam)",
         "description": "Free-range goat from Telangana villages. Rich flavour, no hormones, no antibiotics. Available in 500g, 1kg, 2kg.",
-        "image": "https://www.angadi.farm/product/mutton.png",
+        "image": "https://www.angadi.farm/product/mutton.webp",
         "brand": {"@type": "Brand", "name": "Angadi"},
         "offers": {"@type": "Offer", "priceCurrency": "INR", "price": "680", "priceSpecification": {"@type": "UnitPriceSpecification", "price": "680", "priceCurrency": "INR", "unitText": "per kg"}, "availability": "https://schema.org/InStock", "url": "https://www.angadi.farm/shop.html", "seller": {"@type": "Organization", "name": "Angadi"}}
       }
@@ -43,7 +43,7 @@
         "@type": "Product",
         "name": "Country Chicken (Nati Kodi)",
         "description": "Free-range country chicken from village farms. Authentic taste, naturally raised without cages.",
-        "image": "https://www.angadi.farm/product/country%20chiken.png",
+        "image": "https://www.angadi.farm/product/country%20chiken.webp",
         "brand": {"@type": "Brand", "name": "Angadi"},
         "offers": {"@type": "Offer", "priceCurrency": "INR", "price": "520", "priceSpecification": {"@type": "UnitPriceSpecification", "price": "520", "priceCurrency": "INR", "unitText": "per kg"}, "availability": "https://schema.org/InStock", "url": "https://www.angadi.farm/shop.html", "seller": {"@type": "Organization", "name": "Angadi"}}
       }
@@ -54,7 +54,7 @@
         "@type": "Product",
         "name": "Fresh River Fish",
         "description": "Freshwater fish from Telangana rivers and tanks. Delivered fresh on order day.",
-        "image": "https://www.angadi.farm/product/fish.png",
+        "image": "https://www.angadi.farm/product/fish.webp",
         "brand": {"@type": "Brand", "name": "Angadi"},
         "offers": {"@type": "Offer", "priceCurrency": "INR", "price": "450", "availability": "https://schema.org/InStock", "url": "https://www.angadi.farm/shop.html", "seller": {"@type": "Organization", "name": "Angadi"}}
       }
@@ -219,7 +219,7 @@ nav.scrolled{height:60px;}
 }
 .shop-hero-bg{
   position:absolute;inset:0;
-  background:url('ux ui design/hero-shepherd-sunset.png') center 30%/cover no-repeat;
+  background:url('ux ui design/hero-shepherd-sunset.webp') center 30%/cover no-repeat;
 }
 .shop-hero-bg::after{
   content:'';position:absolute;inset:0;
@@ -882,13 +882,14 @@ footer{
 .card-qty input::-webkit-outer-spin-button,.card-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .card-qty-unit{font-size:0.7rem;color:rgba(246,237,216,0.45);padding:0 0.45rem;flex-shrink:0;}
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
 <!-- NAV -->
 <nav id="navbar">
   <a href="index.html" class="nav-logo">
-    <img src="angadi/Andadi logo .png" alt="Angadi" style="height:48px;object-fit:contain;">
+    <img src="angadi/logo.webp" alt="Angadi" style="height:48px;object-fit:contain;">
   </a>
   <ul class="nav-links">
     <li><a href="shop.html" class="active">Shop</a></li>
@@ -1005,7 +1006,7 @@ footer{
         <video autoplay muted loop playsinline>
           <source src="product/gaot farmer animated video.mp4" type="video/mp4">
         </video>
-        <img src="product/mutton.png" alt="Village Goat Meat" class="pip-product-img">
+        <img loading="lazy" decoding="async" src="product/mutton.webp" alt="Village Goat Meat" class="pip-product-img">
         <div class="product-badge">Bestseller</div>
       </div>
       <div class="product-body">
@@ -1028,7 +1029,7 @@ footer{
         <video autoplay muted loop playsinline>
           <source src="product/country chiken animated video.mp4" type="video/mp4">
         </video>
-        <img src="product/country chiken.png" alt="Country Chicken" class="pip-product-img">
+        <img loading="lazy" decoding="async" src="product/country chiken.webp" alt="Country Chicken" class="pip-product-img">
         <div class="product-badge">Free-range</div>
       </div>
       <div class="product-body">
@@ -1051,7 +1052,7 @@ footer{
         <video autoplay muted loop playsinline>
           <source src="product/fisher man animated video.mp4" type="video/mp4">
         </video>
-        <img src="product/fish.png" alt="Fresh River Fish" class="pip-product-img">
+        <img loading="lazy" decoding="async" src="product/fish.webp" alt="Fresh River Fish" class="pip-product-img">
         <div class="product-badge">Today's catch</div>
       </div>
       <div class="product-body">
@@ -1071,7 +1072,7 @@ footer{
     <!-- 4. Baby Goat Legs -->
     <a href="product-detail.html?id=baby-goat-legs" class="product-card fade-up" data-category="goat" data-price="980" data-name="Baby Goat Legs" data-order="4">
       <div class="product-img-wrap">
-        <img src="product/baby-goat-legs.png" alt="Baby Goat Legs" class="main-img">
+        <img loading="lazy" decoding="async" src="product/baby-goat-legs.webp" alt="Baby Goat Legs" class="main-img">
         <div class="product-badge">Limited</div>
       </div>
       <div class="product-body">
@@ -1091,7 +1092,7 @@ footer{
     <!-- 5. Country Eggs -->
     <a href="product-detail.html?id=country-eggs" class="product-card fade-up" data-category="eggs" data-price="12" data-name="Country Eggs" data-order="5">
       <div class="product-img-wrap">
-        <img src="product/country-eggs.png" alt="Country Eggs" class="main-img">
+        <img loading="lazy" decoding="async" src="product/country-eggs.webp" alt="Country Eggs" class="main-img">
         <div class="product-badge">Farm fresh</div>
       </div>
       <div class="product-body">
@@ -1111,7 +1112,7 @@ footer{
     <!-- 6. Full Goat -->
     <a href="product-detail.html?id=full-goat" class="product-card fade-up" data-category="goat" data-price="8500" data-name="Full Goat" data-order="6">
       <div class="product-img-wrap">
-        <img src="product/mutton.png" alt="Full Goat" class="main-img">
+        <img loading="lazy" decoding="async" src="product/mutton.webp" alt="Full Goat" class="main-img">
         <div class="product-badge">Pre-order</div>
       </div>
       <div class="product-body">
@@ -1131,7 +1132,7 @@ footer{
     <!-- 7. Goat Legs -->
     <a href="product-detail.html?id=goat-legs" class="product-card fade-up" data-category="goat" data-price="400" data-name="Goat Legs" data-order="7">
       <div class="product-img-wrap">
-        <img src="product/legs.png" alt="Goat Legs" class="main-img">
+        <img loading="lazy" decoding="async" src="product/legs.webp" alt="Goat Legs" class="main-img">
         <div class="product-badge">Fresh cut</div>
       </div>
       <div class="product-body">
@@ -1151,7 +1152,7 @@ footer{
     <!-- 8. Goat Liver -->
     <a href="product-detail.html?id=goat-liver" class="product-card fade-up" data-category="goat" data-price="1000" data-name="Goat Liver" data-order="8">
       <div class="product-img-wrap">
-        <img src="product/liver.png" alt="Goat Liver" class="main-img">
+        <img loading="lazy" decoding="async" src="product/liver.webp" alt="Goat Liver" class="main-img">
         <div class="product-badge">Fresh cut</div>
       </div>
       <div class="product-body">
@@ -1171,7 +1172,7 @@ footer{
     <!-- 9. Goat Head -->
     <a href="product-detail.html?id=goat-head" class="product-card fade-up" data-category="goat" data-price="520" data-name="Goat Head" data-order="9">
       <div class="product-img-wrap">
-        <img src="product/head.png" alt="Goat Head" class="main-img">
+        <img loading="lazy" decoding="async" src="product/head.webp" alt="Goat Head" class="main-img">
         <div class="product-badge">Pre-order</div>
       </div>
       <div class="product-body">
@@ -1201,8 +1202,8 @@ footer{
 <section class="why-section">
   <div class="why-grid">
     <div class="why-image-wrap fade-up">
-      <img src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg" alt="Village farmer with goats" class="why-image-main">
-      <img src="product/mutton.png" alt="Fresh cuts" class="why-image-accent">
+      <img loading="lazy" decoding="async" src="ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.webp" alt="Village farmer with goats" class="why-image-main">
+      <img loading="lazy" decoding="async" src="product/mutton.webp" alt="Fresh cuts" class="why-image-accent">
       <div class="why-badge">
         <span class="why-badge-num">100%</span>
         <span class="why-badge-text">Village<br>Sourced</span>
@@ -1250,7 +1251,7 @@ footer{
 <section class="story-section">
   <div class="story-grid">
     <div class="story-image-wrap fade-up">
-      <img src="ux ui design/766444cbfcf856006ff1aeb21ab561e4.jpg" alt="Farmer with red turban">
+      <img loading="lazy" decoding="async" src="ux ui design/766444cbfcf856006ff1aeb21ab561e4.webp" alt="Farmer with red turban">
       <div class="story-image-caption">
         <p>"From Telangana's fields to Hyderabad's kitchens — this is Angadi."</p>
       </div>
@@ -1283,7 +1284,7 @@ footer{
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="index.html" class="nav-logo">
-        <img src="angadi/Andadi logo .png" alt="Angadi" style="height:56px;object-fit:contain;">
+        <img src="angadi/logo.webp" alt="Angadi" style="height:56px;object-fit:contain;">
       </a>
       <p>Healthy, hygienic and handpicked village meat & farm produce. Delivered fresh to Hyderabad families.</p>
     </div>
@@ -1493,7 +1494,7 @@ function productCardHTML(p){
   <a href="product-detail.html?id=${p.slug}" class="product-card fade-up visible" data-category="${p.category}" data-price="${p.price}" data-name="${p.name}" data-order="${p.sort_order||100}">
     <div class="product-img-wrap${p.video?' has-video':''}">
       ${p.video?`<video autoplay muted loop playsinline><source src="${p.video}" type="video/mp4"></video>`:''}
-      <img src="${p.image}" alt="${p.name}" class="pip-product-img"${sold?' style="filter:grayscale(0.7);opacity:0.6;"':''}>
+      <img loading="lazy" decoding="async" src="${p.image}" alt="${p.name}" class="pip-product-img"${sold?' style="filter:grayscale(0.7);opacity:0.6;"':''}>
       ${p.badge?`<div class="product-badge">${p.badge}</div>`:''}
       ${sold?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,5,3,0.45);"><span style="background:#7A3318;color:#F6EDD8;padding:0.35rem 1rem;border-radius:100px;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;">SOLD OUT</span></div>`:''}
     </div>

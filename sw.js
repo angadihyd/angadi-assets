@@ -9,8 +9,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(d.title, {
       body: d.body,
-      icon: '/angadi/Andadi logo .png',
-      badge: '/angadi/Andadi logo .png',
+      icon: '/angadi/icon-192.png',
+      badge: '/angadi/logo.webp',
       data: { url: d.url },
       vibrate: [120, 60, 120],
       requireInteraction: true,
