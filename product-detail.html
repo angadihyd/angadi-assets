@@ -609,6 +609,7 @@ footer{
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -1310,6 +1311,7 @@ function addToCart(name, price, qty=1) {
   if (existing) existing.qty += qty;
   else cart.push({ name, price, qty });
   localStorage.setItem('angadi_cart', JSON.stringify(cart));
+  window.gaTrack?.('add_to_cart', { currency: 'INR', value: price * qty, items: [{ item_name: name, price: price, quantity: qty }] });
   updateCartBadge();
   cartBadge.style.transform = 'scale(1.5)';
   setTimeout(() => cartBadge.style.transform = 'scale(1)', 300);
@@ -1772,6 +1774,7 @@ async function initDetail(){
 
   if (!product){ showNotFound(); return; }
   renderProduct(product);
+  window.gaTrack?.('view_item', { currency: 'INR', value: product.price, items: [{ item_name: product.name, price: product.price, quantity: 1 }] });
   loadReviews(productId);
   initReviewForm(productId);
 

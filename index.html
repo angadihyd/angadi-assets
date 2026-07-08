@@ -48,14 +48,21 @@
       "email": "angadihyd@gmail.com",
       "servesCuisine": ["Meat", "Poultry", "Seafood"],
       "hasMap": "https://www.google.com/maps/search/Hyderabad+Telangana",
-      "areaServed": {
-        "@type": "City",
-        "name": "Hyderabad",
-        "containedInPlace": {
-          "@type": "State",
-          "name": "Telangana"
-        }
-      },
+      "areaServed": [
+        {
+          "@type": "City",
+          "name": "Hyderabad",
+          "containedInPlace": {
+            "@type": "State",
+            "name": "Telangana"
+          }
+        },
+        { "@type": "Place", "name": "Banjara Hills, Hyderabad" },
+        { "@type": "Place", "name": "Jubilee Hills, Hyderabad" },
+        { "@type": "Place", "name": "Madhapur, Hyderabad" },
+        { "@type": "Place", "name": "Gachibowli, Hyderabad" },
+        { "@type": "Place", "name": "Kondapur, Hyderabad" }
+      ],
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Hyderabad",
@@ -1364,6 +1371,7 @@ footer{
     .ah-sub{font-size:1.08rem;}
   }
 </style>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>

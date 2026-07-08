@@ -505,6 +505,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:4rem 4
   .upsell-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -1065,6 +1066,9 @@ function closeMobile() { document.getElementById('mobileMenu').classList.remove(
 //  INIT
 // ─────────────────────────────────────────────
 render();
+if (cart.length && window.gaTrack && window.gaItems) {
+  gaTrack('view_cart', { currency: 'INR', value: subtotal(), items: gaItems(cart) });
+}
 
 // Load admin-configured delivery charges, then refresh the cart display.
 async function loadDeliveryConfig(){

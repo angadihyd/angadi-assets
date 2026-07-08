@@ -882,6 +882,7 @@ footer{
 .card-qty input::-webkit-outer-spin-button,.card-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .card-qty-unit{font-size:0.7rem;color:rgba(246,237,216,0.45);padding:0 0.45rem;flex-shrink:0;}
 </style>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -1360,6 +1361,7 @@ function addToCart(name, price, btnEl) {
   if (existing) { existing.qty++; } else { cart.push({ name, price, qty: 1 }); }
   localStorage.setItem('angadi_cart', JSON.stringify(cart));
   updateCartBadge();
+  window.gaTrack?.('add_to_cart', { currency: 'INR', value: price, items: [{ item_name: name, price: price, quantity: 1 }] });
 
   // Badge pop
   if (cartBadge) { cartBadge.style.animation='none'; cartBadge.offsetHeight; cartBadge.style.animation='cartPop 0.4s ease'; }

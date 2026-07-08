@@ -298,6 +298,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   .confirm-ctas a,.confirm-ctas button{justify-content:center;}
 }
 </style>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -564,6 +565,21 @@ if (!order) {
 if (order && !order.orderId) {
   order.orderId = generateOrderId();
   localStorage.setItem('angadi_last_order', JSON.stringify(order));
+}
+
+// GA4 purchase — once per order id, so reloading this page doesn't double-count
+if (order && order.orderId && window.gaTrack && window.gaItems) {
+  const gaFired = JSON.parse(localStorage.getItem('angadi_ga_purchases') || '[]');
+  if (!gaFired.includes(order.orderId)) {
+    gaTrack('purchase', {
+      transaction_id: order.orderId,
+      currency: 'INR',
+      value: order.total,
+      shipping: order.delivery || 0,
+      items: gaItems(order.items),
+    });
+    localStorage.setItem('angadi_ga_purchases', JSON.stringify(gaFired.concat(order.orderId).slice(-20)));
+  }
 }
 
 // ─────────────────────────────────────────────

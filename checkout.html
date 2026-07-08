@@ -281,6 +281,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 .loc-eta{display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.6rem;font-size:0.78rem;color:var(--gold,#D4A017);background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:100px;padding:0.3rem 0.8rem;}
 .leaflet-container{background:#0d0502;}
 </style>
+<script src="/analytics.js?v=1"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -1120,6 +1121,9 @@ loadSavedAddress();
 renderSummary();
 initLocationPicker();
 loadDeliveryConfig();
+if (cart.length && window.gaTrack && window.gaItems) {
+  gaTrack('begin_checkout', { currency: 'INR', value: total(), items: gaItems(cart) });
+}
 
 // Load admin-configured delivery charges, then refresh the displayed totals.
 async function loadDeliveryConfig(){
