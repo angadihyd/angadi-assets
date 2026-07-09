@@ -2,7 +2,7 @@
 // Paste the GA4 Measurement ID below (Google Analytics → Admin → Data streams → Web).
 // Until an ID is set, gaTrack is a silent no-op and nothing loads.
 (function () {
-  var GA4_ID = ''; // e.g. 'G-XXXXXXXXXX'
+  var GA4_ID = 'G-PP33FGYE45';
 
   if (!GA4_ID) {
     window.gaTrack = function () {};
