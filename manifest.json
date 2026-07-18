@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "Angadi — Village Meat Delivery",
   "short_name": "Angadi",
   "description": "Fresh village meat delivered in Hyderabad — goat, chicken, fish",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#100804",
   "theme_color": "#C4622D",
