@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "farm.angadi.www.twa",
+    "sha256_cert_fingerprints": ["1F:4E:26:B2:50:B3:A0:04:CE:C7:04:D6:BA:49:C1:54:9F:5C:4E:AE:01:D7:8A:E3:D6:56:AB:DF:A5:F1:E7:DC"]
+  }
+}]
