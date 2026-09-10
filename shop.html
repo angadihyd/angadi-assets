@@ -383,13 +383,13 @@ nav.scrolled{height:60px;}
   aspect-ratio:1/1;
   flex-shrink:0;
 }
-.product-img-wrap img.main-img{
+.product-img-wrap:not(.has-video) img{
   width:100%;height:100%;
   object-fit:cover;
   transition:transform 0.6s ease;
   filter:brightness(0.96);
 }
-.product-card:hover .product-img-wrap img.main-img{
+.product-card:hover .product-img-wrap:not(.has-video) img{
   transform:scale(1.05);
 }
 /* Video cards */
