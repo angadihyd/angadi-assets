@@ -971,7 +971,7 @@ footer{
   <div class="shop-banner fade-up">
     <div class="shop-banner-text">
       <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></span>
-      <p><strong>Free delivery on orders above ₹999.</strong> Hyderabad-wide delivery in 4–6 hours. Order before 11 AM for same-day delivery.</p>
+      <p id="deliveryBannerText"><strong>Free delivery on orders above ₹999.</strong> Hyderabad-wide delivery in 4–6 hours.</p>
     </div>
     <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" target="_blank" class="shop-banner-link">Order on WhatsApp →</a>
   </div>
@@ -1615,6 +1615,28 @@ document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
 // Load live catalog from Supabase (replaces static cards; falls back to them on error)
 loadProducts();
+
+// ── ORDER WINDOW — reflect the real, admin-configured schedule instead of a
+// hardcoded "same-day, order before 11 AM" claim (see admin/order-windows.html)
+(async function checkOrderWindowBanner(){
+  const el = document.getElementById('deliveryBannerText');
+  if (!el) return;
+  try{
+    const now = new Date().toISOString();
+    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&opens_at=lte.'+now+'&closes_at=gte.'+now+'&order=closes_at.asc&limit=1', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+    });
+    if(!r.ok) return;
+    const rows = await r.json();
+    if(!rows.length){
+      el.innerHTML = '<strong>Ordering is currently closed.</strong> Check our WhatsApp for the next delivery window.';
+    } else {
+      const d = new Date(rows[0].delivery_date+'T00:00:00');
+      const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+      el.innerHTML = `<strong>Free delivery on orders above ₹999.</strong> Ordering open now for delivery on <strong>${dateStr}</strong>.`;
+    }
+  }catch(e){ /* keep default banner text */ }
+})();
 </script>
 <script src="mobile-nav.js?v=5" defer></script>
 </body>

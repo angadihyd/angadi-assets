@@ -115,6 +115,27 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // ── Ordering must be inside an admin-configured window (see admin/order-windows.html) ──
+  // Checked server-side so this can't be bypassed by calling the API directly —
+  // this is the one place an order actually gets created.
+  let deliveryDate = null;
+  try {
+    const now = new Date().toISOString();
+    const wr = await fetch(
+      `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&opens_at=lte.${now}&closes_at=gte.${now}&order=closes_at.asc&limit=1`,
+      { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
+    );
+    const win = wr.ok ? await wr.json() : [];
+    if (!win.length) {
+      res.status(400).json({ error: 'Ordering is currently closed. Please check back when the next order window opens.' });
+      return;
+    }
+    deliveryDate = win[0].delivery_date;
+  } catch (e) {
+    res.status(500).json({ error: 'Could not verify the order window. Please try again.' });
+    return;
+  }
+
   // ── Load the live catalog (source of truth for prices) ──
   const catalog = { ...FALLBACK_PRICES };
   const stockOut = new Set();
@@ -236,7 +257,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify([{
           order_id: orderId,
           user_id: userId || null,
-          customer: customer || {},
+          customer: { ...(customer || {}), delivery_date: deliveryDate },
           items: validatedItems,
           subtotal, delivery, discount, total,
           payment: 'cod',
@@ -298,7 +319,7 @@ module.exports = async (req, res) => {
         order_id: orderId,
         razorpay_order_id: rzpOrder.id,
         user_id: userId || null,
-        customer: customer || {},
+        customer: { ...(customer || {}), delivery_date: deliveryDate },
         items: validatedItems,
         subtotal, delivery, discount, total,
         payment: 'razorpay',

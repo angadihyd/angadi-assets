@@ -2078,19 +2078,31 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     if(eb) eb.innerHTML=phase.greet+' · <span style="opacity:0.8;">'+phase.note+'</span>';
   }
 
-  function startCountdown(cut){
+  // Driven by the admin-configured order window (admin/order-windows.html)
+  // instead of a fixed daily hour — the site otherwise always claimed
+  // "same-day delivery" even on days with no open order window at all.
+  function startCountdown(){
     var bar=document.getElementById('cutoffBar'), tEl=document.getElementById('cutoffTime'), lEl=document.getElementById('cutoffLabel');
     if(!bar) return;
-    document.getElementById('cutoffLabel').textContent='for '+(cut.label||'same-day delivery');
-    function tick(){
-      var now=new Date(), cutTime=new Date(); cutTime.setHours(cut.hour||16,0,0,0);
-      var diff=cutTime-now;
-      if(diff<=0){ bar.style.display='none'; return; }
+    var timer=null;
+    function tick(closesAt, dateStr){
+      var diff=new Date(closesAt)-new Date();
+      if(diff<=0){ bar.style.display='none'; if(timer) clearInterval(timer); return; }
       var hrs=Math.floor(diff/3600000), mins=Math.floor((diff%3600000)/60000), secs=Math.floor((diff%60000)/1000);
       tEl.textContent=(hrs>0?hrs+'h ':'')+mins+'m '+secs+'s';
+      lEl.textContent='to order for delivery '+dateStr;
       bar.style.display='block';
     }
-    tick(); setInterval(tick,1000);
+    var now=new Date().toISOString();
+    fetch('https://www.angadi.farm/api/supabase/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&opens_at=lte.'+now+'&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:H})
+      .then(function(r){return r.ok?r.json():[];})
+      .then(function(rows){
+        if(!rows.length){ bar.style.display='none'; return; }
+        var d=new Date(rows[0].delivery_date+'T00:00:00');
+        var dateStr=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+        tick(rows[0].closes_at, dateStr);
+        timer=setInterval(function(){ tick(rows[0].closes_at, dateStr); },1000);
+      }).catch(function(){ bar.style.display='none'; });
   }
 
   function farmer(f){
@@ -2150,13 +2162,13 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
         var m=Object.assign({},DEFAULTS);
         (rows||[]).forEach(function(x){ m[x.key]=Object.assign({},DEFAULTS[x.key]||{},x.value||{}); });
         if(m.features.goldenHour) goldenHour();
-        startCountdown(m.cutoff);
+        startCountdown();
         farmer(m.farmer);
         banner(m.banner);
         bulk(m.features.bulkOrder);
         villageSound(m.features.sound);
         ticker(m.features.ticker);
-      }).catch(function(){ startCountdown(DEFAULTS.cutoff); });
+      }).catch(function(){ startCountdown(); });
   }
   if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:2500}); else setTimeout(run,600);
 })();

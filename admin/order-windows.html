@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angadi Admin">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
+<title>Order Windows — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.2rem;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
+.sub{font-size:0.8rem;color:rgba(246,237,216,0.4);margin-bottom:1.4rem;}
+.now-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;border-radius:100px;padding:0.35rem 0.9rem;margin-bottom:1.2rem;}
+.now-badge.open{background:rgba(76,175,80,0.12);color:var(--green);border:1px solid rgba(76,175,80,0.3);}
+.now-badge.closed{background:rgba(229,115,115,0.12);color:var(--red);border:1px solid rgba(229,115,115,0.3);}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--cream);border-radius:8px;padding:0.45rem 0.95rem;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff;}
+.btn.red{color:var(--red);border-color:rgba(229,115,115,0.3);}
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.9rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.date{font-weight:700;font-size:0.95rem;color:var(--cream);min-width:110px;}
+.window{font-size:0.82rem;color:rgba(246,237,216,0.6);flex:1;min-width:200px;}
+.pill{font-size:0.66rem;font-weight:700;border-radius:100px;padding:0.15rem 0.6rem;}
+.pill.on{background:rgba(76,175,80,0.12);color:var(--green);}
+.pill.off{background:rgba(229,115,115,0.12);color:var(--red);}
+.form{background:rgba(212,160,23,0.05);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1.4rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.7rem;align-items:end;}
+.form label{font-size:0.72rem;color:rgba(246,237,216,0.5);display:block;margin-bottom:0.25rem;}
+.in{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.55rem 0.7rem;font-family:inherit;font-size:0.85rem;}
+.empty{text-align:center;color:rgba(246,237,216,0.4);padding:2.5rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+.hidden{display:none;}
+.note{font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:-0.9rem;margin-bottom:1.2rem;}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
+<div id="app" style="display:none;">
+  <div class="top"><h1>Order Windows</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="sub">Controls when customers can place an order and which delivery date it's for — enforced on the website's checkout and the WhatsApp bot. All times are IST.</div>
+  <div id="nowBadge"></div>
+  <div class="form">
+    <div><label>Delivery date</label><input class="in" id="f-date" type="date"></div>
+    <div><label>Orders open from</label><input class="in" id="f-opens" type="datetime-local"></div>
+    <div><label>Orders close at</label><input class="in" id="f-closes" type="datetime-local"></div>
+    <div><button class="btn primary" onclick="saveWindow()" id="saveBtn">＋ Add window</button></div>
+  </div>
+  <div class="note">Example: to take orders for Sunday delivery, set delivery date = that Sunday, "opens from" = when you want to start taking orders (e.g. Thursday), "closes at" = your cutoff (e.g. Saturday 8 PM).</div>
+  <div id="list"></div>
+</div>
+<script src="admin-api.js"></script>
+<script>
+let all=[], editId=null;
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+
+// All times are stored as ISO UTC but entered/shown as IST wall-clock (IST = UTC+5:30),
+// independent of whatever timezone the admin's own browser/OS is set to.
+const IST_OFFSET_MS = 5.5*60*60*1000;
+function isoToISTInput(iso){ if(!iso) return ''; return new Date(new Date(iso).getTime()+IST_OFFSET_MS).toISOString().slice(0,16); }
+function istInputToISO(local){ if(!local) return null; return new Date(new Date(local+':00Z').getTime()-IST_OFFSET_MS).toISOString(); }
+function fmtIST(iso){
+  if(!iso) return '—';
+  const d = new Date(new Date(iso).getTime()+IST_OFFSET_MS);
+  const pad=n=>String(n).padStart(2,'0');
+  let h=d.getUTCHours(); const ampm=h>=12?'PM':'AM'; h=h%12||12;
+  return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)} ${h}:${pad(d.getUTCMinutes())} ${ampm}`;
+}
+
+async function load(){
+  const r=await AdminAPI.db('order_windows','select',{order:'delivery_date.desc'});
+  all=r.data||[];
+  if(r.error) alert('Load failed: '+r.error);
+  renderNowBadge();
+  render();
+}
+function renderNowBadge(){
+  const now=new Date().toISOString();
+  const open = all.find(w=>w.is_active && w.opens_at<=now && w.closes_at>=now);
+  document.getElementById('nowBadge').innerHTML = open
+    ? `<span class="now-badge open">● Ordering is OPEN right now — for delivery ${open.delivery_date}, closes ${fmtIST(open.closes_at)} IST</span>`
+    : `<span class="now-badge closed">● Ordering is CLOSED right now</span>`;
+}
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function render(){
+  const list=document.getElementById('list');
+  if(!all.length){ list.innerHTML='<div class="empty">No order windows yet. Add one above.</div>'; return; }
+  const now=new Date().toISOString();
+  list.innerHTML=all.map(w=>{
+    const live = w.is_active && w.opens_at<=now && w.closes_at>=now;
+    return `
+    <div class="card">
+      <span class="date">${esc(w.delivery_date)}</span>
+      <span class="window">Opens ${fmtIST(w.opens_at)} · Closes ${fmtIST(w.closes_at)} IST</span>
+      <span class="pill ${w.is_active?'on':'off'}">${w.is_active?(live?'Open now':'Active'):'Off'}</span>
+      <button class="btn" onclick="toggle('${w.id}',${!w.is_active})">${w.is_active?'Disable':'Enable'}</button>
+      <button class="btn" onclick="edit('${w.id}')">✎ Edit</button>
+      <button class="btn red" onclick="del('${w.id}')">Delete</button>
+    </div>`;
+  }).join('');
+}
+async function saveWindow(){
+  const date=document.getElementById('f-date').value;
+  const opens=document.getElementById('f-opens').value;
+  const closes=document.getElementById('f-closes').value;
+  if(!date||!opens||!closes){ alert('All three fields are required'); return; }
+  const opensISO=istInputToISO(opens), closesISO=istInputToISO(closes);
+  if(closesISO<=opensISO){ alert('Close time must be after open time'); return; }
+  const row={ delivery_date:date, opens_at:opensISO, closes_at:closesISO, is_active:true };
+  let r;
+  if(editId){ r=await AdminAPI.db('order_windows','update',{match:{id:editId},values:row}); }
+  else { r=await AdminAPI.db('order_windows','insert',{values:row}); }
+  if(r.error){ alert('Save failed: '+r.error); return; }
+  editId=null; document.getElementById('saveBtn').textContent='＋ Add window';
+  ['f-date','f-opens','f-closes'].forEach(i=>document.getElementById(i).value='');
+  load();
+}
+function edit(id){
+  const w=all.find(x=>x.id===id); if(!w) return; editId=id;
+  document.getElementById('f-date').value=w.delivery_date;
+  document.getElementById('f-opens').value=isoToISTInput(w.opens_at);
+  document.getElementById('f-closes').value=isoToISTInput(w.closes_at);
+  document.getElementById('saveBtn').textContent='✓ Save changes';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function toggle(id,active){
+  await AdminAPI.db('order_windows','update',{match:{id},values:{is_active:active}});
+  const w=all.find(x=>x.id===id); if(w)w.is_active=active; renderNowBadge(); render();
+}
+async function del(id){
+  if(!confirm('Delete this order window?'))return;
+  await AdminAPI.db('order_windows','delete',{match:{id}});
+  all=all.filter(x=>x.id!==id); renderNowBadge(); render();
+}
+</script>
+</body>
+</html>

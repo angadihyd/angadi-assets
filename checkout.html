@@ -338,6 +338,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
     </div>
   </div>
 
+  <!-- ORDER WINDOW STATUS -->
+  <div id="windowBanner" style="display:none;max-width:1100px;margin:0 auto 1.2rem;padding:0 1.5rem;"></div>
+
   <!-- BODY -->
   <div class="checkout-body">
 
@@ -592,6 +595,37 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID';
 
 // ─────────────────────────────────────────────
+//  ORDER WINDOW — is ordering open right now? (see admin/order-windows.html)
+//  The server re-checks this independently before creating any order; this
+//  is just so the customer sees it clearly before filling out the whole form.
+// ─────────────────────────────────────────────
+let orderWindowOpen = true; // optimistic default if the check itself fails
+async function checkOrderWindow(){
+  const banner = document.getElementById('windowBanner');
+  try{
+    const now = new Date().toISOString();
+    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&opens_at=lte.'+now+'&closes_at=gte.'+now+'&order=closes_at.asc&limit=1', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+    });
+    if(!r.ok) return; // leave optimistic default on a network hiccup
+    const rows = await r.json();
+    if(!rows.length){
+      orderWindowOpen = false;
+      banner.style.display='block';
+      banner.innerHTML = `<div style="background:rgba(229,115,115,0.1);border:1px solid rgba(229,115,115,0.3);color:#E57373;border-radius:12px;padding:1rem 1.2rem;font-size:0.9rem;font-weight:600;">Ordering is currently closed. We'll be back for the next delivery window — check our WhatsApp or Instagram for the next opening.</div>`;
+      const btn=document.getElementById('btnPay'); if(btn) btn.disabled=true;
+    } else {
+      orderWindowOpen = true;
+      const d = new Date(rows[0].delivery_date+'T00:00:00');
+      const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+      banner.style.display='block';
+      banner.innerHTML = `<div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:#4CAF50;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ordering open — this order will be delivered on <strong>${dateStr}</strong>.</div>`;
+    }
+  }catch(e){ /* leave optimistic default */ }
+}
+checkOrderWindow();
+
+// ─────────────────────────────────────────────
 //  PRODUCT IMAGE MAP
 // ─────────────────────────────────────────────
 const PRODUCT_META = {
@@ -749,6 +783,10 @@ function selectPayment(el){
 }
 
 async function placeOrder(){
+  if (!orderWindowOpen) {
+    alert("Ordering is currently closed. We'll be back for the next delivery window.");
+    return;
+  }
   const btn = document.getElementById('btnPay');
   btn.disabled = true;
   document.getElementById('payBtnText').innerHTML = '<span class="spinner"></span> Processing…';
