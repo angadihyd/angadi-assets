@@ -91,6 +91,9 @@ body{
 .order-amount{text-align:right;flex-shrink:0;}
 .order-total{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);line-height:1;}
 .order-pay{font-size:0.65rem;color:rgba(246,237,216,0.3);}
+.pay-collect{margin-top:0.25rem;background:rgba(224,144,46,0.15);border:1px solid rgba(224,144,46,0.45);color:#F0B429;border-radius:6px;padding:0.2rem 0.45rem;font-size:0.66rem;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap;}
+.pay-done{margin-top:0.25rem;background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.4);color:#7BC67E;border-radius:6px;padding:0.2rem 0.45rem;font-size:0.66rem;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap;}
+.order-date{display:inline-flex;align-items:center;gap:0.3rem;background:rgba(196,98,45,0.12);border:1px solid rgba(196,98,45,0.3);border-radius:100px;padding:0.2rem 0.6rem;font-size:0.65rem;color:var(--clay-l);margin-top:0.5rem;margin-right:0.35rem;font-family:'Space Mono',monospace;}
 .status-pill{display:inline-flex;align-items:center;gap:0.3rem;border-radius:100px;padding:0.18rem 0.6rem;font-size:0.65rem;font-weight:700;margin-top:0.3rem;}
 .status-pill.out_for_delivery{background:rgba(196,98,45,0.12);border:1px solid var(--border);color:var(--clay-l);}
 .status-pill.confirmed{background:rgba(100,181,246,0.1);border:1px solid rgba(100,181,246,0.2);color:#64B5F6;}
@@ -192,9 +195,28 @@ window.ANGADI_PUSH_ROLE = 'partner';
 window.ANGADI_PUSH_CODE = CODE;
 
 let allOrders = [];
+
+// A Razorpay order is only actually paid once payment_id is recorded — the row
+// exists from the moment checkout starts. Labelling every non-COD order "Paid"
+// meant a partner could hand over an unpaid order without collecting, and an
+// order switched to pay-on-delivery looked identical to a prepaid one.
+function isPaidOnline(o){ return o.payment !== 'cod' && !!o.paymentId; }
+function payBadge(o){
+  return isPaidOnline(o)
+    ? '<div class="pay-done">PAID &middot; no cash</div>'
+    : '<div class="pay-collect">COLLECT ' + fmt(o.total||0) + '</div>';
+}
+function deliveryDateChip(o){
+  const d = o.customer && o.customer.delivery_date;
+  if(!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt)) return '';
+  return '<div class="order-date">' + dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) + '</div>';
+}
 function fromDb(r){
   return { orderId:r.order_id, customer:r.customer, items:r.items, total:r.total,
-    payment:r.payment, status:r.status, assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
+    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
     readyAt:r.ready_at, placedAt:r.placed_at };
 }
 async function loadOrders(){
@@ -263,12 +285,12 @@ function renderOffers(){
           </div>
           <div class="order-customer">${o.customer?.name||'—'}</div>
           <div class="order-address">${addr||'—'}</div>
-          <div class="order-slot">${o.customer?.slot||'—'}</div>
+          ${deliveryDateChip(o)}<div class="order-slot">${o.customer?.slot||'—'}</div>
           <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
         </div>
         <div class="order-amount">
           <div class="order-total">${fmt(o.total||0)}</div>
-          <div class="order-pay">${o.payment==='cod'?'COD':'Paid'}</div>
+          ${payBadge(o)}
         </div>
       </div>
       <div class="order-actions">
@@ -329,12 +351,12 @@ function renderOrders(){
           <div class="order-time">${formatTime(o.placedAt||new Date().toISOString())}</div>
           <div class="order-customer">${o.customer?.name||'—'}</div>
           <div class="order-address">${addr||'—'}</div>
-          <div class="order-slot">${o.customer?.slot||'—'}</div>
+          ${deliveryDateChip(o)}<div class="order-slot">${o.customer?.slot||'—'}</div>
           <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.4rem;">${items}</div>
         </div>
         <div class="order-amount">
           <div class="order-total">${fmt(o.total||0)}</div>
-          <div class="order-pay">${o.payment==='cod'?'COD':'Paid'}</div>
+          ${payBadge(o)}
         </div>
       </div>
       <div class="order-actions">

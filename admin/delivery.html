@@ -360,8 +360,21 @@ const NO_ACCEPT_ALERT_MS = 3 * 60 * 1000;  // alert admin if ready & unclaimed >
 const boyKey = b => b.code || b.id;
 function fromDb(r){
   return { orderId:r.order_id, customer:r.customer, items:r.items, total:r.total,
-    payment:r.payment, status:r.status, assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
+    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
     readyAt:r.ready_at, placedAt:r.placed_at };
+}
+
+// A Razorpay order is only actually paid once payment_id is recorded, and an
+// order can be switched to pay-on-delivery after a failed payment — so cash due
+// has to be derived, not assumed from the payment type alone.
+function isPaidOnline(o){ return o.payment !== 'cod' && !!o.paymentId; }
+function deliveryDateChip(o){
+  const d = o.customer && o.customer.delivery_date;
+  if(!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt)) return '';
+  return '<span class="order-slot" style="color:var(--clay-l);">' + dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) + '</span>';
 }
 
 function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'; }
@@ -481,7 +494,7 @@ function buildOrderCard(o, animIdx){
   const a    = o.customer?.address||{};
   const addr = [a.flat, a.area, a.pincode].filter(Boolean).join(', ');
   const items= (o.items||[]).map(i=>`${i.name.split(' · ')[0]} ×${i.qty}`);
-  const isCOD= o.payment==='cod';
+  const isCOD= !isPaidOnline(o);   // cash still to collect
   const assignedBoy = o.assignedTo ? deliveryBoys.find(b=>boyKey(b)===o.assignedTo) : null;
   const availBoys   = deliveryBoys.filter(b=>b.status==='available');
   const isUnclaimed = s==='ready' && !o.assignedTo;
@@ -507,13 +520,14 @@ function buildOrderCard(o, animIdx){
             ${addr||'Address not provided'}
           </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+            ${deliveryDateChip(o)}
             <span class="order-slot">${o.customer?.slot||'—'}</span>
             ${isCOD?`<span style="background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);color:var(--gold);border-radius:100px;padding:0.22rem 0.7rem;font-size:0.68rem;font-family:'Space Mono',monospace;">COD ${fmt(o.total)}</span>`:''}
           </div>
         </div>
         <div class="order-amount-col">
           <div class="order-amount">${fmt(o.total||0)}</div>
-          <div class="order-payment">${isCOD?'Cash on Delivery':'Paid Online'}</div>
+          <div class="order-payment" style="color:${isCOD?'#F0B429':'#7BC67E'};font-weight:700;">${isCOD?'COLLECT '+fmt(o.total||0):'PAID · no cash'}</div>
           ${o.customer?.phone?`<div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(246,237,216,0.3);margin-top:0.3rem;">${o.customer.phone}</div>`:''}
         </div>
       </div>
@@ -683,7 +697,7 @@ function sendWhatsAppUpdate(orderId, event, boyId){
   if(!o||!o.customer?.phone) return;
   const msgs = {
     assigned:         `Hi ${o.customer.name}! Your Angadi order ${orderId} has been assigned to our delivery partner and will be on its way soon.`,
-    out_for_delivery: `Hi ${o.customer.name}! Your Angadi order ${orderId} is out for delivery! Our delivery partner is heading to you now. Please keep ${o.payment==='cod'?'₹'+o.total+' (cash)':''} ready.`,
+    out_for_delivery: `Hi ${o.customer.name}! Your Angadi order ${orderId} is out for delivery! Our delivery partner is heading to you now. ${isPaidOnline(o)?'Your order is already paid — nothing to pay on delivery.':'Please keep ₹'+o.total+' (cash) ready.'}`,
     delivered:        `Hi ${o.customer.name}! Your Angadi order ${orderId} has been delivered. Thank you for choosing Angadi! Enjoy your fresh village meat.`,
   };
   const msg = msgs[event];
