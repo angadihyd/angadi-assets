@@ -503,7 +503,7 @@ function openDetail(orderId){
     </div>
     <div class="detail-section">
       <div class="detail-label">Order Actions</div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${actionButtons(o, true)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${actionButtons(o, true)}${(o.payment==='razorpay' && !o.paymentId && o.razorpayOrderId) ? `<button class="act-btn" onclick="event.stopPropagation();verifyRazorpayPayment('${o.orderId}')">🔍 Verify with Razorpay</button>` : ''}</div>
       ${s==='ready' ? `<div style="margin-top:0.7rem;font-size:0.76rem;color:var(--clay-l);">Broadcasting to available delivery partners… <a href="delivery.html" style="color:var(--gold);">Open delivery board →</a></div>` : ''}
       ${o.acceptedBy ? `<div style="margin-top:0.7rem;font-size:0.78rem;color:rgba(246,237,216,0.6);">Partner: <strong style="color:var(--cream);">${o.acceptedBy}</strong></div>` : ''}
       <select class="status-select" style="width:100%;padding:0.55rem 1rem;margin-top:0.7rem;" onchange="if(this.value){setOrderStatus('${o.orderId}',this.value);this.value='';}">
@@ -579,6 +579,25 @@ function actionButtons(o, big){
       return `<span class="act-btn danger" style="cursor:default;">Cancelled</span>`;
     }
     default: return '';
+  }
+}
+
+async function verifyRazorpayPayment(orderId){
+  const o = allOrders.find(x=>x.orderId===orderId);
+  if(!o) return;
+  showToast('Checking with Razorpay…');
+  const check = await AdminAPI.checkRazorpayPayment(orderId);
+  if(check.error){ alert('Could not verify: '+check.error); return; }
+  if(check.capturedPaymentId){
+    o.paymentId = check.capturedPaymentId;
+    if(o.status!=='cancelled') o.status='paid';
+    renderStats(); renderTable(); openDetail(orderId);
+    alert(`✓ Razorpay confirms payment ${check.capturedPaymentId} was captured. Order updated — a Refund button is now available if you need to cancel it.`);
+  } else if(check.razorpayPayments && check.razorpayPayments.length){
+    const statuses = check.razorpayPayments.map(p=>p.status).join(', ');
+    alert(`Razorpay shows ${check.razorpayPayments.length} payment attempt(s) for this order, none captured: ${statuses}. The customer's payment did not go through.`);
+  } else {
+    alert('Razorpay has no payment attempts on record for this order — the customer never completed the payment step.');
   }
 }
 
