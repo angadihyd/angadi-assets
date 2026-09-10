@@ -309,6 +309,29 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // ── Claim the amount before spending it ──
+      // refunded_amount was read above and only written after the Razorpay
+      // call, so two quick clicks both read the old value and both refunded.
+      // This conditional update only succeeds for the first caller.
+      const newRefundedTotal = alreadyRefunded + amount;
+      const claim = await rest(env,
+        `orders?order_id=eq.${encodeURIComponent(orderId)}&refunded_amount=eq.${alreadyRefunded}`,
+        {
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({ refunded_amount: newRefundedTotal }),
+        });
+      const claimedRows = claim.ok ? await claim.json().catch(() => []) : [];
+      if (!Array.isArray(claimedRows) || !claimedRows.length) {
+        res.status(409).json({ error: 'Another refund for this order is already being processed. Reload the page to see the current refund total.' });
+        return;
+      }
+      const releaseClaim = () => rest(env, `orders?order_id=eq.${encodeURIComponent(orderId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ refunded_amount: alreadyRefunded }),
+      }).catch(() => {});
+
       // ── Call Razorpay's refund API — this actually moves money ──
       let rzpData;
       try {
@@ -320,16 +343,17 @@ module.exports = async (req, res) => {
         });
         rzpData = await rzpRes.json();
         if (!rzpRes.ok) {
+          await releaseClaim();
           res.status(500).json({ error: (rzpData && rzpData.error && rzpData.error.description) || 'Refund failed at Razorpay' });
           return;
         }
       } catch (e) {
+        await releaseClaim();
         res.status(502).json({ error: 'Could not reach Razorpay: ' + String(e.message || e) });
         return;
       }
 
       // ── Record it — this order is now refunded/cancelled ──
-      const newRefundedTotal = alreadyRefunded + amount;
       const patchFields = {
         refund_id: rzpData.id,
         refunded_amount: newRefundedTotal,

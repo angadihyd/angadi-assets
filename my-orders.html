@@ -590,12 +590,20 @@ function renderOrders(){
   const list = document.getElementById('ordersList');
 
   if (filtered.length === 0) {
+    // Someone who isn't signed in has no orders to show *yet* — telling them
+    // "No orders yet" reads as "your order is gone". Offer sign-in instead.
+    const signedIn = !!(JSON.parse(localStorage.getItem('angadi_user') || '{}').loggedIn);
+    const emptyBody = (activeFilter === 'all' && !signedIn)
+      ? `<div class="empty-title">Sign in to see your orders</div>
+         <p class="empty-sub">Your order history is linked to your account. Placed an order as a guest? Message us on WhatsApp with your order ID and we'll track it for you.</p>
+         <a href="login.html?redirect=my-orders.html" class="btn-primary">Sign In</a>`
+      : `<div class="empty-title">${activeFilter === 'all' ? 'No orders yet' : 'No orders found'}</div>
+         <p class="empty-sub">${activeFilter === 'all' ? 'When you place your first order it will appear here.' : 'Try a different filter or search term.'}</p>
+         ${activeFilter === 'all' ? `<a href="shop.html" class="btn-primary">Start Shopping</a>` : ''}`;
     list.innerHTML = `
       <div class="empty-orders">
         <div class="empty-icon"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="rgba(246,237,216,0.35)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></div>
-        <div class="empty-title">${activeFilter === 'all' ? 'No orders yet' : 'No orders found'}</div>
-        <p class="empty-sub">${activeFilter === 'all' ? 'When you place your first order it will appear here.' : 'Try a different filter or search term.'}</p>
-        ${activeFilter === 'all' ? `<a href="shop.html" class="btn-primary">Start Shopping</a>` : ''}
+        ${emptyBody}
       </div>
     `;
     return;

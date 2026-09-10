@@ -1346,6 +1346,10 @@ function renderProduct(p) {
   if (seoDesc) document.querySelector('meta[name="description"]').setAttribute('content', seoDesc);
   const canonicalUrl = `https://www.angadi.farm/product-detail.html?id=${encodeURIComponent(p.id)}`;
   document.querySelector('link[rel="canonical"]').setAttribute('href', canonicalUrl);
+  // og:url was left on the bare page URL, so every shared product link
+  // previewed as the same page.
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
   const ld = document.createElement('script');
   ld.type = 'application/ld+json';
   ld.textContent = JSON.stringify({
