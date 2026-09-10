@@ -373,6 +373,15 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
           <div class="panel-title">Delivery Address</div>
           <p class="panel-sub">Where should we deliver your fresh village meat?</p>
 
+          <!-- Guests were never asked to sign in, so nothing was ever saved to
+               an account and the address had to be retyped every order. -->
+          <div id="guestPrompt" style="display:none;background:rgba(212,160,23,0.08);border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:12px;padding:0.85rem 1rem;margin-bottom:1.2rem;display:none;align-items:center;gap:0.8rem;flex-wrap:wrap;justify-content:space-between;">
+            <div style="font-size:0.85rem;color:rgba(246,237,216,0.75);">
+              <strong style="color:var(--cream);">Have an account?</strong> Sign in and we'll remember your address next time.
+            </div>
+            <a href="login.html?redirect=checkout.html" style="background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);text-decoration:none;padding:0.5rem 1.1rem;border-radius:8px;font-size:0.82rem;font-weight:600;white-space:nowrap;">Sign in</a>
+          </div>
+
           <!-- SAVED ADDRESS BANNER -->
           <div class="saved-addr-banner" id="savedAddrBanner">
             <div class="saved-addr-row">
@@ -974,6 +983,8 @@ async function placeOrder(){
     }
   }catch(e){ /* guest checkout — order stays phone-matched */ }
 
+  saveAddressToAccount(order.customer.address, order.customer.name, order.customer.phone);
+
   // Update saved address from this checkout (keeps it fresh)
   const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
   localStorage.setItem('angadi_user', JSON.stringify({
@@ -1108,15 +1119,19 @@ async function placeRazorpay(order){
       localStorage.removeItem('angadi_promo_discount');
       window.location.href = 'order-confirm.html?method=online&order=' + encodeURIComponent(data.orderId);
     },
-    modal: { ondismiss: () => { document.getElementById('btnPay').disabled=false; renderSummary(); } }
+    modal: { ondismiss: () => {
+      document.getElementById('btnPay').disabled = false;
+      renderSummary();
+      offerCodFallback(order, data.orderId, 'Payment not completed.');
+    } }
   });
 
   // Surface payment failures to the user instead of failing silently.
   rzp.on('payment.failed', (resp) => {
     const desc = resp?.error?.description || 'Your payment could not be completed.';
-    alert('Payment failed: ' + desc + '\nYou can try again.');
     document.getElementById('btnPay').disabled = false;
     renderSummary();
+    offerCodFallback(order, data.orderId, 'Payment failed: ' + desc);
   });
 
   rzp.open();
@@ -1134,6 +1149,105 @@ function genOrderId(){
 // ─────────────────────────────────────────────
 //  AUTO-FILL FROM SAVED USER PROFILE
 // ─────────────────────────────────────────────
+// The saved name/phone/address used to live only in this browser's
+// localStorage, so a customer who signed in on a new phone — or whose browser
+// cleared site data, which Safari does after a week of not visiting — had to
+// type their address again on every order. Pull it from their account instead.
+// When an online payment fails or the customer closes the payment window, the
+// order they already filled in sat as 'pending' forever and most people simply
+// gave up. Offer to keep that order and pay cash on delivery instead.
+const COD_LIMIT_CHECKOUT = 5000;
+async function offerCodFallback(order, orderId, reason) {
+  if (!orderId || !order) return;
+  const phone = order.customer && order.customer.phone;
+  if (Number(order.total || 0) > COD_LIMIT_CHECKOUT) {
+    alert(reason + '\n\nYou can try the payment again.');
+    return;
+  }
+  const ok = confirm(
+    reason +
+    '\n\nYour order is saved. Would you like to pay Cash on Delivery instead?' +
+    '\n\nOK = Cash on Delivery   ·   Cancel = try paying again'
+  );
+  if (!ok) return;
+  try {
+    const r = await fetch('/api/convert-to-cod', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, phone }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(j.error || 'Could not switch to Cash on Delivery. Please message us on WhatsApp.'); return; }
+    localStorage.setItem('angadi_last_order', JSON.stringify({
+      ...order, orderId, payment: 'cod', status: 'confirmed_cod',
+    }));
+    localStorage.removeItem('angadi_cart');
+    localStorage.removeItem('angadi_promo_code');
+    localStorage.removeItem('angadi_promo_discount');
+    window.location.href = 'order-confirm.html?method=cod&order=' + encodeURIComponent(orderId);
+  } catch (e) {
+    alert('Network error. Please check your connection and try again.');
+  }
+}
+
+function updateGuestPrompt() {
+  const el = document.getElementById('guestPrompt');
+  if (!el) return;
+  const u = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  el.style.display = u.loggedIn ? 'none' : 'flex';
+}
+
+async function loadAccountProfile() {
+  if (!supabaseClient) return;
+  try {
+    const { data: sess } = await supabaseClient.auth.getSession();
+    const u = sess && sess.session && sess.session.user;
+    if (!u) return;
+    const stored = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+    const merged = { ...stored, id: u.id, email: u.email || stored.email, loggedIn: true };
+
+    const { data: prof } = await supabaseClient
+      .from('profiles').select('name,phone').eq('id', u.id).maybeSingle();
+    if (prof) {
+      if (prof.name) merged.name = prof.name;
+      if (prof.phone) merged.phone = prof.phone;
+    }
+    const { data: addrs } = await supabaseClient
+      .from('addresses').select('*').eq('user_id', u.id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const a = addrs && addrs[0];
+    if (a && a.flat) {
+      merged.address = {
+        flat: a.flat, area: a.area, landmark: a.landmark,
+        pincode: a.pincode, city: a.city || 'Hyderabad', type: a.type,
+      };
+    }
+    localStorage.setItem('angadi_user', JSON.stringify(merged));
+    loadSavedAddress();
+    updateGuestPrompt();
+  } catch (e) { /* fall back to whatever this browser had */ }
+}
+
+// Save the details back to the account so the next order is one tap. Done as
+// soon as the order is submitted, so it sticks even if the payment then fails.
+async function saveAddressToAccount(addr, name, phone) {
+  if (!supabaseClient) return;
+  try {
+    const { data: sess } = await supabaseClient.auth.getSession();
+    const u = sess && sess.session && sess.session.user;
+    if (!u || !addr || !addr.flat) return;
+    await supabaseClient.from('profiles').upsert({ id: u.id, name: name || '', phone: phone || '' });
+    // Keep exactly one default rather than piling up a duplicate per order.
+    await supabaseClient.from('addresses').delete().eq('user_id', u.id).eq('is_default', true);
+    await supabaseClient.from('addresses').insert({
+      user_id: u.id, flat: addr.flat, area: addr.area, landmark: addr.landmark,
+      pincode: addr.pincode, city: addr.city || 'Hyderabad', type: addr.type, is_default: true,
+    });
+  } catch (e) { /* never block an order on this */ }
+}
+
 function autoFillFromProfile() {
   const user = JSON.parse(localStorage.getItem('angadi_user') || 'null');
   if (!user) return;
@@ -1315,6 +1429,8 @@ if (true) { // Supabase connected
 }
 
 loadSavedAddress();
+updateGuestPrompt();
+loadAccountProfile();
 renderSummary();
 initLocationPicker();
 loadDeliveryConfig();

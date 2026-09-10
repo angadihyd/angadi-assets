@@ -675,6 +675,50 @@ function initProfile() {
     localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
   }
   renderAddresses();
+  loadAddressesFromAccount();
+}
+
+// Mirror the list to the account. The old code upserted a single address with
+// no conflict key, so every edit inserted another row, and removing an address
+// or changing the default was never written to the account at all.
+async function syncAddressesToAccount() {
+  if (!sb) return;
+  try {
+    const { data: sess } = await sb.auth.getSession();
+    const u = sess && sess.session && sess.session.user;
+    if (!u) return;
+    await sb.from('addresses').delete().eq('user_id', u.id);
+    if (savedAddresses.length) {
+      await sb.from('addresses').insert(savedAddresses.map(a => ({
+        user_id: u.id, flat: a.flat, area: a.area, landmark: a.landmark,
+        pincode: a.pincode, city: a.city || 'Hyderabad',
+        type: a.type, is_default: !!a.is_default,
+      })));
+    }
+  } catch (e) { /* local list still updated */ }
+}
+
+// Addresses were only ever read from this browser's localStorage, so signing in
+// on another phone (or after the browser cleared site data) showed none of the
+// addresses already saved to the account.
+async function loadAddressesFromAccount() {
+  if (!sb) return;
+  try {
+    const { data: sess } = await sb.auth.getSession();
+    const u = sess && sess.session && sess.session.user;
+    if (!u) return;
+    const { data: rows } = await sb.from('addresses').select('*').eq('user_id', u.id)
+      .order('is_default', { ascending: false }).order('created_at', { ascending: false });
+    if (!rows || !rows.length) return;
+    savedAddresses = rows.map(r => ({
+      id: r.id, flat: r.flat, area: r.area, landmark: r.landmark,
+      pincode: r.pincode, city: r.city || 'Hyderabad',
+      type: r.type || 'Home', is_default: !!r.is_default,
+    }));
+    if (!savedAddresses.some(a => a.is_default)) savedAddresses[0].is_default = true;
+    localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
+    renderAddresses();
+  } catch (e) { /* keep whatever this browser had */ }
 }
 
 // ─────────────────────────────────────────────
@@ -815,11 +859,7 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
   const def = savedAddresses.find(a => a.is_default);
   if (def) { user.address = def; localStorage.setItem('angadi_user', JSON.stringify(user)); }
 
-  if (sb && user.id) {
-    try {
-      await sb.from('addresses').upsert({ user_id: user.id, ...newAddr });
-    } catch(err) {}
-  }
+  await syncAddressesToAccount();
 
   setLoading('saveAddressBtn', false, 'Save Address');
   renderAddresses();
@@ -834,6 +874,7 @@ function setDefaultAddress(idx) {
   user.address = savedAddresses[idx];
   localStorage.setItem('angadi_user', JSON.stringify(user));
   renderAddresses();
+  syncAddressesToAccount();
   showToast('✓ Default address updated');
 }
 
@@ -843,6 +884,7 @@ function deleteAddress(idx) {
   if (savedAddresses.length && !savedAddresses.some(a => a.is_default)) savedAddresses[0].is_default = true;
   localStorage.setItem('angadi_addresses', JSON.stringify(savedAddresses));
   renderAddresses();
+  syncAddressesToAccount();
   showToast('Address removed');
 }
 
