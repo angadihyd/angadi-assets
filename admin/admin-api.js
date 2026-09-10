@@ -49,6 +49,9 @@
     db: function (table, op, opts) {
       return this.call('db', Object.assign({ table: table, op: op }, opts || {}));
     },
+    refundOrder: function (orderId, amount) {
+      return this.call('refund-order', { orderId: orderId, amount: amount });
+    },
 
     // ── delivery partner ──
     ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },

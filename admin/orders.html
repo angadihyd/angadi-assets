@@ -307,6 +307,7 @@ function fromDb(r){
     assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
     readyAt:r.ready_at, acceptedAt:r.accepted_at, pickedUpAt:r.picked_up_at, deliveredAt:r.delivered_at,
     placedAt:r.placed_at,
+    refundId:r.refund_id, refundedAmount:Number(r.refunded_amount||0), refundedAt:r.refunded_at,
   };
 }
 function o_(v){ return v || ''; }
@@ -508,6 +509,11 @@ function openDetail(orderId){
       <div class="detail-value" style="margin-top:0.4rem;">${o.customer?.slot||'—'}</div>
       ${o.customer?.notes?`<div class="detail-value" style="margin-top:0.4rem;">${o.customer.notes}</div>`:''}
     </div>
+    ${(o.refundedAmount>0)?`<div class="detail-section">
+      <div class="detail-label">Refund</div>
+      <div class="detail-value" style="color:var(--red);font-weight:700;">₹${o.refundedAmount.toLocaleString('en-IN')} refunded${o.refundedAmount<o.total?' (partial)':''}</div>
+      <div class="detail-value" style="margin-top:0.2rem;font-size:0.72rem;opacity:0.6;">${o.refundId||''} · ${o.refundedAt?formatDate(o.refundedAt):''}</div>
+    </div>`:''}
     <a href="https://wa.me/${(o.customer?.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+o.customer?.name+'! Your Angadi order '+o.orderId+' update: '+statusLabel(o.status)+'. Thank you for ordering with us!')}" target="_blank" class="wa-action-btn">Send WhatsApp Update</a>
     <button onclick="closeDetail()" style="width:100%;background:none;border:1px solid var(--border);color:rgba(246,237,216,0.4);padding:0.7rem;border-radius:10px;font-size:0.82rem;cursor:pointer;margin-top:0.6rem;font-family:'DM Sans',sans-serif;" onmouseover="this.style.borderColor='var(--clay-l)'" onmouseout="this.style.borderColor='var(--border)'">Close</button>
   `;
@@ -527,7 +533,7 @@ function actionButtons(o, big){
   const s = normaliseStatus(o.status);
   const cls = big ? 'act-btn' : 'act-btn';
   const b = (label, st, kind='') => `<button class="${cls} ${kind}" onclick="event.stopPropagation();setOrderStatus('${o.orderId}','${st}')">${label}</button>`;
-  const cancel = b('✕ Cancel','cancelled','danger');
+  const cancel = `<button class="${cls} danger" onclick="event.stopPropagation();cancelOrder('${o.orderId}')">✕ Cancel</button>`;
   switch(s){
     case 'pending':   return b('✓ Confirm Order','confirmed','primary') + cancel;
     case 'confirmed': return b('Start Preparing','preparing','primary') + cancel;
@@ -541,6 +547,34 @@ function actionButtons(o, big){
     case 'cancelled': return `<span class="act-btn danger" style="cursor:default;">Cancelled</span>`;
     default: return '';
   }
+}
+
+async function cancelOrder(orderId){
+  const o = allOrders.find(x=>x.orderId===orderId);
+  if(!o) return;
+  const wasPaidOnline = o.payment==='razorpay' && o.paymentId;
+  if(!wasPaidOnline){
+    // COD, or a Razorpay order that was never actually charged — nothing to refund.
+    if(!confirm(`Cancel order ${orderId}? No refund needed (${o.payment==='cod'?'was Cash on Delivery':'was never paid'}).`)) return;
+    setOrderStatus(orderId,'cancelled');
+    return;
+  }
+  const remaining = Number(o.total||0) - Number(o.refundedAmount||0);
+  if(remaining <= 0.01){ alert('This order has already been fully refunded.'); return; }
+  const input = prompt(`Refund amount for ${orderId} (₹, up to ₹${remaining.toLocaleString('en-IN')} remaining):`, remaining);
+  if(input===null) return; // admin cancelled the prompt
+  const amount = parseFloat(input);
+  if(!(amount>0) || amount>remaining+0.01){ alert(`Enter an amount between ₹1 and ₹${remaining.toLocaleString('en-IN')}.`); return; }
+  if(!confirm(`Refund ₹${amount.toLocaleString('en-IN')} to the customer via Razorpay? This cannot be undone.`)) return;
+  showToast('Processing refund…');
+  const r = await AdminAPI.refundOrder(orderId, amount);
+  if(r.error){ alert('Refund failed: '+r.error); return; }
+  o.refundedAmount = r.totalRefunded ?? (Number(o.refundedAmount||0)+amount);
+  o.refundId = r.refundId || o.refundId;
+  if(r.fullyCancelled) o.status = 'cancelled';
+  renderStats(); renderTable();
+  if(document.getElementById('detailPanel').classList.contains('open') && currentDetailId===orderId) openDetail(orderId);
+  showToast(`✓ Refunded ₹${amount.toLocaleString('en-IN')} for ${orderId}`);
 }
 
 async function setOrderStatus(orderId, newStatus){

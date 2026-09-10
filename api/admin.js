@@ -280,6 +280,77 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (action === 'refund-order') {
+      const orderId = String(payload.orderId || '');
+      const amount = Number(payload.amount);
+      if (!orderId || !(amount > 0)) {
+        res.status(400).json({ error: 'orderId and a positive amount are required' });
+        return;
+      }
+      const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+      const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+      if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+        res.status(500).json({ error: 'Razorpay not configured on the server' });
+        return;
+      }
+
+      const lookup = await rest(env, `orders?order_id=eq.${encodeURIComponent(orderId)}&select=payment,payment_id,total,refunded_amount,status`);
+      const rows = await lookup.json();
+      const order = Array.isArray(rows) ? rows[0] : null;
+      if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+      if (order.payment !== 'razorpay' || !order.payment_id) {
+        res.status(400).json({ error: 'This order was not paid online — nothing to refund via Razorpay. Cancel it directly instead.' });
+        return;
+      }
+      const alreadyRefunded = Number(order.refunded_amount || 0);
+      const orderTotal = Number(order.total || 0);
+      if (alreadyRefunded + amount > orderTotal + 0.01) {
+        res.status(400).json({ error: `That would exceed the order total. Already refunded ₹${alreadyRefunded}, order total ₹${orderTotal}.` });
+        return;
+      }
+
+      // ── Call Razorpay's refund API — this actually moves money ──
+      let rzpData;
+      try {
+        const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+        const rzpRes = await fetch(`https://api.razorpay.com/v1/payments/${order.payment_id}/refund`, {
+          method: 'POST',
+          headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: Math.round(amount * 100) }),
+        });
+        rzpData = await rzpRes.json();
+        if (!rzpRes.ok) {
+          res.status(500).json({ error: (rzpData && rzpData.error && rzpData.error.description) || 'Refund failed at Razorpay' });
+          return;
+        }
+      } catch (e) {
+        res.status(502).json({ error: 'Could not reach Razorpay: ' + String(e.message || e) });
+        return;
+      }
+
+      // ── Record it — this order is now refunded/cancelled ──
+      const newRefundedTotal = alreadyRefunded + amount;
+      const patchFields = {
+        refund_id: rzpData.id,
+        refunded_amount: newRefundedTotal,
+        refunded_at: new Date().toISOString(),
+      };
+      if (newRefundedTotal >= orderTotal - 0.01) patchFields.status = 'cancelled';
+      const upd = await rest(env, `orders?order_id=eq.${encodeURIComponent(orderId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify(patchFields),
+      });
+      if (!upd.ok) {
+        const t = await upd.text();
+        // Refund already succeeded at Razorpay — surface this clearly rather than silently losing it.
+        res.status(500).json({ error: 'Refund succeeded at Razorpay (id ' + rzpData.id + ') but saving it failed: ' + t.slice(0, 200) });
+        return;
+      }
+      res.status(200).json({ ok: true, refundId: rzpData.id, amount, totalRefunded: newRefundedTotal, fullyCancelled: !!patchFields.status });
+      return;
+    }
+
     res.status(400).json({ error: 'Unknown action' });
   } catch (e) {
     console.error('admin api error', e);
