@@ -1938,8 +1938,11 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       var byName={}; list.forEach(function(p){byName[p.name]=p;});
       document.querySelectorAll('.products-grid .product-card').forEach(function(card){
         var nameEl=card.querySelector('.product-name'); if(!nameEl) return;
-        var p=byName[card.dataset.name || nameEl.textContent.trim()]; if(!p) return;
-        if(p.active===false){ card.style.display='none'; return; }
+        // RLS only ever returns active=true rows to the anon key, so a
+        // disabled product is simply absent here — not present means hidden,
+        // never leave the stale static card visible/orderable.
+        var p=byName[card.dataset.name || nameEl.textContent.trim()];
+        if(!p){ card.style.display='none'; return; }
         var priceEl=card.querySelector('.product-price-main');
         if(priceEl) priceEl.textContent='₹'+Number(p.price).toLocaleString('en-IN');
         var btn=card.querySelector('.btn-add');

@@ -1095,12 +1095,15 @@ async function syncUpsellPrices(){
     const r = await fetch(COUPON_URL+'/rest/v1/products?select=slug,name,price,unit,active,in_stock&slug=in.('+ids+')',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
     if(!r.ok) return;
     const rows = await r.json();
+    // RLS only ever returns active=true rows to the anon key, so a disabled
+    // product is simply absent here — treat "not found" as inactive, don't
+    // leave it defaulted to shown.
     const bySlug = {}; rows.forEach(row => { bySlug[row.slug] = row; });
     UPSELLS.forEach(u => {
       const row = bySlug[u.id];
-      if(!row) return;
+      if(!row){ u._active = false; return; }
       u.name = row.name; u.price = Number(row.price); u.unit = row.unit;
-      u._active = row.active !== false; u._inStock = row.in_stock !== false;
+      u._active = true; u._inStock = row.in_stock !== false;
     });
     render();
   }catch(e){ /* keep static fallback */ }

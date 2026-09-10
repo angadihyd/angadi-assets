@@ -1736,10 +1736,15 @@ async function initDetail(){
     const res = await fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=*&slug=eq.' + encodeURIComponent(productId), {
       headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
     });
-    const arr = res.ok ? await res.json() : [];
-    const data = (Array.isArray(arr) && arr.length) ? arr[0] : null;
-    if (data && data.active === false){ showNotFound(); return; }
-    if (data){
+    // RLS only ever returns active=true rows to the anon key. A successful
+    // request with no row means "inactive or doesn't exist" — show not
+    // found rather than silently falling back to stale static data. Only
+    // an actual request failure (caught below, or a non-OK response) should
+    // fall back to the static product for resilience.
+    if (res.ok) {
+      const arr = await res.json();
+      const data = (Array.isArray(arr) && arr.length) ? arr[0] : null;
+      if (!data){ showNotFound(); return; }
       if (!product) product = baseFromDb(data);
       product.price = Number(data.price);
       product.unit  = data.unit;
@@ -1802,10 +1807,14 @@ async function syncRelatedPrices(relatedIds, currentPid){
     });
     if (!r.ok) return;
     const rows = await r.json();
+    // RLS only ever returns active=true rows to the anon key, so a disabled
+    // product is simply absent here — mark every requested slug inactive by
+    // default, then flip on only the ones that actually came back.
+    relatedIds.forEach(slug => { const rp = PRODUCTS[slug]; if (rp) rp._active = false; });
     rows.forEach(row => {
       const rp = PRODUCTS[row.slug]; if (!rp) return;
       rp.name = row.name; rp.nameTE = row.name_te; rp.price = Number(row.price); rp.unit = row.unit;
-      rp._active = row.active !== false; rp._inStock = row.in_stock !== false;
+      rp._active = true; rp._inStock = row.in_stock !== false;
     });
     renderRelated(currentPid);
   } catch(e) { /* keep static fallback */ }
