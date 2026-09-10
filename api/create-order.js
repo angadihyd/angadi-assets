@@ -264,9 +264,13 @@ module.exports = async (req, res) => {
       const perCustomer = Number(promo.max_uses_per_customer || 0);
       if (!expired && !belowMin && perCustomer > 0) {
         const phone10 = String((customer && customer.phone) || '').replace(/\D/g, '').slice(-10);
+        // user_id is a uuid column — a malformed value makes the whole lookup
+        // error, and this check fails open, so a junk userId would have been a
+        // way to bypass the limit. Only include it when it really is a uuid.
+        const isUuid = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
         const idParts = [];
         if (phone10.length === 10) idParts.push(`customer->>phone.like.*${phone10.slice(-4)}*`);
-        if (userId) idParts.push(`user_id.eq.${encodeURIComponent(userId)}`);
+        if (isUuid) idParts.push(`user_id.eq.${userId}`);
         if (idParts.length) {
           try {
             // An abandoned checkout ('pending', never paid) and a cancelled
@@ -281,7 +285,7 @@ module.exports = async (req, res) => {
               const prior = await ur.json();
               const used = (prior || []).filter((o) => {
                 const oPhone = String((o.customer && o.customer.phone) || '').replace(/\D/g, '').slice(-10);
-                return (phone10.length === 10 && oPhone === phone10) || (userId && o.user_id === userId);
+                return (phone10.length === 10 && oPhone === phone10) || (isUuid && o.user_id === userId);
               }).length;
               limitReached = used >= perCustomer;
             }
