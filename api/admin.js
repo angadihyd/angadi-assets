@@ -351,6 +351,63 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (action === 'check-razorpay-payment') {
+      // Read-only reconciliation check: our DB may show no payment_id (e.g. the
+      // customer's browser closed before verify-payment.js ran, and the
+      // razorpay-webhook.js backstop is missing/misconfigured) even though
+      // Razorpay actually captured the money. Ask Razorpay directly instead
+      // of trusting our own row, so a paying customer is never told "not paid".
+      const orderId = String(payload.orderId || '');
+      if (!orderId) { res.status(400).json({ error: 'orderId required' }); return; }
+      const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+      const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+      if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+        res.status(500).json({ error: 'Razorpay not configured on the server' });
+        return;
+      }
+      const lookup = await rest(env, `orders?order_id=eq.${encodeURIComponent(orderId)}&select=razorpay_order_id,payment,payment_id,status`);
+      const rows = await lookup.json();
+      const order = Array.isArray(rows) ? rows[0] : null;
+      if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+      if (!order.razorpay_order_id) { res.status(400).json({ error: 'This order has no Razorpay order id — it was never a Razorpay checkout.' }); return; }
+
+      const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+      let rzpData;
+      try {
+        const rzpRes = await fetch(`https://api.razorpay.com/v1/orders/${order.razorpay_order_id}/payments`, {
+          headers: { Authorization: `Basic ${auth}` },
+        });
+        rzpData = await rzpRes.json();
+        if (!rzpRes.ok) {
+          res.status(500).json({ error: (rzpData && rzpData.error && rzpData.error.description) || 'Razorpay lookup failed' });
+          return;
+        }
+      } catch (e) {
+        res.status(502).json({ error: 'Could not reach Razorpay: ' + String(e.message || e) });
+        return;
+      }
+
+      const payments = rzpData.items || [];
+      const captured = payments.find((p) => p.status === 'captured');
+
+      // Auto-heal: Razorpay has a captured payment we never recorded.
+      if (captured && !order.payment_id) {
+        await rest(env, `orders?order_id=eq.${encodeURIComponent(orderId)}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ payment_id: captured.id, status: order.status === 'cancelled' ? order.status : 'paid' }),
+        });
+      }
+
+      res.status(200).json({
+        ok: true,
+        razorpayPayments: payments.map((p) => ({ id: p.id, status: p.status, amount: p.amount, method: p.method, error_description: p.error_description })),
+        reconciled: !!(captured && !order.payment_id),
+        capturedPaymentId: captured ? captured.id : null,
+      });
+      return;
+    }
+
     if (action === 'bulk-archive-orders') {
       // Archiving only ever sets a timestamp — never deletes a row. The
       // client already exported these to CSV before calling this.

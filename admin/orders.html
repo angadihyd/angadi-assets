@@ -305,7 +305,7 @@ function fromDb(r){
   return {
     orderId:o_(r.order_id), customer:r.customer, items:r.items,
     subtotal:r.subtotal, delivery:r.delivery, discount:r.discount, total:r.total,
-    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    payment:r.payment, paymentId:r.payment_id, razorpayOrderId:r.razorpay_order_id, status:r.status,
     assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
     readyAt:r.ready_at, acceptedAt:r.accepted_at, pickedUpAt:r.picked_up_at, deliveredAt:r.delivered_at,
     placedAt:r.placed_at,
@@ -571,7 +571,13 @@ function actionButtons(o, big){
     case 'out_for_delivery': return `<span class="act-btn" style="cursor:default;opacity:0.7;">Out for delivery</span>`;
     case 'delivered': return b('Mark Completed','completed','success');
     case 'completed': return `<span class="act-btn" style="cursor:default;opacity:0.7;">Completed</span>`;
-    case 'cancelled': return `<span class="act-btn danger" style="cursor:default;">Cancelled</span>`;
+    case 'cancelled': {
+      const remaining = Number(o.total||0) - Number(o.refundedAmount||0);
+      if(o.payment==='razorpay' && o.paymentId && remaining>0.01){
+        return `<button class="${cls} danger" onclick="event.stopPropagation();cancelOrder('${o.orderId}')">↩ Refund ${fmt(remaining)}</button>`;
+      }
+      return `<span class="act-btn danger" style="cursor:default;">Cancelled</span>`;
+    }
     default: return '';
   }
 }
@@ -579,7 +585,22 @@ function actionButtons(o, big){
 async function cancelOrder(orderId){
   const o = allOrders.find(x=>x.orderId===orderId);
   if(!o) return;
-  const wasPaidOnline = o.payment==='razorpay' && o.paymentId;
+  let wasPaidOnline = o.payment==='razorpay' && o.paymentId;
+
+  // Our DB shows no payment_id, but this WAS a Razorpay checkout — before
+  // telling anyone "never paid", ask Razorpay directly. A customer's payment
+  // can be captured even if verify-payment.js/webhook never recorded it here.
+  if(o.payment==='razorpay' && !o.paymentId && o.razorpayOrderId){
+    showToast('Checking with Razorpay…');
+    const check = await AdminAPI.checkRazorpayPayment(orderId);
+    if(check.error){ alert('Could not verify with Razorpay: '+check.error+'\n\nTreating as unpaid for now — try again before cancelling if unsure.'); }
+    else if(check.capturedPaymentId){
+      o.paymentId = check.capturedPaymentId;
+      wasPaidOnline = true;
+      alert(`Razorpay confirms this order WAS paid (payment ${check.capturedPaymentId}). Marked as paid — proceeding to refund instead of a plain cancel.`);
+    }
+  }
+
   if(!wasPaidOnline){
     // COD, or a Razorpay order that was never actually charged — nothing to refund.
     if(!confirm(`Cancel order ${orderId}? No refund needed (${o.payment==='cod'?'was Cash on Delivery':'was never paid'}).`)) return;

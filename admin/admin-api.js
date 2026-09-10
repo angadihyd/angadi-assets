@@ -52,6 +52,9 @@
     refundOrder: function (orderId, amount) {
       return this.call('refund-order', { orderId: orderId, amount: amount });
     },
+    checkRazorpayPayment: function (orderId) {
+      return this.call('check-razorpay-payment', { orderId: orderId });
+    },
 
     // ── delivery partner ──
     ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },
