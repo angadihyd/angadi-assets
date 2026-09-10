@@ -188,9 +188,23 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <div class="auth-mode-tab" id="tabSignup" onclick="switchAuthMode('signup')">Create Account</div>
       </div>
 
+      <!-- One-tap sign-in. Shown only when the provider is actually enabled on
+           the backend, so it can never appear as a button that does nothing. -->
+      <div id="socialAuth" style="display:none;">
+        <button type="button" id="googleBtn" onclick="signInWithGoogle()" style="width:100%;background:#fff;color:#1f1f1f;border:none;padding:0.85rem;border-radius:12px;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:0.6rem;">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+        <div style="display:flex;align-items:center;gap:0.8rem;margin:1.2rem 0;">
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+          <span style="font-size:0.72rem;color:rgba(246,237,216,0.35);">or</span>
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+        </div>
+      </div>
+
       <div class="method-tabs" id="methodTabs">
         <div class="method-tab active" data-method="email" onclick="switchMethod('email')">Email</div>
-        <div class="method-tab" data-method="phone" onclick="switchMethod('phone')">Phone OTP</div>
+        <div class="method-tab" data-method="phone" id="methodTabPhone" onclick="switchMethod('phone')">Phone OTP</div>
       </div>
 
       <!-- SIGN IN -->
@@ -470,6 +484,54 @@ document.getElementById('resetForm').addEventListener('submit',async(e)=>{
   if(data?.user?.id) await loadProfile(data.user.id,email);
   showSuccessView(email.split('@')[0]||'there');
 });
+
+// ── Sign in with Google ──
+async function signInWithGoogle(){
+  if(!sb){ setStatus('si-status','error','Can’t reach our sign-in service right now. Please try again.'); return; }
+  const btn=document.getElementById('googleBtn');
+  if(btn){ btn.disabled=true; btn.style.opacity='0.6'; }
+  try{
+    const { error } = await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{ redirectTo: window.location.origin+'/login.html?redirect='+encodeURIComponent(getRedirect()) }
+    });
+    if(error){ setStatus('si-status','error',error.message); }
+  }catch(e){ setStatus('si-status','error','Google sign-in is unavailable right now.'); }
+  if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+}
+
+// Only offer login methods the backend actually has switched on. Phone OTP was
+// shown as an option while the provider was disabled, so tapping it sent people
+// down a flow that could never succeed.
+(async function showAvailableMethods(){
+  try{
+    const r=await fetch(SUPABASE_URL+'/auth/v1/settings',{headers:{apikey:SUPABASE_KEY}});
+    if(!r.ok) return;
+    const s=await r.json();
+    const ext=s.external||{};
+    if(ext.google) document.getElementById('socialAuth').style.display='block';
+    const phoneTab=document.getElementById('methodTabPhone');
+    if(phoneTab && !ext.phone) phoneTab.style.display='none';
+  }catch(e){ /* leave the default email form visible */ }
+})();
+
+// After Google sends the user back, supabase-js picks the session out of the
+// URL — mirror it into the profile/local user the rest of the site reads.
+(function finishOAuthReturn(){
+  if(!sb) return;
+  const hasOAuth = /access_token=|[?&]code=/.test(window.location.hash + window.location.search);
+  if(!hasOAuth) return;
+  sb.auth.onAuthStateChange(async (event, session)=>{
+    if((event==='SIGNED_IN'||event==='INITIAL_SESSION') && session && session.user){
+      const u=session.user;
+      const meta=u.user_metadata||{};
+      saveLocalUser({ id:u.id, email:u.email||'', name:meta.full_name||meta.name||(u.email||'').split('@')[0], phone:meta.phone||'' });
+      try{ await sb.from('profiles').upsert({ id:u.id, name:meta.full_name||meta.name||'', phone:meta.phone||'', email:u.email||'' }); }catch(e){}
+      showCustomerLogin();
+      showSuccessView((meta.full_name||meta.name||u.email||'there').split(' ')[0]);
+    }
+  });
+})();
 
 // Check URL params
 const _p=new URLSearchParams(window.location.search);

@@ -57,6 +57,12 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
+    <h2>Customer Accounts</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Require customers to sign in before they can place an order. Their address is then saved to their account and works on any phone. <strong style="color:#E8956A;">Only switch this on once an easy sign-in (Google) is working</strong> — otherwise every new customer has to confirm an email mid-order.</p>
+    <div class="toggle"><input type="checkbox" id="a-require-login"> <span>Require customers to sign in before checkout</span></div>
+  </div>
+
+  <div class="card">
     <h2>Delivery Charges</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Controls the delivery fee at checkout. Changes apply to new orders immediately.</p>
     <div class="row">
@@ -157,7 +163,8 @@ async function load(){
     const r=await AdminAPI.db('site_settings','select',{});
     const rows=r.data||[];
     const map={}; rows.forEach(x=>map[x.key]=x.value||{});
-    const f=map.farmer||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{}, p=map.permanentBanner||{};
+    const f=map.farmer||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{}, p=map.permanentBanner||{}, au=map.auth||{};
+    g('a-require-login').checked = !!au.require_login;
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
     g('d-standard').value=d.standard_fee!=null?d.standard_fee:49; g('d-free').value=d.free_above!=null?d.free_above:999;
     renderSlotRows(slotsFromSettings(sl));
@@ -196,6 +203,7 @@ async function saveAll(){
   try{
     await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
     await put('delivery',{standard_fee:parseInt(g('d-standard').value,10)||0,free_above:parseInt(g('d-free').value,10)||0});
+    await put('auth',{require_login:g('a-require-login').checked});
     await put('slots',{list:slotsToSave});
     await put('permanentBanner',{active:g('p-active').checked,text:g('p-text').value.trim()});
     await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});

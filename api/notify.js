@@ -56,8 +56,12 @@ module.exports = async (req, res) => {
       // This is the actual moment money was captured (set by
       // verify-payment.js / razorpay-webhook.js) — the real "new paid order".
       role = 'admin';
-      title = '🛒 New Angadi Order';
-      body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · Paid`;
+      const wasPayLater = old.status === 'confirmed_cod';
+      title = wasPayLater ? '💰 Pay-later order is now PAID' : '🛒 New Angadi Order';
+      body = wasPayLater
+        // Otherwise the delivery partner would still turn up asking for cash.
+        ? `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · paid online — do NOT collect cash`
+        : `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · Paid`;
       url = '/admin/orders.html';
     } else if (type === 'UPDATE' && rec.status === 'cancelled' && old.status !== 'cancelled' && rec.payment !== 'cod' && rec.payment_id) {
       // A customer can cancel their own order from my-orders. If they already

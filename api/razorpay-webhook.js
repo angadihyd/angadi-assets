@@ -159,6 +159,10 @@ module.exports = async (req, res) => {
     const upd = await patchOrder(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, rzpOrderId, {
       status: 'paid',
       payment_id: paymentId,
+      // The order may have been switched to pay-on-delivery after a failed
+      // payment attempt. If the money then actually arrives, it is a prepaid
+      // order again — otherwise the delivery partner would still ask for cash.
+      payment: 'razorpay',
     });
     if (!upd.ok) {
       const txt = await upd.text();

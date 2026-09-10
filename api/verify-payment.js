@@ -79,7 +79,10 @@ module.exports = async (req, res) => {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal',
         },
-        body: JSON.stringify({ status: 'paid', payment_id: razorpay_payment_id }),
+        // payment:'razorpay' because the order may have been switched to
+        // pay-on-delivery after an earlier failed attempt — if the money then
+        // arrives it is prepaid again, and nobody should collect cash for it.
+        body: JSON.stringify({ status: 'paid', payment_id: razorpay_payment_id, payment: 'razorpay' }),
       }
     );
     if (!r.ok) {
