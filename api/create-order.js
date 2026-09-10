@@ -102,7 +102,7 @@ module.exports = async (req, res) => {
   try { payload = await readJson(req); }
   catch { res.status(400).json({ error: 'Invalid request body' }); return; }
 
-  const { items, slot, promoCode, customer, userId } = payload;
+  const { items, slot, promoCode, customer, userId, deliveryDate: requestedDate } = payload;
   const isCOD = payload.payment === 'cod';
 
   if (!isCOD && (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET)) {
@@ -114,16 +114,19 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // ── Ordering is open for the nearest not-yet-closed delivery date
-  // (see admin/order-windows.html) — no separate "opens at" concept, a date
-  // is orderable from the moment it's added until its own cutoff. Checked
-  // server-side so this can't be bypassed by calling the API directly —
-  // this is the one place an order actually gets created.
+  // ── Ordering is open for any not-yet-closed delivery date (see
+  // admin/order-windows.html) — no separate "opens at" concept, a date is
+  // orderable from the moment it's added until its own cutoff. Multiple
+  // dates can be open at once; the checkout UI lets the customer pick one
+  // when that happens and sends it as `deliveryDate`. Re-validated here
+  // server-side (never trust the client's chosen date as-is) so this can't
+  // be bypassed by calling the API directly — this is the one place an
+  // order actually gets created.
   let deliveryDate = null;
   try {
     const now = new Date().toISOString();
     const wr = await fetch(
-      `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&closes_at=gte.${now}&order=closes_at.asc&limit=1`,
+      `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&closes_at=gte.${now}&order=closes_at.asc`,
       { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
     );
     const win = wr.ok ? await wr.json() : [];
@@ -131,7 +134,16 @@ module.exports = async (req, res) => {
       res.status(400).json({ error: 'Ordering is currently closed. Please check back when the next order window opens.' });
       return;
     }
-    deliveryDate = win[0].delivery_date;
+    if (requestedDate) {
+      const match = win.find((w) => w.delivery_date === requestedDate);
+      if (!match) {
+        res.status(400).json({ error: 'That delivery date is no longer available. Please refresh and pick again.' });
+        return;
+      }
+      deliveryDate = match.delivery_date;
+    } else {
+      deliveryDate = win[0].delivery_date; // no choice sent (single-date case) → soonest
+    }
   } catch (e) {
     res.status(500).json({ error: 'Could not verify the order window. Please try again.' });
     return;

@@ -453,6 +453,12 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             </div>
             <input type="hidden" id="fcity" value="Hyderabad">
 
+            <!-- DELIVERY DATE (only shown when more than one date is open) -->
+            <div style="margin-top:1.5rem;margin-bottom:0.8rem;">
+              <div class="form-label" style="margin-bottom:0.7rem;">Preferred Delivery Date *</div>
+              <div id="dateGrid" class="slot-grid" style="display:none;"></div>
+            </div>
+
             <!-- DELIVERY SLOT -->
             <div style="margin-top:1.5rem;margin-bottom:0.8rem;">
               <div class="form-label" style="margin-bottom:0.3rem;">Preferred Delivery Slot *</div>
@@ -602,11 +608,16 @@ const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID';
 //  is just so the customer sees it clearly before filling out the whole form.
 // ─────────────────────────────────────────────
 let orderWindowOpen = true; // optimistic default if the check itself fails
+let selectedDeliveryDate = null;
+function fmtDeliveryDate(dateStr, opts){
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('en-IN', opts || {weekday:'long',day:'numeric',month:'long'});
+}
 async function checkOrderWindow(){
   const banner = document.getElementById('windowBanner');
   try{
     const now = new Date().toISOString();
-    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1', {
+    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc', {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
     });
     if(!r.ok) return; // leave optimistic default on a network hiccup
@@ -616,18 +627,39 @@ async function checkOrderWindow(){
       banner.style.display='block';
       banner.innerHTML = `<div style="background:rgba(229,115,115,0.1);border:1px solid rgba(229,115,115,0.3);color:#E57373;border-radius:12px;padding:1rem 1.2rem;font-size:0.9rem;font-weight:600;">Ordering is currently closed. We'll be back for the next delivery window — check our WhatsApp or Instagram for the next opening.</div>`;
       const btn=document.getElementById('btnPay'); if(btn) btn.disabled=true;
-    } else {
-      orderWindowOpen = true;
-      const d = new Date(rows[0].delivery_date+'T00:00:00');
-      const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
-      banner.style.display='block';
+      return;
+    }
+    orderWindowOpen = true;
+    banner.style.display='block';
+    const slotDate = document.getElementById('slotDeliveryDate');
+    const dateGrid = document.getElementById('dateGrid');
+    if(rows.length === 1){
+      selectedDeliveryDate = rows[0].delivery_date;
+      const dateStr = fmtDeliveryDate(rows[0].delivery_date);
       banner.innerHTML = `<div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:#4CAF50;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ordering open — this order will be delivered on <strong>${dateStr}</strong>.</div>`;
       // Repeat it right by the slot picker too, so it's visible at the exact
       // moment the customer is choosing a time — not just in a banner above.
-      const slotDate = document.getElementById('slotDeliveryDate');
       if(slotDate){ slotDate.textContent = '📅 Delivering on '+dateStr; slotDate.style.display='block'; }
+      if(dateGrid) dateGrid.style.display='none';
+    } else {
+      // Multiple delivery dates open at once — let the customer pick.
+      selectedDeliveryDate = rows[0].delivery_date; // default to the soonest
+      banner.innerHTML = `<div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:#4CAF50;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ordering open — ${rows.length} delivery dates available. Pick one below.</div>`;
+      if(slotDate) slotDate.style.display='none';
+      if(dateGrid){
+        dateGrid.style.display='grid';
+        dateGrid.innerHTML = rows.map((w,i)=>`
+          <button type="button" class="slot-btn${i===0?' active':''}" data-date="${w.delivery_date}" onclick="selectDeliveryDate('${w.delivery_date}', this)">
+            <div class="slot-name">${fmtDeliveryDate(w.delivery_date,{weekday:'short',day:'numeric',month:'short'})}</div>
+          </button>`).join('');
+      }
     }
   }catch(e){ /* leave optimistic default */ }
+}
+function selectDeliveryDate(dateStr, btn){
+  selectedDeliveryDate = dateStr;
+  document.querySelectorAll('#dateGrid .slot-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
 }
 checkOrderWindow();
 
@@ -915,6 +947,7 @@ async function placeCOD(order){
         payment:   'cod',
         items:     order.items,
         slot:      order.customer.slot,
+        deliveryDate: selectedDeliveryDate,
         promoCode: promoCode,
         customer:  order.customer,
         userId:    savedUser.id || null,
@@ -968,6 +1001,7 @@ async function placeRazorpay(order){
       body: JSON.stringify({
         items:     order.items,
         slot:      order.customer.slot,
+        deliveryDate: selectedDeliveryDate,
         promoCode: promoCode,
         customer:  order.customer,
         userId:    savedUser.id || null,

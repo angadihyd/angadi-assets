@@ -1637,15 +1637,17 @@ loadProducts();
   }catch(e){}
   try{
     const now = new Date().toISOString();
-    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1', { headers: sbHeaders });
+    const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc', { headers: sbHeaders });
     if(!r.ok) return;
     const rows = await r.json();
     if(!rows.length){
       el.innerHTML = '<strong>Ordering is currently closed.</strong> Check our WhatsApp for the next delivery window.';
-    } else {
+    } else if(rows.length === 1){
       const d = new Date(rows[0].delivery_date+'T00:00:00');
       const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
       el.innerHTML = `<strong>Free delivery on orders above ₹${freeAbove.toLocaleString('en-IN')}.</strong> Ordering open now for delivery on <strong>${dateStr}</strong>.`;
+    } else {
+      el.innerHTML = `<strong>Free delivery on orders above ₹${freeAbove.toLocaleString('en-IN')}.</strong> Ordering open now — ${rows.length} delivery dates available, pick one at checkout.`;
     }
   }catch(e){ /* keep default banner text */ }
 })();
