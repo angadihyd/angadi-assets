@@ -110,7 +110,7 @@ module.exports = async (req, res) => {
   // ── 3. Look up the pending order and verify the amount ──
   try {
     const lookup = await fetch(
-      `${SUPABASE_URL}/rest/v1/orders?razorpay_order_id=eq.${encodeURIComponent(rzpOrderId)}&select=total,status`,
+      `${SUPABASE_URL}/rest/v1/orders?razorpay_order_id=eq.${encodeURIComponent(rzpOrderId)}&select=total,status,payment_id`,
       {
         headers: {
           'apikey': SUPABASE_SERVICE_ROLE_KEY,
@@ -129,6 +129,18 @@ module.exports = async (req, res) => {
 
     if (order.status === 'paid') {
       res.status(200).json({ ok: true, note: 'already paid' }); // idempotent
+      return;
+    }
+
+    // A cancelled order is terminal. Razorpay retries a failed webhook for up
+    // to ~24h, so without this an admin's cancel/refund could be flipped back
+    // to 'paid' by a retry and the order would ship. Still record payment_id
+    // so the money is traceable and admin's Refund button can act on it.
+    if (order.status === 'cancelled') {
+      if (!order.payment_id) {
+        await patchOrder(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, rzpOrderId, { payment_id: paymentId });
+      }
+      res.status(200).json({ ok: true, note: 'order cancelled — payment recorded for refund, status unchanged' });
       return;
     }
 

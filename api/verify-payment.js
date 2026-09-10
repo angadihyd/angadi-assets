@@ -68,7 +68,9 @@ module.exports = async (req, res) => {
   // ── Signature valid → mark the order paid (idempotent) ──
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/orders?razorpay_order_id=eq.${encodeURIComponent(razorpay_order_id)}&status=neq.paid`,
+      // status=neq.cancelled: never resurrect an order the admin or customer
+      // already cancelled (and possibly refunded) back into 'paid'.
+      `${SUPABASE_URL}/rest/v1/orders?razorpay_order_id=eq.${encodeURIComponent(razorpay_order_id)}&status=neq.paid&status=neq.cancelled`,
       {
         method: 'PATCH',
         headers: {

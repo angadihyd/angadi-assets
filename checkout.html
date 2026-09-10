@@ -790,7 +790,7 @@ let selectedMethod  = 'razorpay';
 let supabaseClient  = null;
 // Delivery charges — admin-configurable via Settings (site_settings 'delivery').
 // These are fallback defaults until the live values load.
-let deliveryConfig  = { standard_fee: 49, free_above: 999, express_fee: 99 };
+let deliveryConfig  = { standard_fee: 50, free_above: 3000 };
 
 // ─────────────────────────────────────────────
 //  PRICE HELPERS
@@ -957,7 +957,10 @@ async function placeOrder(){
     name:    order.customer.name,
     phone:   order.customer.phone,
     address: order.customer.address,
-    loggedIn: true,
+    // Never fabricate a session. A guest checkout that set loggedIn:true made
+    // every page show them as signed in and let them open a profile page with
+    // no Supabase user behind it, where saving silently discarded their edits.
+    loggedIn: user.loggedIn === true,
   }));
 
   selectedMethod === 'cod' ? await placeCOD(order) : await placeRazorpay(order);

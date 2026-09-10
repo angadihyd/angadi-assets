@@ -19,24 +19,23 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── Fallback prices if the products table is unreachable ──
+// Only currently-active products belong here — this list is used when the
+// products table is unreachable, so anything listed is sellable at that moment.
 const FALLBACK_PRICES = {
   'Village Pottel mutton (Goat Meat)': 1099,
+  'Boneless Mutton':          1325,
+  'Mutton Kheema(Hand - Cut)': 1325,
   'Country Chicken':    900,
-  'Fresh River Fish':   450,
-  'Baby Goat Legs':     400,
   'Country Eggs':        18,
-  'Full Goat':         8500,
   'Goat Legs':          400,
   'Goat Liver':        1000,
   'Goat Head':          520,
 };
 
-// ── Fallback promo codes (DB coupons are checked first) ──
-const FALLBACK_PROMOS = {
-  'ANGADI10': { type: 'percent', value: 10, min_order: 0 },
-  'FIRST100': { type: 'flat',    value: 100, min_order: 499 },
-  'VILLAGE':  { type: 'percent', value: 5,  min_order: 0 },
-};
+// NOTE: there is deliberately no hardcoded promo-code fallback here. Coupons
+// live only in the `coupons` table so that deactivating one in admin actually
+// stops it working — a fallback list silently resurrected codes the admin had
+// switched off, with no expiry and no way to kill them without a deploy.
 
 const COD_LIMIT = 5000;          // ₹ — matches the note shown at checkout
 const PRICE_TOLERANCE = 2;       // ₹ rounding slack on computed line prices
@@ -150,7 +149,12 @@ module.exports = async (req, res) => {
   }
 
   // ── Load the live catalog (source of truth for prices) ──
-  const catalog = { ...FALLBACK_PRICES };
+  // The query filters active=true, so a disabled product is simply ABSENT from
+  // the rows — it is never returned as active:false. Seeding this map from
+  // FALLBACK_PRICES and merging on top therefore left every disabled product
+  // still priced and orderable. Build it only from live rows, and fall back to
+  // the hardcoded list solely when the catalog is genuinely unreachable.
+  let catalog = null;
   const stockOut = new Set();
   try {
     const r = await fetch(
@@ -159,12 +163,14 @@ module.exports = async (req, res) => {
     );
     if (r.ok) {
       const rows = await r.json();
+      catalog = {};
       for (const p of rows) {
         catalog[p.name] = Number(p.price);
         if (p.in_stock === false) stockOut.add(p.name);
       }
     }
-  } catch (e) { /* fall back to the hardcoded list */ }
+  } catch (e) { /* handled below */ }
+  if (!catalog) catalog = { ...FALLBACK_PRICES };
 
   // ── Validate & recompute every line ──
   let subtotal = 0;
@@ -201,7 +207,7 @@ module.exports = async (req, res) => {
 
   // ── Delivery (admin-configurable via site_settings 'delivery') ──
   // Express delivery is disabled — doesn't fit a fixed weekly delivery-day model.
-  let dcfg = { standard_fee: 49, free_above: 999 };
+  let dcfg = { standard_fee: 50, free_above: 3000 };
   try {
     const sr = await fetch(
       `${SUPABASE_URL}/rest/v1/site_settings?key=eq.delivery&select=value`,
@@ -233,8 +239,7 @@ module.exports = async (req, res) => {
         const rows = await cr.json();
         if (rows.length) promo = rows[0];
       }
-    } catch (e) { /* fall through */ }
-    if (!promo) promo = FALLBACK_PROMOS[code] || null;
+    } catch (e) { /* no coupon applied */ }
     if (promo) {
       const expired = promo.expires_at && new Date(promo.expires_at) < new Date();
       const belowMin = Number(promo.min_order || 0) > subtotal;

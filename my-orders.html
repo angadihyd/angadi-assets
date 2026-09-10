@@ -751,10 +751,14 @@ function reorder(idx) {
 }
 
 async function cancelOrder(orderId, idx) {
-  if (!confirm(`Cancel order ${orderId}?`)) return;
+  const order = allOrders[idx];
+  const paidOnline = order && order.payment !== 'cod' && order.paymentId;
+  const msg = paidOnline
+    ? `Cancel order ${orderId}?\n\nYou paid online, so we'll refund ${fmt(order.total||0)} to your original payment method. Refunds usually reach your account in 5–7 working days.`
+    : `Cancel order ${orderId}?`;
+  if (!confirm(msg)) return;
   const token = await getAccessToken();
   const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
-  const order = allOrders[idx];
   const phone = (order && order.customer && order.customer.phone) || user.phone || '';
   try {
     const r = await fetch('/api/my-orders', {
@@ -766,7 +770,7 @@ async function cancelOrder(orderId, idx) {
   } catch(e){ showToast('Network error — please try again'); return; }
   allOrders[idx].status = 'cancelled';
   renderOrders();
-  showToast(`Order ${orderId} cancelled`);
+  showToast(paidOnline ? `Order ${orderId} cancelled — refund on its way` : `Order ${orderId} cancelled`);
 }
 
 function downloadInvoice(orderId) {

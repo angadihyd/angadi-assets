@@ -623,7 +623,7 @@ function render(){
     { title:'Out for Delivery', desc:`Your insulated package is on its way. Delivery slot: ${slot}.`, time:slot, done:false, active:false },
     { title:'Cash on Delivery', desc:`Please keep ${fmt(order.total)} ready for the delivery partner.`, time:'At delivery', done:false, active:false },
   ] : [
-    { title:'Payment Confirmed', desc:`₹${fmt(order.total)} received. Payment ID: ${order.paymentId || 'N/A'}`, time:'Just now', done:true, active:false },
+    { title:'Payment Confirmed', desc:`${fmt(order.total)} received. Payment ID: ${order.paymentId || 'N/A'}`, time:'Just now', done:true, active:false },
     { title:'Order Confirmed', desc:'Your order is in our system and being prepared.', time:'Just now', done:true, active:false },
     { title:'Sourcing Your Meat', desc:'Our team is procuring your items fresh from village partners.', time:'Within 1–2 hours', done:false, active:true },
     { title:'Hygienic Processing', desc:'Items will be cleaned, cut to your preference, and cold-packed.', time:'2–4 hours before delivery', done:false, active:false },

@@ -403,7 +403,14 @@ function renderStats(){
   const total     = active.length;
   const today     = active.filter(o=>{const d=new Date(o.placedAt);return d.toDateString()===new Date().toDateString();});
   const pending   = active.filter(o=>['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery'].includes(normaliseStatus(o.status)));
-  const revenue   = active.reduce((s,o)=>s+(o.total||0),0);
+  // Only money actually taken: skip cancelled orders and online orders that
+  // were never charged (a Razorpay row is created as 'pending' the moment
+  // checkout starts), and net off anything refunded.
+  const revenue   = active.reduce((s,o)=>{
+    if(normaliseStatus(o.status)==='cancelled') return s;
+    if(o.payment!=='cod' && !o.paymentId) return s;
+    return s + (o.total||0) - (o.refundedAmount||0);
+  },0);
   document.getElementById('statsRow').innerHTML=`
     <div class="mini-stat"><span class="mini-stat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span><div><div class="mini-stat-val">${total}</div><div class="mini-stat-label">Total Orders</div></div></div>
     <div class="mini-stat"><span class="mini-stat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg></span><div><div class="mini-stat-val">${today.length}</div><div class="mini-stat-label">Today</div></div></div>

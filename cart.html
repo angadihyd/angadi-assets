@@ -676,14 +676,8 @@ const UPSELLS = [
   { id:'country-chicken', nameTE:'Nati Kodi', name:'Country Chicken', price:900, unit:'kg', img:'product/country chiken.webp', video:'product/country chiken animated video.mp4' },
 ];
 
-// ─────────────────────────────────────────────
-//  PROMO CODES
-// ─────────────────────────────────────────────
-const PROMOS = {
-  'ANGADI10':  { type:'percent', value:10,  label:'10% off' },
-  'FIRST100':  { type:'flat',    value:100, label:'₹100 off' },
-  'VILLAGE':   { type:'percent', value:5,   label:'5% off' },
-};
+// Promo codes come from the `coupons` table only (admin/coupons.html), so
+// deactivating one there actually stops it working.
 
 // ─────────────────────────────────────────────
 //  DELIVERY OPTIONS
@@ -691,7 +685,7 @@ const PROMOS = {
 // Prices/threshold are admin-configurable (site_settings 'delivery').
 // These are fallback defaults until loadDeliveryConfig() updates them.
 let DELIVERY_OPTIONS = [
-  { id:'standard', name:'Standard Delivery', desc:'Delivered on your chosen date', price:49,  free_above:999  },
+  { id:'standard', name:'Standard Delivery', desc:'Delivered on your chosen date', price:50,  free_above:3000  },
   // Express delivery disabled — doesn't fit a fixed weekly delivery-day model.
 ];
 
@@ -718,6 +712,38 @@ function saveCart() {
   localStorage.setItem('angadi_cart', JSON.stringify(cart));
 }
 
+// Refer & Earn — advertise a real, currently-active coupon or nothing at all.
+// render() rebuilds the whole panel, so the fetched markup is cached and
+// re-painted rather than re-fetched on every render.
+let _referHTML = '';
+function paintRefer(){
+  const box = document.getElementById('referBlock');
+  if(!box || !_referHTML) return;
+  box.innerHTML = _referHTML;
+  box.style.display = 'block';
+}
+async function renderReferBlock(){
+  const box = document.getElementById('referBlock');
+  if(!box) return;
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const r = await fetch(COUPON_URL+'/rest/v1/coupons?select=code,type,value,expires_at&active=eq.true&or=(expires_at.is.null,expires_at.gte.'+today+')&limit=1',
+      {headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
+    if(!r.ok) return;
+    const rows = await r.json();
+    const c = rows && rows[0];
+    if(!c || !c.code) return;
+    const off = c.type === 'percent' ? c.value+'% off' : '₹'+Number(c.value).toLocaleString('en-IN')+' off';
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const share = `Try Angadi — fresh village goat, country chicken & farm eggs delivered in Hyderabad. Use code ${c.code} for ${off} your first order: https://www.angadi.farm`;
+    _referHTML =
+      '<div style="font-weight:700;color:var(--cream);font-size:0.95rem;">Refer &amp; Earn</div>'
+      + '<div style="font-size:0.82rem;color:rgba(246,237,216,0.55);margin:0.3rem 0 0.7rem;">Invite friends — they get <strong style="color:var(--gold);">'+esc(off)+'</strong> their first order with code <strong style="color:var(--gold);">'+esc(c.code)+'</strong>.</div>'
+      + '<a href="https://wa.me/?text='+encodeURIComponent(share)+'" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#25D366;color:#fff;border-radius:100px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;text-decoration:none;">Share on WhatsApp</a>';
+    paintRefer();
+  }catch(e){ /* leave hidden */ }
+}
+
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
@@ -731,7 +757,7 @@ function deliveryCost() {
   return opt.price;
 }
 function discountAmount() {
-  const p = appliedCoupon || (promoCode ? PROMOS[promoCode] : null);
+  const p = appliedCoupon;
   if (!p) return 0;
   if (p.min_order && subtotal() < p.min_order) return 0;
   return p.type === 'percent' ? Math.round(subtotal() * p.value / 100) : Number(p.value);
@@ -770,6 +796,7 @@ function render() {
     document.getElementById('upsellSection').style.opacity = '1';
   } else {
     renderCartBody();
+    paintRefer();
   }
   renderUpsells();
 }
@@ -909,12 +936,9 @@ function renderCartBody() {
           <div class="trust-mini-item">Cold Chain</div>
         </div>
 
-        <!-- REFER & EARN -->
-        <div style="margin-top:1.2rem;background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(196,98,45,0.08));border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:14px;padding:1rem;">
-          <div style="font-weight:700;color:var(--cream);font-size:0.95rem;">Refer &amp; Earn</div>
-          <div style="font-size:0.82rem;color:rgba(246,237,216,0.55);margin:0.3rem 0 0.7rem;">Invite friends — they get <strong style="color:var(--gold);">₹100 off</strong> their first order with code <strong style="color:var(--gold);">FIRST100</strong>.</div>
-          <a href="https://wa.me/?text=${encodeURIComponent('Try Angadi — fresh village goat, country chicken & farm eggs delivered in Hyderabad. Use code FIRST100 for ₹100 off your first order: https://www.angadi.farm')}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#25D366;color:#fff;border-radius:100px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:700;text-decoration:none;">Share on WhatsApp</a>
-        </div>
+        <!-- REFER & EARN — filled in from the live coupons table, hidden if
+             there's no active code (it used to advertise a disabled one). -->
+        <div id="referBlock" style="display:none;margin-top:1.2rem;background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(196,98,45,0.08));border:1px solid var(--border-gold,rgba(212,160,23,0.25));border-radius:14px;padding:1rem;"></div>
       </div>
 
     </div>
@@ -993,9 +1017,10 @@ async function applyPromo() {
   const msg = document.getElementById('promoMsg');
   if (!code) { msg.textContent = 'Please enter a promo code.'; msg.className = 'promo-msg error'; return; }
   msg.textContent = 'Checking…'; msg.className = 'promo-msg';
-  // DB coupon first, then fall back to the built-in codes
-  let c = await fetchCoupon(code);
-  if (!c && PROMOS[code]) c = { code, ...PROMOS[code] };
+  // Coupons live only in the DB — a built-in fallback list here would offer
+  // the customer a discount that api/create-order.js then refuses, so the page
+  // would promise one total and Razorpay would charge another.
+  const c = await fetchCoupon(code);
   if (!c) { appliedCoupon=null; promoCode=null; saveCoupon(); msg.textContent='Invalid or expired code.'; msg.className='promo-msg error'; render(); return; }
   if (c.expires_at && new Date(c.expires_at) < new Date(new Date().toDateString())) {
     appliedCoupon=null; promoCode=null; saveCoupon(); msg.textContent='This code has expired.'; msg.className='promo-msg error'; render(); return;
@@ -1086,6 +1111,7 @@ async function loadDeliveryConfig(){
   }catch(e){ /* keep defaults */ }
 }
 loadDeliveryConfig();
+renderReferBlock();
 
 // Keep the cross-sell tiles' name/price/stock in sync with the live catalog
 // — the static UPSELLS array above is only a display fallback if this fails.

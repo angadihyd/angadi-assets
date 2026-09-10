@@ -244,6 +244,19 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <button class="btn-ghost" onclick="showView('email-signin')">← Back to Sign In</button>
       </div>
 
+      <!-- SET NEW PASSWORD (arrived from the emailed reset link) -->
+      <div class="auth-view" id="view-reset-password">
+        <div class="view-eyebrow">Reset Password</div>
+        <h1 class="view-title">Set a <span>New Password</span></h1>
+        <p class="view-sub">Choose a new password for your account.</p>
+        <div class="auth-status" id="rp-status"></div>
+        <form id="resetForm" novalidate>
+          <div class="form-group"><label class="form-label">New Password</label><input class="form-input" id="rpPass" type="password" placeholder="At least 8 characters"><span class="field-error" id="rpPassErr">Must be at least 8 characters</span></div>
+          <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" id="rpPass2" type="password" placeholder="Re-enter password"><span class="field-error" id="rpPass2Err">Passwords don't match</span></div>
+          <button type="submit" class="btn-primary" id="rpBtn">Update Password →</button>
+        </form>
+      </div>
+
       <!-- EMAIL VERIFY -->
       <div class="auth-view" id="view-email-verify">
         <div class="success-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 7l9.5 6.5L21.5 7"/></svg></div>
@@ -321,7 +334,17 @@ function setLoading(btnId,loading,label){const btn=document.getElementById(btnId
 const PW_EYE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>';
 const PW_EYE_OFF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><line x1="4" y1="4" x2="20" y2="20"/></svg>';
 function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.innerHTML=i.type==='password'?PW_EYE:PW_EYE_OFF;}
-function getRedirect(){const p=new URLSearchParams(window.location.search).get('redirect');if(p)return p;const r=document.referrer;if(r.includes('checkout'))return 'checkout.html';if(r.includes('cart'))return 'cart.html';return 'shop.html';}
+// Only ever redirect to a page on this site — `redirect` comes from the URL, so
+// accepting it as-is let a crafted link bounce a just-signed-in user offsite.
+const ALLOWED_REDIRECTS=['shop.html','cart.html','checkout.html','my-orders.html','my-profile.html','index.html'];
+function getRedirect(){
+  const p=new URLSearchParams(window.location.search).get('redirect');
+  if(p){ const clean=p.replace(/^\/+/,'').split(/[?#]/)[0]; if(ALLOWED_REDIRECTS.includes(clean)) return clean; }
+  const r=document.referrer;
+  if(r.includes('checkout'))return 'checkout.html';
+  if(r.includes('cart'))return 'cart.html';
+  return 'shop.html';
+}
 function saveLocalUser(d){const e=JSON.parse(localStorage.getItem('angadi_user')||'{}');localStorage.setItem('angadi_user',JSON.stringify({...e,...d,loggedIn:true}));}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
@@ -333,7 +356,7 @@ document.getElementById('signinForm').addEventListener('submit',async(e)=>{
   if(!pass){document.getElementById('siPass').classList.add('error');document.getElementById('siPassErr').classList.add('visible');ok=false;}else{document.getElementById('siPass').classList.remove('error');document.getElementById('siPassErr').classList.remove('visible');}
   if(!ok)return;
   setLoading('siBtn',true);
-  if(!sb){await sleep(800);saveLocalUser({email,name:email.split('@')[0],id:'dev-'+email});setLoading('siBtn',false,'Sign In →');showSuccessView(email.split('@')[0]);return;}
+  if(!sb){setLoading('siBtn',false,'Sign In →');setStatus('si-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
   const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
   setLoading('siBtn',false,'Sign In →');
   if(error){setStatus('si-status','error',error.message);return;}
@@ -347,7 +370,7 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   [{id:'suName',errId:'suNameErr',test:v=>v.length>=2,val:name},{id:'suEmail',errId:'suEmailErr',test:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),val:email},{id:'suPhone',errId:'suPhoneErr',test:v=>v===''||/^[6-9]\d{9}$/.test(v),val:phone,wrap:'suPhoneWrap'},{id:'suPass',errId:'suPassErr',test:v=>v.length>=8,val:pass},{id:'suPass2',errId:'suPass2Err',test:v=>v===pass,val:pass2}].forEach(c=>{const el=document.getElementById(c.wrap||c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
   if(!ok)return;
   setLoading('suBtn',true);
-  if(!sb){await sleep(900);setLoading('suBtn',false,'Create Account →');saveLocalUser({email,name,phone:phone?'+91'+phone:'',id:'dev-'+email});_lastEmail=email;document.getElementById('verifyEmailDisplay').textContent=email;showView('email-verify');return;}
+  if(!sb){setLoading('suBtn',false,'Create Account →');setStatus('su-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
   const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,phone:phone?'+91'+phone:''}}});
   setLoading('suBtn',false,'Create Account →');
   if(error){setStatus('su-status','error',error.message);return;}
@@ -362,7 +385,7 @@ document.getElementById('forgotForm').addEventListener('submit',async(e)=>{
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('fpEmail').classList.add('error');document.getElementById('fpEmailErr').classList.add('visible');return;}
   document.getElementById('fpEmail').classList.remove('error');document.getElementById('fpEmailErr').classList.remove('visible');
   setLoading('fpBtn',true);
-  if(!sb){await sleep(800);setLoading('fpBtn',false,'Send Reset Link →');setStatus('fp-status','success','Reset link sent! Check your email.');return;}
+  if(!sb){setLoading('fpBtn',false,'Send Reset Link →');setStatus('fp-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
   const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href.split('?')[0]+'?view=reset-password'});
   setLoading('fpBtn',false,'Send Reset Link →');
   if(error){setStatus('fp-status','error',error.message);return;}
@@ -375,7 +398,7 @@ async function sendOTP(){
   if(!/^[6-9]\d{9}$/.test(phone)){document.getElementById('phoneWrap').classList.add('error');document.getElementById('phoneErr').classList.add('visible');return;}
   document.getElementById('phoneWrap').classList.remove('error');document.getElementById('phoneErr').classList.remove('visible');
   setLoading('sendOtpBtn',true);
-  if(!sb){await sleep(800);setLoading('sendOtpBtn',false,'Send OTP →');document.getElementById('verifiedPhone').textContent='+91 '+phone;showView('phone-otp');startTimer();return;}
+  if(!sb){setLoading('sendOtpBtn',false,'Send OTP →');setStatus('phone-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
   const{error}=await sb.auth.signInWithOtp({phone:'+91'+phone});
   setLoading('sendOtpBtn',false,'Send OTP →');
   if(error){setStatus('phone-status','error',error.message);return;}
@@ -388,7 +411,7 @@ async function verifyOTP(){
   if(code.length!==6){setStatus('otp-status','error','Enter all 6 digits');return;}
   const phone='+91'+document.getElementById('phoneInput').value.replace(/\D/g,'');
   clearStatus('otp-status');setLoading('verifyBtn',true);
-  if(!sb){await sleep(800);setLoading('verifyBtn',false,'Verify & Continue →');showView('profile');document.getElementById('profilePhoneChip').innerHTML='✓ Verified: <strong>'+phone+'</strong>';return;}
+  if(!sb){setLoading('verifyBtn',false,'Verify & Continue →');setStatus('otp-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
   const{data,error}=await sb.auth.verifyOtp({phone,token:code,type:'sms'});
   setLoading('verifyBtn',false,'Verify & Continue →');
   if(error){setStatus('otp-status','error',error.message);return;}
@@ -427,9 +450,49 @@ async function loadProfile(userId,email){
   }catch(e){saveLocalUser({email,name:email.split('@')[0],id:userId});}
 }
 
+// ── Set a new password after following the emailed reset link ──
+document.getElementById('resetForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();clearStatus('rp-status');
+  const pass=document.getElementById('rpPass').value,pass2=document.getElementById('rpPass2').value;
+  let ok=true;
+  [{id:'rpPass',errId:'rpPassErr',test:v=>v.length>=8,val:pass},{id:'rpPass2',errId:'rpPass2Err',test:v=>v===pass&&v.length>0,val:pass2}].forEach(c=>{
+    const el=document.getElementById(c.id),err=document.getElementById(c.errId);
+    if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}
+    else{el.classList.remove('error');err.classList.remove('visible');}
+  });
+  if(!ok)return;
+  if(!sb){setStatus('rp-status','error','Can’t reach our sign-in service right now. Please try again.');return;}
+  setLoading('rpBtn',true);
+  const{data,error}=await sb.auth.updateUser({password:pass});
+  setLoading('rpBtn',false,'Update Password →');
+  if(error){setStatus('rp-status','error',error.message);return;}
+  const email=data?.user?.email||'';
+  if(data?.user?.id) await loadProfile(data.user.id,email);
+  showSuccessView(email.split('@')[0]||'there');
+});
+
 // Check URL params
 const _p=new URLSearchParams(window.location.search);
 if(_p.get('role')==='customer')showCustomerLogin();
+
+// Supabase sends the recovery link back with type=recovery in the URL hash and
+// (with detectSessionInUrl on) establishes a temporary session. Without this the
+// reset link just dropped the user on the sign-in page with no way to set a
+// password — the whole "forgot password" flow was a dead end.
+(function handleRecoveryLink(){
+  const hash=new URLSearchParams((window.location.hash||'').replace(/^#/,''));
+  const isRecovery = hash.get('type')==='recovery' || _p.get('view')==='reset-password' || _p.get('type')==='recovery';
+  if(isRecovery){ showCustomerLogin(); showView('reset-password'); }
+  if(hash.get('error_description')){
+    showCustomerLogin(); showView('forgot-password');
+    setStatus('fp-status','error',hash.get('error_description')+' — please request a new link.');
+  }
+  if(sb && sb.auth && sb.auth.onAuthStateChange){
+    sb.auth.onAuthStateChange((event)=>{
+      if(event==='PASSWORD_RECOVERY'){ showCustomerLogin(); showView('reset-password'); }
+    });
+  }
+})();
 </script>
 <script src="mobile-nav.js?v=5" defer></script>
 </body>

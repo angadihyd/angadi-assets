@@ -59,6 +59,13 @@ module.exports = async (req, res) => {
       title = '🛒 New Angadi Order';
       body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · Paid`;
       url = '/admin/orders.html';
+    } else if (type === 'UPDATE' && rec.status === 'cancelled' && old.status !== 'cancelled' && rec.payment !== 'cod' && rec.payment_id) {
+      // A customer can cancel their own order from my-orders. If they already
+      // paid online, a refund is owed and nothing else would tell anyone.
+      role = 'admin';
+      title = '↩️ Paid order cancelled — refund due';
+      body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · refund not yet issued`;
+      url = '/admin/orders.html';
     } else if (type === 'UPDATE' && rec.status === 'ready' && old.status !== 'ready') {
       role = 'partner';
       title = '🛵 New delivery available';

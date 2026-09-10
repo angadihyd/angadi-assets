@@ -1433,7 +1433,7 @@ function renderProduct(p) {
         <span class="price-main" id="displayPrice">₹${p.price.toLocaleString('en-IN')}</span>
         <span class="price-unit">per ${p.unit}</span>
       </div>
-      <p class="price-note">Free delivery on orders above ₹999</p>
+      <p class="price-note" id="freeDeliveryNote"></p>
 
       <div class="info-divider"></div>
 
@@ -1663,6 +1663,23 @@ function showNotFound(){
   document.getElementById('relatedSection').style.display = 'none';
 }
 
+// Free-delivery threshold comes from site_settings (admin/settings.html) — it
+// was hardcoded to a stale ₹999 here while the real value was ₹3,000.
+async function loadFreeDeliveryNote(){
+  const el = document.getElementById('freeDeliveryNote');
+  if(!el) return;
+  const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
+  try{
+    const r = await fetch('https://www.angadi.farm/api/supabase/rest/v1/site_settings?key=eq.delivery&select=value',
+      { headers:{ apikey:KEY, Authorization:'Bearer '+KEY } });
+    if(!r.ok) return;
+    const rows = await r.json();
+    const v = rows && rows[0] && rows[0].value;
+    if(v && v.free_above != null)
+      el.textContent = 'Free delivery on orders above ₹'+Number(v.free_above).toLocaleString('en-IN');
+  }catch(e){ /* leave blank rather than quote a wrong number */ }
+}
+
 // ── DELIVERY WINDOW — reflect the real, admin-configured schedule instead
 // of the old hardcoded "same-day / 4–6 hours" claim (see admin/order-windows.html)
 async function loadDeliveryWindow(){
@@ -1778,6 +1795,7 @@ async function initDetail(){
   loadReviews(productId);
   initReviewForm(productId);
   loadDeliveryWindow();
+  loadFreeDeliveryNote();
 
   // Sold-out handling
   if (!inStock){
