@@ -66,17 +66,22 @@ function sbHeaders(key) {
 //   "Goat Liver · 1.5kg · Curry Cut" → 1.5
 //   "Country Eggs · 12 eggs"     → 12    (of the per-egg price)
 //   "Full Goat"                  → 1
-function parseFactor(name) {
+// Returns every quantity found in the name, not just the first. Taking the
+// first match let a crafted name carry two quantities — "… · 0.01 kg · 1 kg ·
+// Curry Cut" priced at 0.01 kg while the packing slip read "1 kg". More than
+// one quantity is always malformed, and the caller rejects the order.
+function parseFactors(name) {
   const parts = String(name).split(' · ').slice(1);
+  const found = [];
   for (const part of parts) {
     const kg = part.match(/^([\d.]+)\s*kg$/i);
-    if (kg) return parseFloat(kg[1]);
+    if (kg) { found.push(parseFloat(kg[1])); continue; }
     const g = part.match(/^([\d.]+)\s*g$/i);
-    if (g) return parseFloat(g[1]) / 1000;
+    if (g) { found.push(parseFloat(g[1]) / 1000); continue; }
     const count = part.match(/^([\d.]+)\s*(eggs?|pcs?|pieces?|heads?|goats?)$/i);
-    if (count) return parseFloat(count[1]);
+    if (count) { found.push(parseFloat(count[1])); continue; }
   }
-  return 1;
+  return found;
 }
 
 module.exports = async (req, res) => {
@@ -191,7 +196,12 @@ module.exports = async (req, res) => {
       res.status(400).json({ error: `Invalid quantity for ${baseName}` });
       return;
     }
-    const factor = parseFactor(it.name);
+    const factors = parseFactors(it.name);
+    if (factors.length > 1) {
+      res.status(400).json({ error: `Invalid item "${baseName}". Please refresh the page and add it to your cart again.` });
+      return;
+    }
+    const factor = factors.length ? factors[0] : 1;
     if (!Number.isFinite(factor) || factor <= 0 || factor > 200) {
       res.status(400).json({ error: `Invalid weight for ${baseName}` });
       return;
