@@ -304,6 +304,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
   </div>
 </nav>
 
+<!-- OCCASION BANNER (admin-controlled, see admin/settings.html) -->
+<div id="occasionBanner" style="display:none;"></div>
+
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-close" id="menuClose">✕</button>
@@ -649,6 +652,22 @@ async function applySlotConfig(){
   }catch(e){ /* keep all slots visible */ }
 }
 applySlotConfig();
+
+// Occasion banner — admin-set custom text (admin/settings.html)
+(async function occasionBanner(){
+  try{
+    const r = await fetch(SUPABASE_URL+'/rest/v1/site_settings?key=eq.banner&select=value', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+    });
+    if(!r.ok) return;
+    const rows = await r.json();
+    const b = (rows[0] && rows[0].value) || {};
+    if(!b.active || !b.text) return;
+    const el = document.getElementById('occasionBanner');
+    el.innerHTML = '<div style="background:linear-gradient(90deg,#C4622D,#D4A017);color:#fff;text-align:center;padding:0.7rem 1rem;font-size:0.9rem;font-weight:600;">'+b.text+'</div>';
+    el.style.display = 'block';
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────
 //  PRODUCT IMAGE MAP

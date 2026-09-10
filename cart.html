@@ -789,7 +789,7 @@ function renderEmpty() {
 function renderCartBody() {
   document.getElementById('clearCartBtn').style.display = '';
   const sub = subtotal();
-  const FREE_THRESHOLD = 999;
+  const FREE_THRESHOLD = DELIVERY_OPTIONS.find(d=>d.id==='standard')?.free_above || 999;
   const remaining = Math.max(0, FREE_THRESHOLD - sub);
   const progress = Math.min(100, (sub / FREE_THRESHOLD) * 100);
 
