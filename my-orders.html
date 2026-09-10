@@ -697,6 +697,10 @@ function buildOrderCard(order, idx){
               <span class="order-info-val">${customer.name || '—'}, ${address.area || ''}, ${address.pincode || ''}</span>
             </div>
             <div class="order-info-item">
+              <span class="order-info-label">Delivery Date</span>
+              <span class="order-info-val">${customer.delivery_date ? new Date(customer.delivery_date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) : '—'}</span>
+            </div>
+            <div class="order-info-item">
               <span class="order-info-label">Slot</span>
               <span class="order-info-val">${customer.slot || '—'}</span>
             </div>

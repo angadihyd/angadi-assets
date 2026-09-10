@@ -256,7 +256,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
                 <th>Items</th>
                 <th>Total</th>
                 <th>Payment</th>
-                <th>Slot</th>
+                <th>Delivery</th>
                 <th>Placed</th>
                 <th>Status</th>
                 <th>Update</th>
@@ -324,6 +324,11 @@ function statusLabel(s){
 function formatDate(iso){
   const d=new Date(iso);
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+function formatDeliveryDate(dateStr){
+  if(!dateStr) return '—';
+  const d=new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
 }
 const PRODUCT_IMGS = {
   'Village Goat Meat':'../product/mutton.webp','Country Chicken':'../product/country chiken.webp',
@@ -434,7 +439,7 @@ function renderTable(){
         <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;">${items}</td>
         <td class="td-amount">${fmt(o.total||0)}</td>
         <td><span class="payment-badge ${o.payment==='cod'?'cod':'online'}">${o.payment==='cod'?'COD':'Online'}</span></td>
-        <td style="font-size:0.75rem;">${(o.customer?.slot||'—').split(' ')[0]}</td>
+        <td style="font-size:0.75rem;white-space:nowrap;">${formatDeliveryDate(o.customer?.delivery_date)}<br><span style="opacity:0.5;">${(o.customer?.slot||'—').split(' ')[0]}</span></td>
         <td style="font-size:0.75rem;white-space:nowrap;">${formatDate(o.placedAt)}</td>
         <td><span class="status-pill ${s}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
         <td onclick="event.stopPropagation()">
@@ -497,6 +502,7 @@ function openDetail(orderId){
     </div>
     <div class="detail-section">
       <div class="detail-label">Delivery Details</div>
+      <div class="detail-value" style="color:var(--gold);font-weight:700;">${formatDeliveryDate(o.customer?.delivery_date)}</div>
       <div class="detail-value">${[a.flat,a.area,a.pincode].filter(Boolean).join(', ')||'—'}</div>
       <div class="detail-value" style="margin-top:0.4rem;">${o.customer?.phone||'—'}</div>
       <div class="detail-value" style="margin-top:0.4rem;">${o.customer?.slot||'—'}</div>
@@ -557,10 +563,10 @@ async function setOrderStatus(orderId, newStatus){
 }
 
 function exportCSV(){
-  const rows=[['Order ID','Customer','Phone','Address','Items','Subtotal','Delivery','Discount','Total','Payment','Status','Slot','Date']];
+  const rows=[['Order ID','Customer','Phone','Address','Items','Subtotal','Delivery','Discount','Total','Payment','Status','Delivery Date','Slot','Placed']];
   allOrders.forEach(o=>{
     const a=o.customer?.address||{};
-    rows.push([o.orderId,o.customer?.name||'',o.customer?.phone||'',[a.flat,a.area,a.pincode].filter(Boolean).join(', '),(o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' | '),o.subtotal||0,o.delivery||0,o.discount||0,o.total||0,o.payment||'',o.status||'',o.customer?.slot||'',o.placedAt||'']);
+    rows.push([o.orderId,o.customer?.name||'',o.customer?.phone||'',[a.flat,a.area,a.pincode].filter(Boolean).join(', '),(o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' | '),o.subtotal||0,o.delivery||0,o.discount||0,o.total||0,o.payment||'',o.status||'',o.customer?.delivery_date||'',o.customer?.slot||'',o.placedAt||'']);
   });
   const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});

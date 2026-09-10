@@ -69,6 +69,14 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
+    <h2>Delivery Slots</h2>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Which time-of-day slots customers can pick at checkout. Turn one off any time — e.g. if you can't cover Evening this week.</p>
+    <div class="toggle"><input type="checkbox" id="s-morning"> <span>Morning (7 AM – 12 PM)</span></div>
+    <div class="toggle"><input type="checkbox" id="s-afternoon"> <span>Afternoon (12 PM – 5 PM)</span></div>
+    <div class="toggle"><input type="checkbox" id="s-evening"> <span>Evening (5 PM – 8 PM)</span></div>
+  </div>
+
+  <div class="card">
     <h2>Occasion Banner</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Top banner for functions, Sundays, festivals. Turn on when needed.</p>
     <div class="toggle"><input type="checkbox" id="b-active"> <span>Show banner</span></div>
@@ -97,10 +105,11 @@ async function load(){
     const r=await AdminAPI.db('site_settings','select',{});
     const rows=r.data||[];
     const map={}; rows.forEach(x=>map[x.key]=x.value||{});
-    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{};
+    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{};
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
     g('c-hour').value=c.hour!=null?c.hour:16; g('c-label').value=c.label||'same-day delivery';
     g('d-standard').value=d.standard_fee!=null?d.standard_fee:49; g('d-free').value=d.free_above!=null?d.free_above:999;
+    g('s-morning').checked=sl.morning!==false; g('s-afternoon').checked=sl.afternoon!==false; g('s-evening').checked=sl.evening!==false;
     g('b-active').checked=!!b.active; g('b-text').value=b.text||'';
     g('x-ticker').checked=x.ticker!==false; g('x-sound').checked=x.sound!==false; g('x-golden').checked=x.goldenHour!==false; g('x-bulk').checked=x.bulkOrder!==false;
   }catch(e){}
@@ -116,6 +125,7 @@ async function saveAll(){
     await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
     await put('cutoff',{hour:parseInt(g('c-hour').value,10)||16,label:g('c-label').value.trim()||'same-day delivery'});
     await put('delivery',{standard_fee:parseInt(g('d-standard').value,10)||0,free_above:parseInt(g('d-free').value,10)||0});
+    await put('slots',{morning:g('s-morning').checked,afternoon:g('s-afternoon').checked,evening:g('s-evening').checked});
     await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});
     await put('features',{ticker:g('x-ticker').checked,sound:g('x-sound').checked,goldenHour:g('x-golden').checked,bulkOrder:g('x-bulk').checked});
     st.textContent='✓ Saved! Changes are live on the site.'; st.style.color='#7BC67E';
