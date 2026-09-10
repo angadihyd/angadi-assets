@@ -422,7 +422,7 @@ let allOrders = [];
 function fromDb(r){
   return { orderId:r.order_id, customer:r.customer, items:r.items,
     subtotal:r.subtotal, delivery:r.delivery, discount:r.discount, total:r.total,
-    payment:r.payment, paymentId:r.payment_id, status:r.status,
+    payment:r.payment, paymentId:r.payment_id, status:r.status, refundedAmount:Number(r.refunded_amount||0),
     assignedTo:r.assigned_to, acceptedBy:r.accepted_by, placedAt:r.placed_at };
 }
 
@@ -514,11 +514,20 @@ function setTopbarInfo() {
   document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 }
 
+// Revenue counted every order, including ones that were cancelled and ones
+// where a Razorpay row was created at checkout but never actually paid — and
+// it ignored refunds. Same rule as the Orders page: money actually taken.
+function realRevenue(o){
+  if (normaliseStatus(o.status) === 'cancelled') return 0;
+  if (o.payment !== 'cod' && !o.paymentId) return 0;
+  return Number(o.total||0) - Number(o.refundedAmount||0);
+}
+
 function renderStats(orders) {
   const today   = orders.filter(o => isToday(o.placedAt));
   const pending = orders.filter(o => !['delivered','completed','cancelled'].includes(normaliseStatus(o.status)));
-  const revenue = today.reduce((s,o) => s + (o.total||0), 0);
-  const totalRev= orders.reduce((s,o) => s + (o.total||0), 0);
+  const revenue = today.reduce((s,o) => s + realRevenue(o), 0);
+  const totalRev= orders.reduce((s,o) => s + realRevenue(o), 0);
   const unique  = [...new Set(orders.map(o => o.customer?.phone))].length;
 
   document.getElementById('statTodayOrders').textContent        = today.length;
@@ -546,7 +555,7 @@ function renderChart(orders) {
     return d;
   });
   const dayRevs = days.map(day => {
-    const rev = orders.filter(o => new Date(o.placedAt).toDateString() === day.toDateString()).reduce((s,o) => s+(o.total||0), 0);
+    const rev = orders.filter(o => new Date(o.placedAt).toDateString() === day.toDateString()).reduce((s,o) => s+realRevenue(o), 0);
     return { day, rev };
   });
   const maxRev = Math.max(...dayRevs.map(d => d.rev), 1);
@@ -699,7 +708,7 @@ function showNewOrderAlert(order) {
   // Browser notification
   if (Notification.permission === 'granted') {
     new Notification('New Angadi order', {
-      body: `${order.customer?.name||'Customer'} — ₹${order.total||0} · ${order.payment==='cod'?'COD':'Paid Online'}`,
+      body: `${order.customer?.name||'Customer'} — ₹${order.total||0} · ${order.payment==='cod'?'COD':(order.payment_id?'Paid Online':'Awaiting payment')}`,
       icon: '../angadi/icon-192.png'
     });
   }
