@@ -213,6 +213,13 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
   .form-row{grid-template-columns:1fr;}
   footer{padding:2rem 1.5rem 1rem;}
   .footer-bottom{flex-direction:column;text-align:center;}
+  /* Phones: a horizontally-scrolling tab strip with no scroll cue left
+     people stuck on the first option, not realizing they could swipe.
+     Stack it as a plain vertical list instead — nothing to discover. */
+  .sidebar-menu{display:flex;flex-direction:column;overflow-x:visible;border-radius:14px;}
+  .sidebar-item{white-space:normal;border-right:none;border-bottom:1px solid rgba(196,98,45,0.06);}
+  .sidebar-item:last-child{border-bottom:none;}
+  .sidebar-item.active{border-left:3px solid var(--clay);border-bottom:1px solid rgba(196,98,45,0.06);}
 }
 </style>
 <script src="/analytics.js?v=1"></script>
