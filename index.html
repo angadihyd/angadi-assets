@@ -96,8 +96,8 @@
               "category": "Goat Meat"
             },
             "priceCurrency": "INR",
-            "price": "680",
-            "priceSpecification": {"@type": "UnitPriceSpecification", "price": "680", "priceCurrency": "INR", "unitText": "per kg"},
+            "price": "1099",
+            "priceSpecification": {"@type": "UnitPriceSpecification", "price": "1099", "priceCurrency": "INR", "unitText": "per kg"},
             "availability": "https://schema.org/InStock",
             "url": "https://www.angadi.farm/shop.html"
           },
@@ -110,8 +110,8 @@
               "category": "Chicken"
             },
             "priceCurrency": "INR",
-            "price": "520",
-            "priceSpecification": {"@type": "UnitPriceSpecification", "price": "520", "priceCurrency": "INR", "unitText": "per kg"},
+            "price": "900",
+            "priceSpecification": {"@type": "UnitPriceSpecification", "price": "900", "priceCurrency": "INR", "unitText": "per kg"},
             "availability": "https://schema.org/InStock",
             "url": "https://www.angadi.farm/shop.html"
           },
@@ -172,7 +172,7 @@
         {
           "@type": "Question",
           "name": "What is the price of goat meat delivery in Hyderabad?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Angadi's village goat meat starts from ₹680 per kg, country chicken from ₹520 per kg, delivered fresh to your door in Hyderabad."}
+          "acceptedAnswer": {"@type": "Answer", "text": "Angadi's village goat meat starts from ₹1,099 per kg, country chicken from ₹900 per kg, delivered fresh to your door in Hyderabad."}
         }
       ]
     }
@@ -1492,7 +1492,7 @@ footer{
   <div class="products-grid">
 
     <!-- 1 · Village Goat Meat (featured, video) -->
-    <div class="product-card fade-up">
+    <div class="product-card fade-up" data-name="Village Pottel mutton (Goat Meat)">
       <div class="product-img-wrap has-video">
         <video autoplay muted loop playsinline class="lazy-video">
           <source data-src="product/gaot farmer animated video.mp4" type="video/mp4">
@@ -1506,10 +1506,10 @@ footer{
         <div class="product-desc">Farm-raised Telangana goat, hand-cut to curry pieces. Rich flavour, tender texture. No hormones, no antibiotics.</div>
         <div class="product-footer">
           <div class="product-price">
-            <span class="product-price-main">₹680</span>
+            <span class="product-price-main">₹1,099</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Village Goat Meat',680,this)">+</button>
+          <button class="btn-add" onclick="addToCart('Village Pottel mutton (Goat Meat)',1099,this)">+</button>
         </div>
       </div>
     </div>
@@ -1529,10 +1529,10 @@ footer{
         <div class="product-desc">Free-range country chicken raised in open villages. Firm and flavourful — made for slow cooking.</div>
         <div class="product-footer">
           <div class="product-price">
-            <span class="product-price-main">₹520</span>
+            <span class="product-price-main">₹900</span>
             <span class="product-price-unit">per kilogram</span>
           </div>
-          <button class="btn-add" onclick="addToCart('Country Chicken',520,this)">+</button>
+          <button class="btn-add" onclick="addToCart('Country Chicken',900,this)">+</button>
         </div>
       </div>
     </div>
@@ -1938,7 +1938,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       var byName={}; list.forEach(function(p){byName[p.name]=p;});
       document.querySelectorAll('.products-grid .product-card').forEach(function(card){
         var nameEl=card.querySelector('.product-name'); if(!nameEl) return;
-        var p=byName[nameEl.textContent.trim()]; if(!p) return;
+        var p=byName[card.dataset.name || nameEl.textContent.trim()]; if(!p) return;
         var priceEl=card.querySelector('.product-price-main');
         if(priceEl) priceEl.textContent='₹'+Number(p.price).toLocaleString('en-IN');
         var btn=card.querySelector('.btn-add');

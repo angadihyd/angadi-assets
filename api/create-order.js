@@ -20,15 +20,15 @@
 
 // ── Fallback prices if the products table is unreachable ──
 const FALLBACK_PRICES = {
-  'Village Goat Meat': 680,
-  'Country Chicken':   520,
-  'Fresh River Fish':  450,
-  'Baby Goat Legs':    980,
-  'Country Eggs':       12,
-  'Full Goat':        8500,
-  'Goat Legs':         400,
-  'Goat Liver':       1000,
-  'Goat Head':         520,
+  'Village Pottel mutton (Goat Meat)': 1099,
+  'Country Chicken':    900,
+  'Fresh River Fish':   450,
+  'Baby Goat Legs':     400,
+  'Country Eggs':        18,
+  'Full Goat':         8500,
+  'Goat Legs':          400,
+  'Goat Liver':        1000,
+  'Goat Head':          520,
 };
 
 // ── Fallback promo codes (DB coupons are checked first) ──

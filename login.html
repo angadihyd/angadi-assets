@@ -351,6 +351,7 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,phone:phone?'+91'+phone:''}}});
   setLoading('suBtn',false,'Create Account →');
   if(error){setStatus('su-status','error',error.message);return;}
+  if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){setStatus('su-status','error','This email is already registered. Please sign in instead.');return;}
   if(data.user?.id){saveLocalUser({email,name,phone:phone?'+91'+phone:'',id:data.user.id});try{await sb.from('profiles').upsert({id:data.user.id,name,phone:phone?'+91'+phone:''});}catch(ex){}}
   _lastEmail=email;document.getElementById('verifyEmailDisplay').textContent=email;showView('email-verify');
 });
@@ -409,7 +410,22 @@ document.getElementById('profileForm').addEventListener('submit',async(e)=>{
   saveLocalUser({name,address:{flat,area,pincode,city:'Hyderabad'}});setLoading('profileBtn',false,'Save & Continue →');showSuccessView(name);
 });
 function showSuccessView(name){showView('success');const redirect=getRedirect();document.getElementById('redirectMsg').textContent='Taking you to '+(redirect.includes('checkout')?'checkout':redirect.includes('cart')?'your cart':'the shop')+'…';setTimeout(()=>{window.location.href=redirect;},2000);}
-async function loadProfile(userId,email){if(!sb||!userId)return;try{const{data:p}=await sb.from('profiles').select('*').eq('id',userId).single();if(p)saveLocalUser({email,name:p.name||email.split('@')[0],phone:p.phone||'',id:userId});else saveLocalUser({email,name:email.split('@')[0],id:userId});}catch(e){saveLocalUser({email,name:email.split('@')[0],id:userId});}}
+async function loadProfile(userId,email){
+  if(!sb||!userId)return;
+  try{
+    const{data:p}=await sb.from('profiles').select('*').eq('id',userId).single();
+    if(p){saveLocalUser({email,name:p.name||email.split('@')[0],phone:p.phone||'',id:userId});return;}
+  }catch(e){}
+  // No profile row yet — signup's upsert can silently fail while email confirmation is pending
+  // (no session yet, so RLS blocks the write). Backfill it now that we have an active session.
+  try{
+    const{data:{user}}=await sb.auth.getUser();
+    const meta=user?.user_metadata||{};
+    const name=meta.name||email.split('@')[0],phone=meta.phone||'';
+    await sb.from('profiles').upsert({id:userId,name,phone});
+    saveLocalUser({email,name,phone,id:userId});
+  }catch(e){saveLocalUser({email,name:email.split('@')[0],id:userId});}
+}
 
 // Check URL params
 const _p=new URLSearchParams(window.location.search);
