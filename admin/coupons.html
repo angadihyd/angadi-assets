@@ -45,6 +45,7 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
     <div><label>Min order ₹</label><input class="in" id="f-min" type="number" placeholder="0"></div>
     <div><label>Label</label><input class="in" id="f-label" placeholder="₹100 off"></div>
     <div><label>Expires (optional)</label><input class="in" id="f-exp" type="date"></div>
+    <div style="display:flex;align-items:flex-end;"><label style="display:flex;align-items:center;gap:0.45rem;margin:0 0 0.55rem;cursor:pointer;"><input type="checkbox" id="f-once"> One use per customer</label></div>
     <div><button class="btn primary" onclick="saveCoupon()" id="saveBtn">＋ Add coupon</button></div>
   </div>
   <div id="list"></div>
@@ -56,7 +57,7 @@ if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidd
 else { document.getElementById('app').style.display='block'; load(); }
 function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,"\\'"); }
 async function load(){ const r=await AdminAPI.db('coupons','select',{order:'created_at.desc'}); all=r.data||[]; if(r.error) alert('Load failed: '+r.error); render(); }
-function descOf(c){ return (c.type==='percent'?c.value+'% off':'₹'+c.value+' off') + (c.min_order?` · min ₹${c.min_order}`:'') + (c.expires_at?` · till ${c.expires_at}`:''); }
+function descOf(c){ return (c.type==='percent'?c.value+'% off':'₹'+c.value+' off') + (c.min_order?` · min ₹${c.min_order}`:'') + (Number(c.max_uses_per_customer||0)>0?' · once per customer':'') + (c.expires_at?` · till ${c.expires_at}`:''); }
 function render(){
   const list=document.getElementById('list');
   if(!all.length){ list.innerHTML='<div class="empty">No coupons yet. Add one above.</div>'; return; }
@@ -74,19 +75,21 @@ function val(id){ return document.getElementById(id).value.trim(); }
 async function saveCoupon(){
   const code=val('f-code').toUpperCase();
   if(!code || !val('f-value')){ alert('Code and value are required'); return; }
-  const row={ code, type:val('f-type'), value:Number(val('f-value')), min_order:Number(val('f-min')||0), label:val('f-label'), expires_at: val('f-exp')||null, active:true };
+  const row={ code, type:val('f-type'), value:Number(val('f-value')), min_order:Number(val('f-min')||0), label:val('f-label'), expires_at: val('f-exp')||null, active:true, max_uses_per_customer: document.getElementById('f-once').checked ? 1 : null };
   let r;
   if(editId){ r=await AdminAPI.db('coupons','update',{match:{id:editId},values:row}); }
   else { r=await AdminAPI.db('coupons','upsert',{values:row}); }
   if(r.error){ alert('Save failed: '+r.error); return; }
   editId=null; document.getElementById('saveBtn').textContent='＋ Add coupon';
   ['f-code','f-value','f-min','f-label','f-exp'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('f-once').checked=false;
   load();
 }
 function edit(id){ const c=all.find(x=>x.id===id); if(!c) return; editId=id;
   document.getElementById('f-code').value=c.code; document.getElementById('f-type').value=c.type;
   document.getElementById('f-value').value=c.value; document.getElementById('f-min').value=c.min_order||'';
   document.getElementById('f-label').value=c.label||''; document.getElementById('f-exp').value=c.expires_at||'';
+  document.getElementById('f-once').checked = Number(c.max_uses_per_customer||0) > 0;
   document.getElementById('saveBtn').textContent='✓ Save changes'; window.scrollTo({top:0,behavior:'smooth'});
 }
 async function toggle(id,active){ await AdminAPI.db('coupons','update',{match:{id},values:{active}}); const c=all.find(x=>x.id===id); if(c)c.active=active; render(); }

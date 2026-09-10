@@ -235,14 +235,15 @@ module.exports = async (req, res) => {
 
   const delivery = subtotal >= dcfg.free_above ? 0 : dcfg.standard_fee;
 
-  // ── Discount — check admin-managed DB coupons first ──
+  // ── Discount — coupons live only in the DB (admin/coupons.html) ──
   let discount = 0;
+  let appliedCode = null;
   if (promoCode) {
     const code = String(promoCode).toUpperCase();
     let promo = null;
     try {
       const cr = await fetch(
-        `${SUPABASE_URL}/rest/v1/coupons?code=eq.${encodeURIComponent(code)}&active=eq.true&select=type,value,min_order,expires_at`,
+        `${SUPABASE_URL}/rest/v1/coupons?code=eq.${encodeURIComponent(code)}&active=eq.true&select=type,value,min_order,expires_at,max_uses_per_customer`,
         { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
       );
       if (cr.ok) {
@@ -253,10 +254,50 @@ module.exports = async (req, res) => {
     if (promo) {
       const expired = promo.expires_at && new Date(promo.expires_at) < new Date();
       const belowMin = Number(promo.min_order || 0) > subtotal;
+
+      // ── Per-customer usage limit ──
+      // Identity is the delivery phone number first: it's required to order,
+      // it's how the order actually reaches someone, and it's the same for a
+      // guest checkout as for a signed-in account. The account id is checked
+      // too, in case the customer ordered under a different number.
+      let limitReached = false;
+      const perCustomer = Number(promo.max_uses_per_customer || 0);
+      if (!expired && !belowMin && perCustomer > 0) {
+        const phone10 = String((customer && customer.phone) || '').replace(/\D/g, '').slice(-10);
+        const idParts = [];
+        if (phone10.length === 10) idParts.push(`customer->>phone.like.*${phone10.slice(-4)}*`);
+        if (userId) idParts.push(`user_id.eq.${encodeURIComponent(userId)}`);
+        if (idParts.length) {
+          try {
+            // An abandoned checkout ('pending', never paid) and a cancelled
+            // order must not burn the customer's one use.
+            const ur = await fetch(
+              `${SUPABASE_URL}/rest/v1/orders?promo_code=eq.${encodeURIComponent(code)}` +
+              `&status=not.in.(cancelled,pending)&or=(${idParts.join(',')})` +
+              `&select=customer,user_id&limit=200`,
+              { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
+            );
+            if (ur.ok) {
+              const prior = await ur.json();
+              const used = (prior || []).filter((o) => {
+                const oPhone = String((o.customer && o.customer.phone) || '').replace(/\D/g, '').slice(-10);
+                return (phone10.length === 10 && oPhone === phone10) || (userId && o.user_id === userId);
+              }).length;
+              limitReached = used >= perCustomer;
+            }
+          } catch (e) { /* lookup failed — fall through and allow */ }
+        }
+      }
+      if (limitReached) {
+        res.status(400).json({ error: `You've already used ${code}. It can only be used once per customer.` });
+        return;
+      }
+
       if (!expired && !belowMin) {
         discount = promo.type === 'percent'
           ? Math.round(subtotal * Number(promo.value) / 100)
           : Math.round(Number(promo.value));
+        if (discount > 0) appliedCode = code;
       }
     }
   }
@@ -286,6 +327,7 @@ module.exports = async (req, res) => {
           customer: { ...(customer || {}), delivery_date: deliveryDate },
           items: validatedItems,
           subtotal, delivery, discount, total,
+          promo_code: appliedCode,
           payment: 'cod',
           status: 'confirmed_cod',
         }]),
@@ -348,6 +390,7 @@ module.exports = async (req, res) => {
         customer: { ...(customer || {}), delivery_date: deliveryDate },
         items: validatedItems,
         subtotal, delivery, discount, total,
+        promo_code: appliedCode,
         payment: 'razorpay',
         status: 'pending',
       }]),
