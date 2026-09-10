@@ -213,6 +213,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
       <div style="display:flex;gap:0.8rem;align-items:center;">
         <button class="btn-sm" id="alertsBtn" onclick="enableAlerts()" title="Enable push notifications on this device">Alerts</button>
         <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
+        <button class="btn-sm" onclick="archiveOldOrders()">📦 Archive Old Orders</button>
         <button class="btn-sm primary" onclick="refreshOrders()">↻ Refresh</button>
       </div>
     </div>
@@ -236,12 +237,13 @@ tr:hover td{background:rgba(255,255,255,0.012);}
           <button class="filter-tab" data-f="out_for_delivery">Out for Delivery <span class="count-pill" id="cnt-ofd">0</span></button>
           <button class="filter-tab" data-f="delivered">Delivered <span class="count-pill" id="cnt-delivered">0</span></button>
           <button class="filter-tab" data-f="cancelled">Cancelled <span class="count-pill" id="cnt-cancelled">0</span></button>
+          <button class="filter-tab" data-f="archived">📦 Archived <span class="count-pill" id="cnt-archived">0</span></button>
         </div>
         <div class="search-wrap">
           <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
-          <input class="search-input" id="searchInput" placeholder="Order ID or customer…">
+          <input class="search-input" id="searchInput" placeholder="Order ID, customer or phone…">
         </div>
-        <input class="date-input" id="dateFilter" type="date" title="Filter by date">
+        <input class="date-input" id="dateFilter" type="date" title="Filter by delivery date">
       </div>
 
       <!-- TABLE -->
@@ -254,10 +256,10 @@ tr:hover td{background:rgba(255,255,255,0.012);}
                 <th>Customer</th>
                 <th>Phone</th>
                 <th>Items</th>
-                <th>Total</th>
+                <th style="cursor:pointer;" onclick="setSort('total')">Total <span id="sortCaret-total"></span></th>
                 <th>Payment</th>
-                <th>Delivery</th>
-                <th>Placed</th>
+                <th style="cursor:pointer;" onclick="setSort('deliveryDate')">Delivery <span id="sortCaret-deliveryDate"></span></th>
+                <th style="cursor:pointer;" onclick="setSort('placedAt')">Placed <span id="sortCaret-placedAt"></span></th>
                 <th>Status</th>
                 <th>Update</th>
                 <th></th>
@@ -308,6 +310,7 @@ function fromDb(r){
     readyAt:r.ready_at, acceptedAt:r.accepted_at, pickedUpAt:r.picked_up_at, deliveredAt:r.delivered_at,
     placedAt:r.placed_at,
     refundId:r.refund_id, refundedAmount:Number(r.refunded_amount||0), refundedAt:r.refunded_at,
+    archivedAt:r.archived_at,
   };
 }
 function o_(v){ return v || ''; }
@@ -345,6 +348,12 @@ function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../pr
 //  STATE
 // ─────────────────────────────────────────────
 let allOrders=[], activeFilter='all', searchQuery='', dateFilter='', seenIds=new Set();
+let sortBy='placedAt', sortDir='desc';
+function setSort(field){
+  if(sortBy===field) sortDir = sortDir==='desc'?'asc':'desc';
+  else { sortBy=field; sortDir = field==='deliveryDate'?'asc':'desc'; }
+  renderTable();
+}
 
 // (demo orders removed — the guarded API is the only data source)
 
@@ -389,10 +398,12 @@ async function init(){
 async function refreshOrders(){ await loadOrders(false); renderStats(); renderTable(); showToast('Orders refreshed'); }
 
 function renderStats(){
-  const total     = allOrders.length;
-  const today     = allOrders.filter(o=>{const d=new Date(o.placedAt);return d.toDateString()===new Date().toDateString();});
-  const pending   = allOrders.filter(o=>['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery'].includes(normaliseStatus(o.status)));
-  const revenue   = allOrders.reduce((s,o)=>s+(o.total||0),0);
+  const active    = allOrders.filter(o=>!o.archivedAt); // stats reflect the live operational view, not archived history
+  const archived  = allOrders.filter(o=>o.archivedAt);
+  const total     = active.length;
+  const today     = active.filter(o=>{const d=new Date(o.placedAt);return d.toDateString()===new Date().toDateString();});
+  const pending   = active.filter(o=>['pending','confirmed','preparing','ready','assigned','picked_up','out_for_delivery'].includes(normaliseStatus(o.status)));
+  const revenue   = active.reduce((s,o)=>s+(o.total||0),0);
   document.getElementById('statsRow').innerHTML=`
     <div class="mini-stat"><span class="mini-stat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span><div><div class="mini-stat-val">${total}</div><div class="mini-stat-label">Total Orders</div></div></div>
     <div class="mini-stat"><span class="mini-stat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg></span><div><div class="mini-stat-val">${today.length}</div><div class="mini-stat-label">Today</div></div></div>
@@ -401,7 +412,7 @@ function renderStats(){
   `;
   // Counts
   const counts={};
-  allOrders.forEach(o=>{ const s=normaliseStatus(o.status); counts[s]=(counts[s]||0)+1; });
+  active.forEach(o=>{ const s=normaliseStatus(o.status); counts[s]=(counts[s]||0)+1; });
   const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=v||0;};
   set('cnt-all',total);
   set('cnt-pending',counts.pending);
@@ -412,17 +423,33 @@ function renderStats(){
   set('cnt-ofd',counts.out_for_delivery);
   set('cnt-delivered',(counts.delivered||0)+(counts.completed||0));
   set('cnt-cancelled',counts.cancelled);
+  set('cnt-archived',archived.length);
 }
 
 function renderTable(){
+  ['total','deliveryDate','placedAt'].forEach(f=>{
+    const el=document.getElementById('sortCaret-'+f);
+    if(el) el.textContent = sortBy===f ? (sortDir==='asc'?'▲':'▼') : '';
+  });
   const filtered = allOrders.filter(o=>{
+    // Archived orders are hidden from every normal tab — only the
+    // "Archived" tab itself shows them. Nothing is ever deleted.
+    if(activeFilter==='archived') { if(!o.archivedAt) return false; }
+    else if(o.archivedAt) return false;
     const s=normaliseStatus(o.status);
-    const mStatus = activeFilter==='all'||s===activeFilter;
+    const mStatus = activeFilter==='all'||activeFilter==='archived'||s===activeFilter;
     const q=searchQuery.toLowerCase();
     const mSearch=!q||(o.orderId||'').toLowerCase().includes(q)||(o.customer?.name||'').toLowerCase().includes(q)||(o.customer?.phone||'').includes(q);
-    const mDate=!dateFilter||new Date(o.placedAt).toISOString().slice(0,10)===dateFilter;
+    const mDate=!dateFilter||o.customer?.delivery_date===dateFilter;
     return mStatus&&mSearch&&mDate;
-  }).sort((a,b)=>new Date(b.placedAt)-new Date(a.placedAt));
+  }).sort((a,b)=>{
+    let av,bv;
+    if(sortBy==='total'){ av=Number(a.total)||0; bv=Number(b.total)||0; }
+    else if(sortBy==='deliveryDate'){ av=a.customer?.delivery_date||''; bv=b.customer?.delivery_date||''; }
+    else { av=new Date(a.placedAt).getTime()||0; bv=new Date(b.placedAt).getTime()||0; }
+    const cmp = av<bv?-1:av>bv?1:0;
+    return sortDir==='asc'?cmp:-cmp;
+  });
 
   const tbody=document.getElementById('ordersBody');
   if(!filtered.length){
@@ -596,17 +623,46 @@ async function setOrderStatus(orderId, newStatus){
   if (error){ console.warn('update failed', error); showToast('Save failed — ' + error); }
 }
 
-function exportCSV(){
+function ordersToCSV(list, filenameSuffix){
   const rows=[['Order ID','Customer','Phone','Address','Items','Subtotal','Delivery','Discount','Total','Payment','Status','Delivery Date','Slot','Placed']];
-  allOrders.forEach(o=>{
+  list.forEach(o=>{
     const a=o.customer?.address||{};
     rows.push([o.orderId,o.customer?.name||'',o.customer?.phone||'',[a.flat,a.area,a.pincode].filter(Boolean).join(', '),(o.items||[]).map(i=>i.name.split(' · ')[0]+'×'+i.qty).join(' | '),o.subtotal||0,o.delivery||0,o.discount||0,o.total||0,o.payment||'',o.status||'',o.customer?.delivery_date||'',o.customer?.slot||'',o.placedAt||'']);
   });
-  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`angadi-orders-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  a.download=`angadi-orders-${filenameSuffix||new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+function exportCSV(){
+  ordersToCSV(allOrders, new Date().toISOString().slice(0,10));
   showToast('✓ CSV exported');
+}
+
+// ─────────────────────────────────────────────
+//  ARCHIVE — hides old orders from the default view without deleting them.
+//  Always exports to CSV first so nothing is lost even if you never open
+//  the Archived tab again.
+// ─────────────────────────────────────────────
+async function archiveOldOrders(){
+  const daysStr = prompt('Archive orders placed more than how many days ago?', '30');
+  if(daysStr===null) return;
+  const days = parseInt(daysStr, 10);
+  if(!(days>0)){ alert('Enter a positive number of days.'); return; }
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days);
+  const toArchive = allOrders.filter(o => !o.archivedAt && new Date(o.placedAt) < cutoff);
+  if(!toArchive.length){ alert(`No orders older than ${days} days to archive.`); return; }
+  if(!confirm(`Archive ${toArchive.length} order(s) placed before ${cutoff.toLocaleDateString('en-IN')}?\n\nThey'll be exported to a CSV file first, then hidden from the main list (still viewable under the "Archived" tab — nothing is deleted).`)) return;
+
+  ordersToCSV(toArchive, 'archived-'+new Date().toISOString().slice(0,10));
+
+  showToast('Archiving…');
+  const r = await AdminAPI.call('bulk-archive-orders', { orderIds: toArchive.map(o=>o.orderId) });
+  if(r.error){ alert('Archive failed: '+r.error); return; }
+  const now = new Date().toISOString();
+  toArchive.forEach(o => { o.archivedAt = now; });
+  renderStats(); renderTable();
+  showToast(`✓ Archived ${toArchive.length} order(s) — CSV downloaded`);
 }
 
 // Filter events

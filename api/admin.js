@@ -351,6 +351,30 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (action === 'bulk-archive-orders') {
+      // Archiving only ever sets a timestamp — never deletes a row. The
+      // client already exported these to CSV before calling this.
+      const orderIds = Array.isArray(payload.orderIds) ? payload.orderIds : [];
+      if (!orderIds.length) { res.status(400).json({ error: 'orderIds required' }); return; }
+      if (!orderIds.every((id) => /^[a-zA-Z0-9_-]+$/.test(id))) {
+        res.status(400).json({ error: 'Bad order id in list' });
+        return;
+      }
+      const idList = orderIds.map((id) => encodeURIComponent(id)).join(',');
+      const r = await rest(env, `orders?order_id=in.(${idList})`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ archived_at: new Date().toISOString() }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        res.status(500).json({ error: 'Archive failed: ' + t.slice(0, 200) });
+        return;
+      }
+      res.status(200).json({ ok: true, archived: orderIds.length });
+      return;
+    }
+
     res.status(400).json({ error: 'Unknown action' });
   } catch (e) {
     console.error('admin api error', e);
