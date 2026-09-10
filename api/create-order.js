@@ -38,7 +38,6 @@ const FALLBACK_PROMOS = {
   'VILLAGE':  { type: 'percent', value: 5,  min_order: 0 },
 };
 
-const EXPRESS_SLOT = 'Express (2 hrs, +₹99)';
 const COD_LIMIT = 5000;          // ₹ — matches the note shown at checkout
 const PRICE_TOLERANCE = 2;       // ₹ rounding slack on computed line prices
 
@@ -115,14 +114,16 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // ── Ordering must be inside an admin-configured window (see admin/order-windows.html) ──
-  // Checked server-side so this can't be bypassed by calling the API directly —
+  // ── Ordering is open for the nearest not-yet-closed delivery date
+  // (see admin/order-windows.html) — no separate "opens at" concept, a date
+  // is orderable from the moment it's added until its own cutoff. Checked
+  // server-side so this can't be bypassed by calling the API directly —
   // this is the one place an order actually gets created.
   let deliveryDate = null;
   try {
     const now = new Date().toISOString();
     const wr = await fetch(
-      `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&opens_at=lte.${now}&closes_at=gte.${now}&order=closes_at.asc&limit=1`,
+      `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&closes_at=gte.${now}&order=closes_at.asc&limit=1`,
       { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
     );
     const win = wr.ok ? await wr.json() : [];
@@ -187,7 +188,8 @@ module.exports = async (req, res) => {
   }
 
   // ── Delivery (admin-configurable via site_settings 'delivery') ──
-  let dcfg = { standard_fee: 49, free_above: 999, express_fee: 99 };
+  // Express delivery is disabled — doesn't fit a fixed weekly delivery-day model.
+  let dcfg = { standard_fee: 49, free_above: 999 };
   try {
     const sr = await fetch(
       `${SUPABASE_URL}/rest/v1/site_settings?key=eq.delivery&select=value`,
@@ -199,14 +201,11 @@ module.exports = async (req, res) => {
       if (v) dcfg = {
         standard_fee: Number(v.standard_fee ?? dcfg.standard_fee),
         free_above:   Number(v.free_above   ?? dcfg.free_above),
-        express_fee:  Number(v.express_fee  ?? dcfg.express_fee),
       };
     }
   } catch (e) { /* fall back to defaults */ }
 
-  const delivery = slot === EXPRESS_SLOT
-    ? dcfg.express_fee
-    : (subtotal >= dcfg.free_above ? 0 : dcfg.standard_fee);
+  const delivery = subtotal >= dcfg.free_above ? 0 : dcfg.standard_fee;
 
   // ── Discount — check admin-managed DB coupons first ──
   let discount = 0;

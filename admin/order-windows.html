@@ -43,15 +43,14 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
 <div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
 <div id="app" style="display:none;">
   <div class="top"><h1>Order Windows</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
-  <div class="sub">Controls when customers can place an order and which delivery date it's for — enforced on the website's checkout and the WhatsApp bot. All times are IST.</div>
+  <div class="sub">Controls which delivery date customers are ordering for right now — enforced on the website's checkout and the WhatsApp bot. Ordering is open as soon as you add a date, all the way up to its cutoff. Add another one any time — for a normal week, or an extra mid-week delivery — and whichever cutoff comes soonest is the one customers see. All times are IST.</div>
   <div id="nowBadge"></div>
   <div class="form">
     <div><label>Delivery date</label><input class="in" id="f-date" type="date"></div>
-    <div><label>Orders open from</label><input class="in" id="f-opens" type="datetime-local"></div>
-    <div><label>Orders close at</label><input class="in" id="f-closes" type="datetime-local"></div>
-    <div><button class="btn primary" onclick="saveWindow()" id="saveBtn">＋ Add window</button></div>
+    <div><label>Order cutoff (orders close)</label><input class="in" id="f-closes" type="datetime-local"></div>
+    <div><button class="btn primary" onclick="saveWindow()" id="saveBtn">＋ Add delivery date</button></div>
   </div>
-  <div class="note">Example: to take orders for Sunday delivery, set delivery date = that Sunday, "opens from" = when you want to start taking orders (e.g. Thursday), "closes at" = your cutoff (e.g. Saturday 8 PM).</div>
+  <div class="note">Example: for Sunday delivery, set delivery date = that Sunday and cutoff = whenever you want to stop taking orders (e.g. Saturday 8 PM, or Sunday 10 AM).</div>
   <div id="list"></div>
 </div>
 <script src="admin-api.js"></script>
@@ -74,31 +73,36 @@ function fmtIST(iso){
 }
 
 async function load(){
-  const r=await AdminAPI.db('order_windows','select',{order:'delivery_date.desc'});
+  const r=await AdminAPI.db('order_windows','select',{order:'closes_at.asc'});
   all=r.data||[];
   if(r.error) alert('Load failed: '+r.error);
   renderNowBadge();
   render();
 }
-function renderNowBadge(){
+// "Current" window = the soonest cutoff that hasn't passed yet — ordering is
+// open for it from the moment it's added (no separate "opens at" concept).
+function currentWindow(){
   const now=new Date().toISOString();
-  const open = all.find(w=>w.is_active && w.opens_at<=now && w.closes_at>=now);
+  return all.filter(w=>w.is_active && w.closes_at>=now).sort((a,b)=>a.closes_at<b.closes_at?-1:1)[0] || null;
+}
+function renderNowBadge(){
+  const open = currentWindow();
   document.getElementById('nowBadge').innerHTML = open
-    ? `<span class="now-badge open">● Ordering is OPEN right now — for delivery ${open.delivery_date}, closes ${fmtIST(open.closes_at)} IST</span>`
-    : `<span class="now-badge closed">● Ordering is CLOSED right now</span>`;
+    ? `<span class="now-badge open">● Taking orders now — for delivery ${open.delivery_date}, cutoff ${fmtIST(open.closes_at)} IST</span>`
+    : `<span class="now-badge closed">● No open delivery date — orders are closed until you add one</span>`;
 }
 function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function render(){
   const list=document.getElementById('list');
-  if(!all.length){ list.innerHTML='<div class="empty">No order windows yet. Add one above.</div>'; return; }
-  const now=new Date().toISOString();
+  if(!all.length){ list.innerHTML='<div class="empty">No delivery dates yet. Add one above.</div>'; return; }
+  const cur = currentWindow();
   list.innerHTML=all.map(w=>{
-    const live = w.is_active && w.opens_at<=now && w.closes_at>=now;
+    const isCurrent = cur && w.id===cur.id;
     return `
     <div class="card">
       <span class="date">${esc(w.delivery_date)}</span>
-      <span class="window">Opens ${fmtIST(w.opens_at)} · Closes ${fmtIST(w.closes_at)} IST</span>
-      <span class="pill ${w.is_active?'on':'off'}">${w.is_active?(live?'Open now':'Active'):'Off'}</span>
+      <span class="window">Cutoff ${fmtIST(w.closes_at)} IST</span>
+      <span class="pill ${w.is_active?'on':'off'}">${!w.is_active?'Off':(isCurrent?'Taking orders':'Active')}</span>
       <button class="btn" onclick="toggle('${w.id}',${!w.is_active})">${w.is_active?'Disable':'Enable'}</button>
       <button class="btn" onclick="edit('${w.id}')">✎ Edit</button>
       <button class="btn red" onclick="del('${w.id}')">Delete</button>
@@ -107,24 +111,22 @@ function render(){
 }
 async function saveWindow(){
   const date=document.getElementById('f-date').value;
-  const opens=document.getElementById('f-opens').value;
   const closes=document.getElementById('f-closes').value;
-  if(!date||!opens||!closes){ alert('All three fields are required'); return; }
-  const opensISO=istInputToISO(opens), closesISO=istInputToISO(closes);
-  if(closesISO<=opensISO){ alert('Close time must be after open time'); return; }
-  const row={ delivery_date:date, opens_at:opensISO, closes_at:closesISO, is_active:true };
+  if(!date||!closes){ alert('Both fields are required'); return; }
+  const closesISO=istInputToISO(closes);
+  const row={ delivery_date:date, closes_at:closesISO, is_active:true };
+  if(!editId) row.opens_at=new Date().toISOString(); // schema requires a value; not used for gating
   let r;
   if(editId){ r=await AdminAPI.db('order_windows','update',{match:{id:editId},values:row}); }
   else { r=await AdminAPI.db('order_windows','insert',{values:row}); }
   if(r.error){ alert('Save failed: '+r.error); return; }
-  editId=null; document.getElementById('saveBtn').textContent='＋ Add window';
-  ['f-date','f-opens','f-closes'].forEach(i=>document.getElementById(i).value='');
+  editId=null; document.getElementById('saveBtn').textContent='＋ Add delivery date';
+  ['f-date','f-closes'].forEach(i=>document.getElementById(i).value='');
   load();
 }
 function edit(id){
   const w=all.find(x=>x.id===id); if(!w) return; editId=id;
   document.getElementById('f-date').value=w.delivery_date;
-  document.getElementById('f-opens').value=isoToISTInput(w.opens_at);
   document.getElementById('f-closes').value=isoToISTInput(w.closes_at);
   document.getElementById('saveBtn').textContent='✓ Save changes';
   window.scrollTo({top:0,behavior:'smooth'});

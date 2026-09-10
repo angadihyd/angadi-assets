@@ -2094,7 +2094,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       bar.style.display='block';
     }
     var now=new Date().toISOString();
-    fetch('https://www.angadi.farm/api/supabase/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&opens_at=lte.'+now+'&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:H})
+    fetch('https://www.angadi.farm/api/supabase/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:H})
       .then(function(r){return r.ok?r.json():[];})
       .then(function(rows){
         if(!rows.length){ bar.style.display='none'; return; }
