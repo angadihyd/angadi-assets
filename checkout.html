@@ -304,9 +304,6 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
   </div>
 </nav>
 
-<!-- OCCASION BANNER (admin-controlled, see admin/settings.html) -->
-<div id="occasionBanner" style="display:none;"></div>
-
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-close" id="menuClose">✕</button>
@@ -315,6 +312,12 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 </div>
 
 <div class="page">
+
+  <!-- PERMANENT BANNER (admin-controlled, always-on) -->
+  <div id="permanentBanner" style="display:none;"></div>
+
+  <!-- OCCASION BANNER (admin-controlled, see admin/settings.html) -->
+  <div id="occasionBanner" style="display:none;"></div>
 
   <!-- BREADCRUMB -->
   <div class="breadcrumb-bar">
@@ -452,7 +455,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 
             <!-- DELIVERY SLOT -->
             <div style="margin-top:1.5rem;margin-bottom:0.8rem;">
-              <div class="form-label" style="margin-bottom:0.7rem;">Preferred Delivery Slot *</div>
+              <div class="form-label" style="margin-bottom:0.3rem;">Preferred Delivery Slot *</div>
+              <div id="slotDeliveryDate" style="display:none;font-size:0.82rem;color:var(--clay-l,#E8956A);font-weight:600;margin-bottom:0.7rem;"></div>
               <div class="slot-grid">
                 <button type="button" class="slot-btn active" data-slot="Morning (7 AM – 12 PM)" data-key="morning">
                   <div class="slot-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a5 5 0 0 1 10 0"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="4" x2="12" y2="8"/><path d="M9.5 6.5L12 4l2.5 2.5"/></svg></div>
@@ -618,6 +622,10 @@ async function checkOrderWindow(){
       const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
       banner.style.display='block';
       banner.innerHTML = `<div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.25);color:#4CAF50;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ordering open — this order will be delivered on <strong>${dateStr}</strong>.</div>`;
+      // Repeat it right by the slot picker too, so it's visible at the exact
+      // moment the customer is choosing a time — not just in a banner above.
+      const slotDate = document.getElementById('slotDeliveryDate');
+      if(slotDate){ slotDate.textContent = '📅 Delivering on '+dateStr; slotDate.style.display='block'; }
     }
   }catch(e){ /* leave optimistic default */ }
 }
@@ -652,6 +660,22 @@ async function applySlotConfig(){
   }catch(e){ /* keep all slots visible */ }
 }
 applySlotConfig();
+
+// Permanent banner — always-on admin-set custom text (admin/settings.html)
+(async function permanentBannerFn(){
+  try{
+    const r = await fetch(SUPABASE_URL+'/rest/v1/site_settings?key=eq.permanentBanner&select=value', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
+    });
+    if(!r.ok) return;
+    const rows = await r.json();
+    const p = (rows[0] && rows[0].value) || {};
+    if(!p.active || !p.text) return;
+    const el = document.getElementById('permanentBanner');
+    el.innerHTML = '<div style="background:#1A0E06;border-bottom:1px solid rgba(212,160,23,0.3);color:#F6EDD8;text-align:center;padding:0.6rem 1rem;font-size:0.85rem;font-weight:600;">'+p.text+'</div>';
+    el.style.display = 'block';
+  }catch(e){}
+})();
 
 // Occasion banner — admin-set custom text (admin/settings.html)
 (async function occasionBanner(){

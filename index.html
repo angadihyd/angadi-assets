@@ -1451,6 +1451,9 @@ footer{
 </div>
 
 <!-- PRODUCTS -->
+<!-- PERMANENT BANNER (admin-controlled, always-on) -->
+<div id="permanentBanner" style="display:none;"></div>
+
 <!-- OCCASION BANNER (admin-controlled) -->
 <div id="occasionBanner" style="display:none;"></div>
 
@@ -2126,6 +2129,14 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     el.innerHTML='<div style="background:linear-gradient(90deg,#C4622D,#D4A017);color:#fff;text-align:center;padding:0.7rem 1rem;font-size:0.9rem;font-weight:600;">'+b.text+'</div>';
     el.style.display='block';
   }
+  function permanentBanner(p){
+    p=p||{};
+    if(!p.active||!p.text) return;
+    var el=document.getElementById('permanentBanner');
+    if(!el) return;
+    el.innerHTML='<div style="background:#1A0E06;border-bottom:1px solid rgba(212,160,23,0.3);color:#F6EDD8;text-align:center;padding:0.6rem 1rem;font-size:0.85rem;font-weight:600;">'+p.text+'</div>';
+    el.style.display='block';
+  }
 
   function bulk(on){ if(on){ var s=document.getElementById('bulkOrder'); if(s) s.style.display='block'; } }
 
@@ -2164,6 +2175,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
         if(m.features.goldenHour) goldenHour();
         startCountdown();
         farmer(m.farmer);
+        permanentBanner(m.permanentBanner);
         banner(m.banner);
         bulk(m.features.bulkOrder);
         villageSound(m.features.sound);
