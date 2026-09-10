@@ -50,15 +50,6 @@ textarea.in{resize:vertical;min-height:60px;}
   </div>
 
   <div class="card">
-    <h2>⏰ Order Cut-off</h2>
-    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Homepage shows a live countdown to this time for same-day delivery.</p>
-    <div class="row">
-      <div><label>Cut-off hour (24h, e.g. 16 = 4 PM)</label><input class="in" id="c-hour" type="number" min="0" max="23" placeholder="16"></div>
-      <div><label>Label</label><input class="in" id="c-label" placeholder="same-day delivery"></div>
-    </div>
-  </div>
-
-  <div class="card">
     <h2>Delivery Charges</h2>
     <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Controls the delivery fee at checkout. Changes apply to new orders immediately.</p>
     <div class="row">
@@ -113,9 +104,8 @@ async function load(){
     const r=await AdminAPI.db('site_settings','select',{});
     const rows=r.data||[];
     const map={}; rows.forEach(x=>map[x.key]=x.value||{});
-    const f=map.farmer||{}, c=map.cutoff||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{}, p=map.permanentBanner||{};
+    const f=map.farmer||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{}, p=map.permanentBanner||{};
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
-    g('c-hour').value=c.hour!=null?c.hour:16; g('c-label').value=c.label||'same-day delivery';
     g('d-standard').value=d.standard_fee!=null?d.standard_fee:49; g('d-free').value=d.free_above!=null?d.free_above:999;
     g('s-morning').checked=sl.morning!==false; g('s-afternoon').checked=sl.afternoon!==false; g('s-evening').checked=sl.evening!==false;
     g('p-active').checked=!!p.active; g('p-text').value=p.text||'';
@@ -132,7 +122,6 @@ async function saveAll(){
   const st=g('status'); st.textContent='Saving…'; st.style.color='';
   try{
     await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
-    await put('cutoff',{hour:parseInt(g('c-hour').value,10)||16,label:g('c-label').value.trim()||'same-day delivery'});
     await put('delivery',{standard_fee:parseInt(g('d-standard').value,10)||0,free_above:parseInt(g('d-free').value,10)||0});
     await put('slots',{morning:g('s-morning').checked,afternoon:g('s-afternoon').checked,evening:g('s-evening').checked});
     await put('permanentBanner',{active:g('p-active').checked,text:g('p-text').value.trim()});

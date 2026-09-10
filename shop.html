@@ -10,11 +10,11 @@
 <meta name="apple-mobile-web-app-title" content="Angadi">
 <link rel="apple-touch-icon" href="/angadi/icon-180.png">
 <title>Buy Village Meat Online Hyderabad — Goat, Chicken, Fish | Angadi</title>
-<meta name="description" content="Order free-range goat meat, country chicken (nati kodi) & fresh river fish online in Hyderabad. Farm-direct from Telangana villages. Same-day delivery.">
+<meta name="description" content="Order free-range goat meat, country chicken (nati kodi) & fresh river fish online in Hyderabad. Farm-direct from Telangana villages, delivered to your door.">
 <meta name="keywords" content="buy goat meat online Hyderabad, order chicken online Hyderabad, nati kodi order online, meka mamsam online, fresh fish delivery Hyderabad, village chicken Hyderabad, angadi shop, free range meat online India">
 <link rel="canonical" href="https://www.angadi.farm/shop.html">
 <meta property="og:title" content="Buy Village Meat Online — Goat, Chicken, Fish | Angadi Hyderabad">
-<meta property="og:description" content="Free-range goat meat, country chicken & fresh fish from Telangana villages. Order online, delivered same day in Hyderabad.">
+<meta property="og:description" content="Free-range goat meat, country chicken & fresh fish from Telangana villages. Order online, delivered to your door in Hyderabad.">
 <meta property="og:url" content="https://www.angadi.farm/shop.html">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://www.angadi.farm/ux%20ui%20design/6ccbeb50a9a2ed023989c42b3b686f61.jpg">
@@ -960,7 +960,7 @@ footer{
       Fresh From<br><em>Telangana's</em> Villages
     </h1>
     <p class="shop-hero-sub">
-      Every product sourced directly from free-range farms. Processed hygienically and delivered cold to your door — same day.
+      Every product sourced directly from free-range farms. Processed hygienically and delivered cold to your door.
     </p>
     <div class="shop-hero-meta">
       <span class="shop-hero-pill">Village Sourced</span>
@@ -977,7 +977,7 @@ footer{
   <div class="shop-banner fade-up">
     <div class="shop-banner-text">
       <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></span>
-      <p id="deliveryBannerText">Hyderabad-wide delivery in 4–6 hours.</p>
+      <p id="deliveryBannerText">Checking delivery schedule…</p>
     </div>
     <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" target="_blank" class="shop-banner-link">Order on WhatsApp →</a>
   </div>
@@ -1649,7 +1649,7 @@ loadProducts();
     } else {
       el.innerHTML = `<strong>Free delivery on orders above ₹${freeAbove.toLocaleString('en-IN')}.</strong> Ordering open now — ${rows.length} delivery dates available, pick one at checkout.`;
     }
-  }catch(e){ /* keep default banner text */ }
+  }catch(e){ el.textContent = 'Choose your delivery date at checkout.'; }
 })();
 
 // Permanent banner — always-on admin-set custom text (admin/settings.html)
