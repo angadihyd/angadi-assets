@@ -528,13 +528,7 @@ function openEditProduct(idx){
         </div>
         <div class="form-group">
           <label class="form-label">Unit</label>
-          <select class="form-input form-select" id="ef-unit">
-            <option ${p.unit==='kg'?'selected':''}>kg</option>
-            <option ${p.unit==='egg'?'selected':''}>egg</option>
-            <option ${p.unit==='head'?'selected':''}>head</option>
-            <option ${p.unit==='goat'?'selected':''}>goat</option>
-            <option ${p.unit==='4 pcs'?'selected':''}>4 pcs</option>
-          </select>
+          <input class="form-input" id="ef-unit" list="unitOptions" value="${(p.unit||'').replace(/"/g,'&quot;')}" placeholder="kg, set, 4 pcs…" autocomplete="off">
         </div>
       </div>
       <div class="form-group">
@@ -594,9 +588,7 @@ function openAddProduct(){
         </div>
         <div class="form-group">
           <label class="form-label">Unit</label>
-          <select class="form-input form-select" id="ef-unit">
-            <option>kg</option><option>egg</option><option>head</option><option>goat</option><option>4 pcs</option>
-          </select>
+          <input class="form-input" id="ef-unit" list="unitOptions" value="kg" placeholder="kg, set, 4 pcs…" autocomplete="off">
         </div>
       </div>
       <div class="form-group">
@@ -634,7 +626,7 @@ function saveEdit(e, idx){
     name:     document.getElementById('ef-name').value.trim(),
     nameTE:   document.getElementById('ef-namete').value.trim(),
     price:    parseFloat(document.getElementById('ef-price').value),
-    unit:     document.getElementById('ef-unit').value,
+    unit:     document.getElementById('ef-unit').value.trim() || 'kg',
     badge:    document.getElementById('ef-badge').value.trim(),
     category: document.getElementById('ef-cat').value,
     inStock:  document.getElementById('ef-stock').value === '1',
@@ -651,7 +643,7 @@ function saveNewProduct(e){
     name:     document.getElementById('ef-name').value.trim(),
     nameTE:   document.getElementById('ef-namete').value.trim(),
     price:    parseFloat(document.getElementById('ef-price').value),
-    unit:     document.getElementById('ef-unit').value,
+    unit:     document.getElementById('ef-unit').value.trim() || 'kg',
     badge:    document.getElementById('ef-badge').value.trim(),
     category: document.getElementById('ef-cat').value,
     inStock:  document.getElementById('ef-stock').value === '1',
@@ -727,5 +719,20 @@ function showToast(msg){
   document.body.appendChild(toast); setTimeout(()=>toast.remove(),2600);
 }
 </script>
+<!-- Suggestions for the Unit field. It's a free-text input, so anything can be
+     typed (set, 2 pcs, 500 g…) — these are just shortcuts. -->
+<datalist id="unitOptions">
+  <option value="kg"></option>
+  <option value="set"></option>
+  <option value="piece"></option>
+  <option value="egg"></option>
+  <option value="head"></option>
+  <option value="goat"></option>
+  <option value="2 pcs"></option>
+  <option value="4 pcs"></option>
+  <option value="6 pcs"></option>
+  <option value="12 pcs"></option>
+  <option value="500 g"></option>
+</datalist>
 </body>
 </html>

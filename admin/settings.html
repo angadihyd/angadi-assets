@@ -129,8 +129,8 @@ function addSlotRow(slot){
   const s=slot||{name:'',time:'',active:true};
   const row=document.createElement('div');
   row.className='slot-row';
-  row.innerHTML='<input class="in s-name" placeholder="Morning">'
-    +'<input class="in s-time" placeholder="7 AM – 12 PM">'
+  row.innerHTML='<input class="in s-name" placeholder="e.g. Morning">'
+    +'<input class="in s-time" placeholder="e.g. 7 AM – 12 PM">'
     +'<label class="slot-on"><input type="checkbox" class="s-active"> On</label>'
     +'<button type="button" class="btn-x" title="Remove this slot">✕</button>';
   row.querySelector('.s-name').value=s.name||'';
@@ -145,7 +145,12 @@ function collectSlots(){
     name:r.querySelector('.s-name').value.trim(),
     time:r.querySelector('.s-time').value.trim(),
     active:r.querySelector('.s-active').checked,
-  })).filter(s=>s.name);
+  }));
+}
+// A row with a timing but no name is a half-filled slot, not an empty one.
+// Dropping it silently lost slots the admin thought they had saved.
+function incompleteSlotRows(list){
+  return list.filter(s => !s.name && (s.time || s.active));
 }
 async function load(){
   try{
@@ -170,7 +175,17 @@ async function saveAll(){
   const st=g('status');
   // A checkout with no selectable slot can't be completed at all, so refuse to
   // save that state — pausing orders is what Order Windows is for.
-  const slotsToSave=collectSlots();
+  const allRows=collectSlots();
+  const incomplete=incompleteSlotRows(allRows);
+  if(incomplete.length){
+    st.textContent='Give every slot a name (e.g. "Morning") — a slot with only a timing can’t be saved.';
+    st.style.color='#E57373';
+    const blank=[...document.querySelectorAll('#slotRows .slot-row')].find(r=>!r.querySelector('.s-name').value.trim() && (r.querySelector('.s-time').value.trim() || r.querySelector('.s-active').checked));
+    if(blank){ blank.querySelector('.s-name').style.borderColor='#E57373'; blank.querySelector('.s-name').focus(); }
+    setTimeout(()=>{st.textContent='';},7000);
+    return;
+  }
+  const slotsToSave=allRows.filter(s=>s.name);
   if(!slotsToSave.some(s=>s.active)){
     st.textContent='Keep at least one slot switched On — customers can’t check out otherwise.';
     st.style.color='#E57373';
