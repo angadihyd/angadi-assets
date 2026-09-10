@@ -261,7 +261,10 @@ module.exports = async (req, res) => {
       let buf;
       try { buf = Buffer.from(String(payload.base64 || ''), 'base64'); }
       catch { res.status(400).json({ error: 'Bad file data' }); return; }
-      if (!buf.length || buf.length > 4.2 * 1024 * 1024) { res.status(400).json({ error: 'Image must be under 4MB' }); return; }
+      // Vercel's Node function body cap is ~4.5MB, and base64 inflates the
+      // raw file by ~33% in transit — so the *decoded* limit must stay well
+      // under that, not just under the request-body cap itself.
+      if (!buf.length || buf.length > 3.2 * 1024 * 1024) { res.status(400).json({ error: 'Image must be under 3MB' }); return; }
       const r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/product-images/${name}`, {
         method: 'POST',
         headers: {

@@ -57,6 +57,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 .product-admin-card{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.3s;}
 .product-admin-card:hover{border-color:rgba(196,98,45,0.4);}
 .product-admin-card.out-of-stock{opacity:0.65;}
+.product-admin-card.is-disabled{opacity:0.5;border-color:rgba(229,115,115,0.35);}
+.product-admin-card.is-disabled .out-of-stock-overlay{color:var(--red);}
 .prod-img{position:relative;height:160px;overflow:hidden;}
 .prod-img img{width:100%;height:100%;object-fit:cover;filter:brightness(0.85);}
 .prod-stock-badge{position:absolute;top:0.7rem;right:0.7rem;}
@@ -235,31 +237,71 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 function rowToProduct(r){
   return { id:r.slug, name:r.name, nameTE:r.name_te, price:Number(r.price), unit:r.unit,
     img:(r.image||'').startsWith('../')?r.image:'../'+(r.image||''), category:r.category,
-    badge:r.badge, inStock:r.in_stock, featured:r.featured, sortOrder:r.sort_order,
+    badge:r.badge, inStock:r.in_stock, active:r.active!==false, featured:r.featured, sortOrder:r.sort_order,
     cutTime:r.cut_time, stockQty:r.stock_qty, boardDate:r.board_date };
 }
 // UI product → DB row
 function productToRow(p){
   return { slug:p.id, name:p.name, name_te:p.nameTE, price:p.price, unit:p.unit,
     image:(p.img||'').replace(/^\.\.\//,''), category:p.category, badge:p.badge,
-    in_stock:p.inStock, featured:p.featured, active:true };
+    in_stock:p.inStock, featured:p.featured, active:p.active!==false };
 }
+// Resize + recompress to JPEG on a canvas — PNGs from phones/screenshots are
+// often 5-15MB uncompressed, well past what fits in the admin API's request
+// body once base64-encoded. This shrinks any input down before it's sent.
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height); // flatten transparency (PNG → JPEG)
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Compression failed')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read image')); };
+    img.src = url;
+  });
+}
+
 // ── IMAGE UPLOAD — goes through the guarded API (admin token required) ──
 async function uploadProductImage(file, statusEl, previewEl, pathInputEl){
   if (!file) return;
   if (!file.type.startsWith('image/')) { showToast('Please pick an image file'); return; }
-  if (file.size > 4*1024*1024) { showToast('Image must be under 4MB'); return; }
-  const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-  const name = 'product-' + Date.now() + '.' + ext;
-  if (statusEl) { statusEl.textContent = '⏳ Uploading…'; statusEl.classList.add('uploading'); }
+  if (file.size > 20*1024*1024) { showToast('Image is too large (max 20MB)'); return; }
+  if (statusEl) { statusEl.textContent = '⏳ Compressing…'; statusEl.classList.add('uploading'); }
   try {
+    let blob, ext, type;
+    try {
+      blob = await compressImage(file, 1600, 0.85);
+      ext = 'jpg'; type = 'image/jpeg';
+    } catch(ce){
+      // Compression unsupported/failed — fall back to the original file.
+      blob = file; ext = file.name.split('.').pop().toLowerCase() || 'jpg'; type = file.type;
+    }
+    if (blob.size > 3.2*1024*1024) {
+      showToast('Image is still too large after compression — try a smaller photo');
+      if (statusEl){ statusEl.textContent = '✗ Failed'; statusEl.classList.remove('uploading'); }
+      return;
+    }
+    const name = 'product-' + Date.now() + '.' + ext;
+    if (statusEl) statusEl.textContent = '⏳ Uploading…';
     const base64 = await new Promise((resolve, reject) => {
       const fr = new FileReader();
       fr.onload = () => resolve(String(fr.result).split(',')[1]);
       fr.onerror = reject;
-      fr.readAsDataURL(file);
+      fr.readAsDataURL(blob);
     });
-    const r = await AdminAPI.call('storage-upload', { name, type: file.type, base64 });
+    const r = await AdminAPI.call('storage-upload', { name, type, base64 });
     if (r.error || !r.publicUrl) throw new Error(r.error || 'No URL returned');
     if (pathInputEl) pathInputEl.value = r.publicUrl;
     if (previewEl){ previewEl.src = r.publicUrl; previewEl.classList.add('visible'); }
@@ -314,15 +356,15 @@ function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'
 //  DEFAULT PRODUCTS
 // ─────────────────────────────────────────────
 const DEFAULT_PRODUCTS = [
-  { id:'goat-meat',     name:'Village Goat Meat', nameTE:'Meka Mamsam',    price:680,  unit:'kg',   img:'../product/mutton.webp',          category:'goat',    badge:'Bestseller', inStock:true,  featured:true  },
-  { id:'country-chicken',name:'Country Chicken',  nameTE:'Nati Kodi',      price:520,  unit:'kg',   img:'../product/country chiken.webp',  category:'chicken', badge:'Nati',      inStock:true,  featured:true  },
-  { id:'river-fish',    name:'Fresh River Fish',  nameTE:'Chepa Mukkalu',  price:450,  unit:'kg',   img:'../product/fish.webp',            category:'fish',    badge:'River Fresh',inStock:true,  featured:true  },
-  { id:'goat-legs',     name:'Goat Legs',         nameTE:'Meka Kalu',      price:400,  unit:'4 pcs',img:'../product/legs.webp',            category:'goat',    badge:'Fresh',     inStock:true,  featured:false },
-  { id:'goat-liver',    name:'Goat Liver',        nameTE:'Meka Kalleja',   price:1000, unit:'kg',   img:'../product/liver.webp',           category:'goat',    badge:'Premium',   inStock:true,  featured:false },
-  { id:'goat-head',     name:'Goat Head',         nameTE:'Meka Tala',      price:520,  unit:'head', img:'../product/head.webp',            category:'goat',    badge:'Whole',     inStock:false, featured:false },
-  { id:'baby-goat-legs',name:'Baby Goat Legs',    nameTE:'Pilla Meka Kalu',price:980,  unit:'kg',   img:'../product/baby-goat-legs.webp',category:'goat',badge:'Premium',inStock:false,featured:false},
-  { id:'country-eggs',  name:'Country Eggs',      nameTE:'Nati Kodi Gudlu',price:12,   unit:'egg',  img:'../product/country-eggs.webp',category:'eggs',badge:'Farm Fresh',inStock:true,featured:false},
-  { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/mutton.webp',category:'goat',badge:'Whole',inStock:true,featured:false},
+  { id:'goat-meat',     name:'Village Goat Meat', nameTE:'Meka Mamsam',    price:1099, unit:'kg',   img:'../product/mutton.webp',          category:'goat',    badge:'Bestseller', inStock:true,  active:true, featured:true  },
+  { id:'country-chicken',name:'Country Chicken',  nameTE:'Nati Kodi',      price:900,  unit:'kg',   img:'../product/country chiken.webp',  category:'chicken', badge:'Nati',      inStock:true,  active:true, featured:true  },
+  { id:'river-fish',    name:'Fresh River Fish',  nameTE:'Chepa Mukkalu',  price:450,  unit:'kg',   img:'../product/fish.webp',            category:'fish',    badge:'River Fresh',inStock:true,  active:true, featured:true  },
+  { id:'goat-legs',     name:'Goat Legs',         nameTE:'Meka Kalu',      price:400,  unit:'4 pcs',img:'../product/legs.webp',            category:'goat',    badge:'Fresh',     inStock:true,  active:true, featured:false },
+  { id:'goat-liver',    name:'Goat Liver',        nameTE:'Meka Kalleja',   price:1000, unit:'kg',   img:'../product/liver.webp',           category:'goat',    badge:'Premium',   inStock:true,  active:true, featured:false },
+  { id:'goat-head',     name:'Goat Head',         nameTE:'Meka Tala',      price:520,  unit:'head', img:'../product/head.webp',            category:'goat',    badge:'Whole',     inStock:false, active:true, featured:false },
+  { id:'baby-goat-legs',name:'Baby Goat Legs',    nameTE:'Pilla Meka Kalu',price:400,  unit:'kg',   img:'../product/baby-goat-legs.webp',category:'goat',badge:'Premium',inStock:false,active:true,featured:false},
+  { id:'country-eggs',  name:'Country Eggs',      nameTE:'Nati Kodi Gudlu',price:18,   unit:'egg',  img:'../product/country-eggs.webp',category:'eggs',badge:'Farm Fresh',inStock:true,active:true,featured:false},
+  { id:'full-goat',     name:'Full Goat',         nameTE:'Poora Meka',     price:8500, unit:'goat', img:'../product/mutton.webp',category:'goat',badge:'Whole',inStock:true,active:true,featured:false},
 ];
 
 let products = [];
@@ -363,14 +405,15 @@ function renderProducts(){
 }
 
 function buildCard(p, idx){
+  const isActive = p.active !== false;
   return `
-    <div class="product-admin-card ${p.inStock?'':'out-of-stock'}">
+    <div class="product-admin-card ${p.inStock?'':'out-of-stock'} ${isActive?'':'is-disabled'}">
       <div class="prod-img">
         <img src="${p.img}" alt="${p.name}">
         <div class="prod-stock-badge">
           <span class="${p.inStock?'stock-on':'stock-off'}">${p.inStock?'IN STOCK':'OUT OF STOCK'}</span>
         </div>
-        ${!p.inStock?'<div class="out-of-stock-overlay">Out of Stock</div>':''}
+        ${!isActive?'<div class="out-of-stock-overlay">Hidden from site</div>':(!p.inStock?'<div class="out-of-stock-overlay">Out of Stock</div>':'')}
       </div>
       <div class="prod-body">
         <div class="prod-name-te">${p.nameTE}</div>
@@ -390,6 +433,13 @@ function buildCard(p, idx){
               <span class="toggle-slider"></span>
             </label>
             <span>${p.inStock?'In Stock':'Out of Stock'}</span>
+          </div>
+          <div class="stock-toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" ${isActive?'checked':''} onchange="toggleActive(${idx},this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span>${isActive?'Visible on site':'Hidden (disabled)'}</span>
           </div>
           <button class="btn-sm" onclick="openEditProduct(${idx})" style="margin-left:auto;">✎ Edit</button>
           <button class="btn-sm" onclick="toggleFeatured(${idx})" title="Toggle featured on homepage" style="${p.featured?'color:var(--gold);border-color:rgba(212,160,23,0.3);background:rgba(212,160,23,0.08);':''}">
@@ -418,6 +468,13 @@ function toggleStock(idx, val){
   saveProducts(); persistProduct(products[idx]);
   renderProducts();
   showToast(`${products[idx].name} → ${val?'In Stock':'Out of Stock'}`);
+}
+
+function toggleActive(idx, val){
+  products[idx].active = val;
+  saveProducts(); persistProduct(products[idx]);
+  renderProducts();
+  showToast(`${products[idx].name} → ${val?'visible on site':'hidden everywhere (shop, home, direct link)'}`);
 }
 
 function toggleFeatured(idx){

@@ -1931,7 +1931,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
 /* Live prices/stock — deferred until page is idle so it doesn't block first paint */
 (function(){
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=slug,name,price,unit,in_stock,category,cut_time,stock_qty,board_date,sort_order&order=sort_order.asc',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=slug,name,price,unit,in_stock,active,category,cut_time,stock_qty,board_date,sort_order&order=sort_order.asc',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
     .then(function(r){return r.ok?r.json():[];})
     .then(function(list){
       if(!Array.isArray(list)||!list.length) return;
@@ -1939,6 +1939,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       document.querySelectorAll('.products-grid .product-card').forEach(function(card){
         var nameEl=card.querySelector('.product-name'); if(!nameEl) return;
         var p=byName[card.dataset.name || nameEl.textContent.trim()]; if(!p) return;
+        if(p.active===false){ card.style.display='none'; return; }
         var priceEl=card.querySelector('.product-price-main');
         if(priceEl) priceEl.textContent='₹'+Number(p.price).toLocaleString('en-IN');
         var btn=card.querySelector('.btn-add');

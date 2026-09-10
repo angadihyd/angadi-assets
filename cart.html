@@ -926,7 +926,7 @@ function renderCartBody() {
 // ─────────────────────────────────────────────
 function renderUpsells() {
   const cartNames = cart.map(i => i.name.split(' · ')[0]);
-  const shown = UPSELLS.filter(u => !cartNames.includes(u.name)).slice(0, 4);
+  const shown = UPSELLS.filter(u => u._active !== false && u._inStock !== false && !cartNames.includes(u.name)).slice(0, 4);
   if (shown.length === 0) { document.getElementById('upsellSection').style.display = 'none'; return; }
   document.getElementById('upsellSection').style.display = '';
   document.getElementById('upsellGrid').innerHTML = shown.map(u => `
@@ -1086,6 +1086,26 @@ async function loadDeliveryConfig(){
   }catch(e){ /* keep defaults */ }
 }
 loadDeliveryConfig();
+
+// Keep the cross-sell tiles' name/price/stock in sync with the live catalog
+// — the static UPSELLS array above is only a display fallback if this fails.
+async function syncUpsellPrices(){
+  try{
+    const ids = UPSELLS.map(u => u.id).join(',');
+    const r = await fetch(COUPON_URL+'/rest/v1/products?select=slug,name,price,unit,active,in_stock&slug=in.('+ids+')',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
+    if(!r.ok) return;
+    const rows = await r.json();
+    const bySlug = {}; rows.forEach(row => { bySlug[row.slug] = row; });
+    UPSELLS.forEach(u => {
+      const row = bySlug[u.id];
+      if(!row) return;
+      u.name = row.name; u.price = Number(row.price); u.unit = row.unit;
+      u._active = row.active !== false; u._inStock = row.in_stock !== false;
+    });
+    render();
+  }catch(e){ /* keep static fallback */ }
+}
+syncUpsellPrices();
 
 // NAV LOGIN STATE
 (function(){
