@@ -420,7 +420,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 <label class="form-label">Phone Number *</label>
                 <input class="form-input" id="fphone" type="tel" placeholder="+91 XXXXXXXXXX" maxlength="13" autocomplete="tel">
                 <span class="form-hint">For delivery coordination only</span>
-                <span class="form-error" id="fphone-err">Enter a valid phone number</span>
+                <span class="form-error" id="fphone-err">Enter a valid 10-digit mobile number</span>
               </div>
             </div>
 
@@ -877,7 +877,7 @@ function validateAddress(){
   let ok = true;
   [
     { id:'fname',  errId:'fname-err',  test: v => v.trim().length >= 2 },
-    { id:'fphone', errId:'fphone-err', test: v => v.replace(/\D/g,'').length >= 10 },
+    { id:'fphone', errId:'fphone-err', test: v => /^[6-9]\d{9}$/.test(v.replace(/\D/g,'').slice(-10)) },
     { id:'fflat',    errId:'fflat-err',    test: v => v.trim().length >= 3 },
     { id:'farea',    errId:'farea-err',    test: v => v.trim().length >= 3 },
     { id:'fpincode', errId:'fpincode-err', test: v => /^\d{6}$/.test(v.trim()) },

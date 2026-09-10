@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angadi Admin">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
+<title>Customers — Angadi Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;
+  --gold:#D4A017;--cream:#F6EDD8;
+  --ink:#080503;--ink-2:#100804;--ink-3:#1A0E06;
+  --border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;--sidebar:180px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--ink-2);}::-webkit-scrollbar-thumb{background:var(--clay);border-radius:2px;}
+.guard{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+.guard.hidden{display:none;}
+.guard-box{text-align:center;padding:2rem;}
+.guard-box p{color:rgba(246,237,216,0.4);margin-bottom:1.5rem;}
+.guard-box a{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:var(--cream);text-decoration:none;padding:0.8rem 2rem;border-radius:10px;font-weight:600;}
+.admin-layout{display:flex;min-height:100vh;}
+.admin-sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--ink-2);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:1.5rem 1.2rem 1.2rem;border-bottom:1px solid var(--border);}
+.sidebar-logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--cream);letter-spacing:0.08em;}
+.sidebar-logo-text span{color:var(--gold);}
+.sidebar-logo-sub{font-size:0.6rem;font-family:'Space Mono',monospace;color:rgba(246,237,216,0.25);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;}
+.sidebar-nav{flex:1;padding:1rem 0;}
+.sidebar-link{display:flex;align-items:center;gap:0.7rem;padding:0.75rem 1.2rem;font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.5);text-decoration:none;transition:all 0.25s;border-left:3px solid transparent;}
+.sidebar-link:hover{color:var(--cream);background:rgba(255,255,255,0.02);}
+.sidebar-link.active{color:var(--cream);background:rgba(196,98,45,0.1);border-left-color:var(--clay);}
+.sidebar-divider{height:1px;background:var(--border);margin:0.5rem 1.2rem;}
+.sidebar-bottom{padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.sidebar-user{font-size:0.75rem;color:rgba(246,237,216,0.3);margin-bottom:0.5rem;}
+.sidebar-user strong{color:rgba(246,237,216,0.55);display:block;}
+.btn-logout{width:100%;background:none;border:1px solid rgba(229,115,115,0.2);color:rgba(229,115,115,0.6);border-radius:8px;padding:0.5rem;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.admin-main{margin-left:var(--sidebar);flex:1;min-width:0;}
+.admin-topbar{background:rgba(8,5,3,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:1rem;}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);}
+.topbar-title span{font-style:italic;color:var(--gold);}
+.admin-content{padding:2rem;}
+.btn-sm{background:rgba(196,98,45,0.1);border:1px solid var(--border);color:var(--clay-l);padding:0.45rem 0.9rem;border-radius:7px;font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.btn-sm:hover{background:rgba(196,98,45,0.2);color:var(--cream);}
+.stats-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.mini-stat{background:var(--ink-3);border:1px solid var(--border);border-radius:12px;padding:0.9rem 1.2rem;display:flex;align-items:center;gap:0.8rem;min-width:150px;}
+.mini-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;line-height:1;color:var(--gold);}
+.mini-stat-label{font-size:0.66rem;color:rgba(246,237,216,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.2rem;}
+.search-input{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:0.55rem 1rem;font-size:0.82rem;color:var(--cream);font-family:'DM Sans',sans-serif;outline:none;width:260px;max-width:100%;}
+.search-input::placeholder{color:rgba(246,237,216,0.25);}
+.search-input:focus{border-color:var(--clay);}
+.table-wrap{background:var(--ink-3);border:1px solid var(--border);border-radius:14px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:720px;}
+th{text-align:left;font-family:'Space Mono',monospace;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.35);padding:0.9rem 1rem;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--clay-l);}
+td{padding:0.85rem 1rem;border-bottom:1px solid rgba(196,98,45,0.08);font-size:0.85rem;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+.c-name{font-weight:600;color:var(--cream);}
+.c-phone{font-family:'Space Mono',monospace;font-size:0.82rem;color:var(--clay-l);}
+.c-area{font-size:0.78rem;color:rgba(246,237,216,0.45);}
+.pill{background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.25);color:var(--gold);border-radius:100px;padding:0.15rem 0.6rem;font-size:0.72rem;font-weight:700;font-family:'Space Mono',monospace;}
+.wa-btn{background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:7px;padding:0.35rem 0.7rem;font-size:0.72rem;text-decoration:none;white-space:nowrap;display:inline-block;}
+.wa-btn:hover{background:rgba(37,211,102,0.22);}
+.empty{padding:3rem 1rem;text-align:center;color:rgba(246,237,216,0.35);font-size:0.85rem;}
+@media(max-width:900px){
+  :root{--sidebar:56px;}
+  .sidebar-logo-text,.sidebar-logo-sub,.sidebar-link span:not(.icon),.sidebar-user,.btn-logout span{display:none;}
+  .sidebar-link{padding:0.9rem;justify-content:center;}
+  .admin-content{padding:1rem;}
+  .admin-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;padding-top:0.7rem;padding-bottom:0.7rem;}
+}
+</style>
+</head>
+<body>
+<div class="guard hidden" id="guard">
+  <div class="guard-box"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p>Please log in first.</p><a href="dashboard.html">Go to login</a></div>
+</div>
+
+<div class="admin-layout" id="adminLayout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">ANGADI <span>↗</span></div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="dashboard.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="19" y1="20" x2="19" y2="9"/></svg></span> <span>Dashboard</span></a>
+      <a class="sidebar-link" href="orders.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span> <span>Orders</span></a>
+      <a class="sidebar-link active" href="customers.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M21 20v-2a4 4 0 0 0-3-3.8"/></svg></span> <span>Customers</span></a>
+      <a class="sidebar-link" href="products.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4L11 3.8H4v7l9.6 9.6a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8z"/><circle cx="8" cy="8" r="1.4"/></svg></span> <span>Products</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="delivery.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></span> <span>Delivery</span></a>
+      <a class="sidebar-link" href="delivery-areas.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span> <span>Delivery Areas</span></a>
+      <a class="sidebar-link" href="order-windows.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span> <span>Order Windows</span></a>
+      <div class="sidebar-divider"></div>
+      <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg></span> <span>View Shop</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">Logged in as<strong>Admin</strong></div>
+      <button class="btn-logout" onclick="adminLogout()"><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="topbar-title">Your <span>Customers</span></div>
+      <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+        <input class="search-input" id="search" type="search" placeholder="Search name, phone or area…">
+        <button class="btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="setSort('name')">Customer <span id="s-name"></span></th>
+              <th onclick="setSort('phone')">Phone <span id="s-phone"></span></th>
+              <th onclick="setSort('area')">Area <span id="s-area"></span></th>
+              <th onclick="setSort('orders')">Orders <span id="s-orders">▼</span></th>
+              <th onclick="setSort('spent')">Total spent <span id="s-spent"></span></th>
+              <th onclick="setSort('last')">Last order <span id="s-last"></span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.75rem;color:rgba(246,237,216,0.3);margin-top:0.9rem;">
+        Built from every order placed — one row per phone number. Cancelled and never-paid orders don't count towards orders or spend.
+      </p>
+    </div>
+  </main>
+</div>
+
+<script src="admin-api.js"></script>
+<script>
+if (!AdminAPI.isAdmin()) {
+  document.getElementById('guard').classList.remove('hidden');
+  document.getElementById('adminLayout').style.display = 'none';
+}
+function adminLogout(){ AdminAPI.logout(); window.location.href='dashboard.html'; }
+
+let customers = [], sortBy = 'orders', sortDir = 'desc', query = '';
+
+function last10(p){ return String(p||'').replace(/\D/g,'').slice(-10); }
+function fmt(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'});
+}
+
+// An order only counts as real business once it's cash-on-delivery confirmed or
+// actually paid — a Razorpay row sits as 'pending' from the moment checkout
+// starts, including for people who never paid.
+function countsAsOrder(o){
+  const s = o.status;
+  if (s === 'cancelled' || s === 'pending') return false;
+  if (o.payment !== 'cod' && !o.payment_id) return false;
+  return true;
+}
+
+async function load(){
+  const r = await AdminAPI.db('orders','select',{ order:'placed_at.desc', limit:1000 });
+  if (r.error){
+    document.getElementById('rows').innerHTML = '<tr><td colspan="7" class="empty">Could not load orders — '+esc(r.error)+'</td></tr>';
+    return;
+  }
+  const byPhone = new Map();
+  (r.data||[]).forEach(o => {
+    const c = o.customer || {};
+    const phone = last10(c.phone);
+    if (phone.length !== 10) return;   // nothing we could actually call
+    let rec = byPhone.get(phone);
+    if (!rec){
+      rec = { phone, name:c.name||'—', area:(c.address&&c.address.area)||'', orders:0, spent:0, last:null, pending:0 };
+      byPhone.set(phone, rec);
+    }
+    // Newest order wins for the display name/area (list is sorted desc).
+    if (rec.last === null){
+      if (c.name) rec.name = c.name;
+      if (c.address && c.address.area) rec.area = c.address.area;
+    }
+    if (countsAsOrder(o)){
+      rec.orders += 1;
+      rec.spent += Number(o.total||0) - Number(o.refunded_amount||0);
+      if (!rec.last || new Date(o.placed_at) > new Date(rec.last)) rec.last = o.placed_at;
+    } else {
+      rec.pending += 1;
+    }
+  });
+  customers = [...byPhone.values()];
+  renderStats();
+  render();
+}
+
+function renderStats(){
+  const withOrders = customers.filter(c => c.orders > 0);
+  const repeat = withOrders.filter(c => c.orders > 1).length;
+  const revenue = withOrders.reduce((s,c) => s + c.spent, 0);
+  const stat = (val,label) => '<div class="mini-stat"><div><div class="mini-stat-val">'+val+'</div><div class="mini-stat-label">'+label+'</div></div></div>';
+  document.getElementById('statsRow').innerHTML =
+    stat(customers.length, 'Phone numbers') +
+    stat(withOrders.length, 'Bought at least once') +
+    stat(repeat, 'Repeat customers') +
+    stat(fmt(revenue), 'Total from customers');
+}
+
+function setSort(field){
+  if (sortBy === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortBy = field; sortDir = (field === 'name' || field === 'area' || field === 'phone') ? 'asc' : 'desc'; }
+  render();
+}
+
+function visible(){
+  const q = query.trim().toLowerCase();
+  let list = customers;
+  if (q) list = list.filter(c =>
+    (c.name||'').toLowerCase().includes(q) ||
+    c.phone.includes(q.replace(/\D/g,'')) ||
+    (c.area||'').toLowerCase().includes(q)
+  );
+  const dir = sortDir === 'asc' ? 1 : -1;
+  return [...list].sort((a,b) => {
+    let av, bv;
+    switch (sortBy){
+      case 'name':  av=(a.name||'').toLowerCase();  bv=(b.name||'').toLowerCase();  break;
+      case 'phone': av=a.phone; bv=b.phone; break;
+      case 'area':  av=(a.area||'').toLowerCase();  bv=(b.area||'').toLowerCase();  break;
+      case 'spent': av=a.spent; bv=b.spent; break;
+      case 'last':  av=a.last?new Date(a.last).getTime():0; bv=b.last?new Date(b.last).getTime():0; break;
+      default:      av=a.orders; bv=b.orders;
+    }
+    if (av < bv) return -1*dir;
+    if (av > bv) return 1*dir;
+    return 0;
+  });
+}
+
+function render(){
+  ['name','phone','area','orders','spent','last'].forEach(f => {
+    const el = document.getElementById('s-'+f);
+    if (el) el.textContent = sortBy === f ? (sortDir === 'asc' ? '▲' : '▼') : '';
+  });
+  const list = visible();
+  const tb = document.getElementById('rows');
+  if (!list.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty">'+(query?'No customer matches that search.':'No customers yet — they appear here as soon as orders come in.')+'</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(c => {
+    const wa = 'https://wa.me/91'+c.phone+'?text='+encodeURIComponent('Hi '+(c.name&&c.name!=='—'?c.name:'')+'! This is Angadi Village Meat.');
+    return '<tr>'
+      + '<td><div class="c-name">'+esc(c.name)+'</div>'+(c.orders===0?'<div class="c-area">no completed order yet</div>':'')+'</td>'
+      + '<td><span class="c-phone">'+esc(c.phone)+'</span></td>'
+      + '<td><span class="c-area">'+esc(c.area||'—')+'</span></td>'
+      + '<td><span class="pill">'+c.orders+'</span></td>'
+      + '<td>'+fmt(c.spent)+'</td>'
+      + '<td><span class="c-area">'+fmtDate(c.last)+'</span></td>'
+      + '<td><a class="wa-btn" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function exportCSV(){
+  const list = visible();
+  if (!list.length){ alert('Nothing to export.'); return; }
+  const head = ['Name','Phone','Area','Orders','Total spent','Last order'];
+  const rows = list.map(c => [c.name, c.phone, c.area||'', c.orders, c.spent, c.last?new Date(c.last).toISOString().slice(0,10):'']);
+  const csv = [head, ...rows]
+    .map(r => r.map(v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(','))
+    .join('\n');
+  const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'angadi-customers-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('search').addEventListener('input', e => { query = e.target.value; render(); });
+
+if (AdminAPI.isAdmin()) load();
+</script>
+</body>
+</html>

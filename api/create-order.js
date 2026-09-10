@@ -118,6 +118,28 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // ── Name and phone are required, and checked HERE, not just in the browser ──
+  // The phone number is the only reliable way to reach someone about their
+  // delivery, and it's the key their order is looked up by in "My Orders",
+  // guest tracking and the per-customer coupon limit. Only the browser was
+  // enforcing it, so an order could still reach the database with no usable
+  // number — leaving an order nobody could deliver or trace.
+  const digits = String((customer && customer.phone) || '').replace(/\D/g, '');
+  const phone10 = digits.slice(-10);
+  if (!/^[6-9]\d{9}$/.test(phone10)) {
+    res.status(400).json({ error: 'A valid 10-digit mobile number is required so we can contact you about your delivery.' });
+    return;
+  }
+  const customerName = String((customer && customer.name) || '').trim();
+  if (customerName.length < 2) {
+    res.status(400).json({ error: 'Please enter your name so we know who to deliver to.' });
+    return;
+  }
+  // Stored in one consistent 10-digit form. It used to be saved exactly as
+  // typed ("+91 98765 43210", "098765…"), which is why every lookup had to
+  // fuzzy-match on the last digits.
+  const normalisedCustomer = { ...(customer || {}), name: customerName, phone: phone10 };
+
   // ── Ordering is open for any not-yet-closed delivery date (see
   // admin/order-windows.html) — no separate "opens at" concept, a date is
   // orderable from the moment it's added until its own cutoff. Multiple
@@ -328,7 +350,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify([{
           order_id: orderId,
           user_id: userId || null,
-          customer: { ...(customer || {}), delivery_date: deliveryDate },
+          customer: { ...normalisedCustomer, delivery_date: deliveryDate },
           items: validatedItems,
           subtotal, delivery, discount, total,
           promo_code: appliedCode,
@@ -362,7 +384,7 @@ module.exports = async (req, res) => {
         amount: total * 100,
         currency: 'INR',
         receipt: orderId,
-        notes: { orderId, customerName: customer?.name || '', phone: customer?.phone || '' },
+        notes: { orderId, customerName, phone: phone10 },
       }),
     });
     rzpOrder = await r.json();
@@ -391,7 +413,7 @@ module.exports = async (req, res) => {
         order_id: orderId,
         razorpay_order_id: rzpOrder.id,
         user_id: userId || null,
-        customer: { ...(customer || {}), delivery_date: deliveryDate },
+        customer: { ...normalisedCustomer, delivery_date: deliveryDate },
         items: validatedItems,
         subtotal, delivery, discount, total,
         promo_code: appliedCode,
