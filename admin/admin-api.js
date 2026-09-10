@@ -25,19 +25,19 @@
 
   window.AdminAPI = {
     // ── admin auth ──
-    token: function () { return sessionStorage.getItem('angadi_admin_token') || ''; },
+    token: function () { return localStorage.getItem('angadi_admin_token') || ''; },
     isAdmin: function () { return !!this.token(); },
     login: async function (password) {
       var r = await post({ action: 'login', password: password });
       if (r.token) {
-        sessionStorage.setItem('angadi_admin_token', r.token);
-        sessionStorage.setItem('angadi_admin', '1'); // legacy guard flag (UX only)
+        localStorage.setItem('angadi_admin_token', r.token);
+        localStorage.setItem('angadi_admin', '1'); // legacy guard flag (UX only)
       }
       return r;
     },
     logout: function () {
-      sessionStorage.removeItem('angadi_admin_token');
-      sessionStorage.removeItem('angadi_admin');
+      localStorage.removeItem('angadi_admin_token');
+      localStorage.removeItem('angadi_admin');
     },
 
     // ── admin data (mirrors the {data, error} shape of supabase-js) ──
@@ -51,20 +51,20 @@
     },
 
     // ── delivery partner ──
-    ptoken: function () { return sessionStorage.getItem('angadi_partner_token') || ''; },
+    ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },
     partnerLogin: async function (username, password) {
       var r = await post({ action: 'partner-login', username: username, password: password });
       if (r.token) {
-        sessionStorage.setItem('angadi_partner_token', r.token);
-        sessionStorage.setItem('angadi_delivery', username);
-        sessionStorage.setItem('angadi_partner_code', r.code || username);
-        sessionStorage.setItem('angadi_partner_name', r.name || username);
+        localStorage.setItem('angadi_partner_token', r.token);
+        localStorage.setItem('angadi_delivery', username);
+        localStorage.setItem('angadi_partner_code', r.code || username);
+        localStorage.setItem('angadi_partner_name', r.name || username);
       }
       return r;
     },
     partnerLogout: function () {
       ['angadi_partner_token', 'angadi_delivery', 'angadi_partner_code', 'angadi_partner_name']
-        .forEach(function (k) { sessionStorage.removeItem(k); });
+        .forEach(function (k) { localStorage.removeItem(k); });
     },
     partner: async function (action, payload) {
       var r = await post(Object.assign({ action: action }, payload || {}), { 'x-partner-token': this.ptoken() });
