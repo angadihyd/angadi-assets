@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angadi Admin">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
+<title>Delivery Areas — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-d:#7A3318;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.2rem;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
+.sub{font-size:0.8rem;color:rgba(246,237,216,0.4);margin-bottom:1.4rem;}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--cream);border-radius:8px;padding:0.45rem 0.95rem;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff;}
+.btn.red{color:var(--red);border-color:rgba(229,115,115,0.3);}
+.card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:0.7rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.order-badge{font-family:'Space Mono',monospace;font-size:0.72rem;color:rgba(246,237,216,0.35);width:1.6rem;text-align:center;flex-shrink:0;}
+.name{font-weight:700;font-size:0.95rem;min-width:120px;}
+.fee{font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:1.1rem;}
+.pill{font-size:0.66rem;font-weight:700;border-radius:100px;padding:0.15rem 0.6rem;}
+.pill.on{background:rgba(76,175,80,0.12);color:var(--green);}
+.pill.off{background:rgba(229,115,115,0.12);color:var(--red);}
+.form{background:rgba(212,160,23,0.05);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1.4rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.7rem;align-items:end;}
+.form label{font-size:0.72rem;color:rgba(246,237,216,0.5);display:block;margin-bottom:0.25rem;}
+.in{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.55rem 0.7rem;font-family:inherit;font-size:0.85rem;}
+.empty{text-align:center;color:rgba(246,237,216,0.4);padding:2.5rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+.hidden{display:none;}
+.move-btns{display:flex;flex-direction:column;gap:0.15rem;}
+.move-btns button{background:none;border:none;color:rgba(246,237,216,0.4);cursor:pointer;font-size:0.7rem;line-height:1;padding:0.1rem;}
+.move-btns button:hover{color:var(--cream);}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay-l);">log in</a> first.</p></div>
+<div id="app" style="display:none;">
+  <div class="top"><h1>Delivery Areas</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="sub">Shown to customers as the area picker in the WhatsApp ordering bot, in this order. New areas are added to the end of the list automatically.</div>
+  <div class="form">
+    <div><label>Area name</label><input class="in" id="f-name" placeholder="Manikonda"></div>
+    <div><label>Delivery fee ₹</label><input class="in" id="f-fee" type="number" placeholder="0" value="0"></div>
+    <div><button class="btn primary" onclick="saveArea()" id="saveBtn">＋ Add area (goes last)</button></div>
+  </div>
+  <div id="list"></div>
+</div>
+<script src="admin-api.js"></script>
+<script>
+let all=[], editId=null;
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,"\\'"); }
+async function load(){
+  const r=await AdminAPI.db('delivery_areas','select',{order:'sort_order.asc'});
+  all=r.data||[];
+  if(r.error) alert('Load failed: '+r.error);
+  render();
+}
+function render(){
+  const list=document.getElementById('list');
+  if(!all.length){ list.innerHTML='<div class="empty">No delivery areas yet. Add one above.</div>'; return; }
+  list.innerHTML=all.map((a,i)=>`
+    <div class="card">
+      <span class="order-badge">${a.sort_order}</span>
+      <div class="move-btns">
+        <button ${i===0?'disabled style="opacity:0.2;cursor:default;"':''} onclick="move('${a.id}',-1)" title="Move up">▲</button>
+        <button ${i===all.length-1?'disabled style="opacity:0.2;cursor:default;"':''} onclick="move('${a.id}',1)" title="Move down">▼</button>
+      </div>
+      <span class="name">${esc(a.name)}</span>
+      <span class="fee">₹${Number(a.delivery_fee||0).toLocaleString('en-IN')}</span>
+      <span class="pill ${a.active?'on':'off'}">${a.active?'Active':'Off'}</span>
+      <button class="btn" onclick="toggle('${a.id}',${!a.active})">${a.active?'Disable':'Enable'}</button>
+      <button class="btn" onclick="edit('${a.id}')">✎ Edit</button>
+      <button class="btn red" onclick="del('${a.id}')">Delete</button>
+    </div>`).join('');
+}
+function val(id){ return document.getElementById(id).value.trim(); }
+async function saveArea(){
+  const name=val('f-name');
+  if(!name){ alert('Area name is required'); return; }
+  const fee=Number(val('f-fee')||0);
+  if(editId){
+    const r=await AdminAPI.db('delivery_areas','update',{match:{id:editId},values:{name,delivery_fee:fee}});
+    if(r.error){ alert('Save failed: '+r.error); return; }
+    editId=null; document.getElementById('saveBtn').textContent='＋ Add area (goes last)';
+  } else {
+    const nextOrder = all.length ? Math.max(...all.map(a=>a.sort_order||0))+1 : 1;
+    const r=await AdminAPI.db('delivery_areas','insert',{values:{name,delivery_fee:fee,active:true,sort_order:nextOrder}});
+    if(r.error){ alert('Save failed: '+r.error); return; }
+  }
+  document.getElementById('f-name').value=''; document.getElementById('f-fee').value='0';
+  load();
+}
+function edit(id){
+  const a=all.find(x=>x.id===id); if(!a) return; editId=id;
+  document.getElementById('f-name').value=a.name;
+  document.getElementById('f-fee').value=a.delivery_fee||0;
+  document.getElementById('saveBtn').textContent='✓ Save changes';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function toggle(id,active){
+  await AdminAPI.db('delivery_areas','update',{match:{id},values:{active}});
+  const a=all.find(x=>x.id===id); if(a)a.active=active; render();
+}
+async function del(id){
+  if(!confirm('Delete this delivery area?'))return;
+  await AdminAPI.db('delivery_areas','delete',{match:{id}});
+  all=all.filter(x=>x.id!==id); render();
+}
+async function move(id, dir){
+  const idx=all.findIndex(x=>x.id===id); const swapIdx=idx+dir;
+  if(swapIdx<0||swapIdx>=all.length) return;
+  const a=all[idx], b=all[swapIdx];
+  const aOrder=a.sort_order, bOrder=b.sort_order;
+  await Promise.all([
+    AdminAPI.db('delivery_areas','update',{match:{id:a.id},values:{sort_order:bOrder}}),
+    AdminAPI.db('delivery_areas','update',{match:{id:b.id},values:{sort_order:aOrder}}),
+  ]);
+  await load();
+}
+</script>
+</body>
+</html>

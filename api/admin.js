@@ -31,7 +31,7 @@
 
 const crypto = require('crypto');
 
-const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews'];
+const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas'];
 const OPS = ['select', 'insert', 'update', 'upsert', 'delete'];
 const CONFLICT_KEYS = { products: 'slug', site_settings: 'key', coupons: 'code' };
 const PARTNER_STATUSES = ['picked_up', 'out_for_delivery', 'delivered'];
