@@ -56,8 +56,11 @@ module.exports = async (req, res) => {
   catch { res.status(400).json({ error: 'Invalid JSON' }); return; }
   const action = payload.action || 'list';
 
-  // ── Resolve the caller's verified phone (if a token was sent) ──
-  async function verifiedPhone() {
+  // ── Resolve the caller's verified identity (if a token was sent) ──
+  // Phone is optional at signup, so an account can legitimately have none —
+  // in that case the order is matched by the account id that checkout stamps
+  // onto it instead, otherwise a customer who paid could never see their order.
+  async function verifiedUser() {
     const token = payload.accessToken;
     if (!token) return null;
     try {
@@ -69,8 +72,15 @@ module.exports = async (req, res) => {
       });
       if (!r.ok) return null;
       const user = await r.json();
-      return last10(user.phone || (user.user_metadata && user.user_metadata.phone));
+      return {
+        id: user.id || null,
+        phone: last10(user.phone || (user.user_metadata && user.user_metadata.phone)),
+      };
     } catch { return null; }
+  }
+  async function verifiedPhone() {
+    const u = await verifiedUser();
+    return u ? u.phone : null;
   }
 
   async function fetchOrders(qs) {
@@ -80,11 +90,25 @@ module.exports = async (req, res) => {
 
   try {
     if (action === 'list') {
-      const phone = await verifiedPhone();
-      if (!phone) { res.status(401).json({ error: 'Login required' }); return; }
-      // fetch recent orders, match by phone digits (formats vary: '+91 98…', '98…')
-      const rows = await fetchOrders('select=*&order=placed_at.desc&limit=400');
-      const mine = rows.filter(o => last10(o.customer && o.customer.phone) === phone);
+      const me = await verifiedUser();
+      if (!me) { res.status(401).json({ error: 'Login required' }); return; }
+      if (!me.id && !me.phone) { res.status(200).json({ data: [] }); return; }
+      // Pre-filter in the database rather than pulling the newest 400 orders
+      // site-wide and filtering here — past 400 total orders that dropped
+      // customers' own history. Phone formats vary ('+91 98…', '98…'), so the
+      // coarse last-4 match is narrowed exactly in JS below.
+      const filters = [];
+      if (me.id) filters.push(`customer->>user_id.eq.${encodeURIComponent(me.id)}`);
+      if (me.phone) filters.push(`customer->>phone.like.*${encodeURIComponent(me.phone.slice(-4))}*`);
+      let rows = await fetchOrders(`select=*&or=(${filters.join(',')})&order=placed_at.desc&limit=500`);
+      // Never let a query problem look like "you have no orders".
+      if (!Array.isArray(rows) || !rows.length) {
+        rows = await fetchOrders('select=*&order=placed_at.desc&limit=500');
+      }
+      const mine = (rows || []).filter(o => {
+        const c = o.customer || {};
+        return (me.id && c.user_id === me.id) || (me.phone && last10(c.phone) === me.phone);
+      });
       res.status(200).json({ data: mine });
       return;
     }

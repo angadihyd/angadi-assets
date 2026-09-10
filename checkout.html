@@ -950,6 +950,24 @@ async function placeOrder(){
     placedAt: new Date().toISOString(),
   };
 
+  // Link the order to the signed-in account. Phone is optional at signup, so
+  // matching orders by phone alone left some customers unable to see an order
+  // they had just paid for. Also back-fill the account's phone when it has none.
+  try{
+    if (supabaseClient) {
+      const { data } = await supabaseClient.auth.getSession();
+      const sUser = data && data.session && data.session.user;
+      if (sUser) {
+        order.customer.user_id = sUser.id;
+        if (sUser.email) order.customer.email = sUser.email;
+        const metaPhone = sUser.user_metadata && sUser.user_metadata.phone;
+        if (!metaPhone && order.customer.phone) {
+          try { await supabaseClient.auth.updateUser({ data: { phone: order.customer.phone } }); } catch(e){}
+        }
+      }
+    }
+  }catch(e){ /* guest checkout — order stays phone-matched */ }
+
   // Update saved address from this checkout (keeps it fresh)
   const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
   localStorage.setItem('angadi_user', JSON.stringify({

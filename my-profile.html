@@ -926,20 +926,27 @@ function saveNotifications() {
 // ─────────────────────────────────────────────
 //  LOGOUT / DELETE
 // ─────────────────────────────────────────────
+// Everything tied to the person who was signed in. Logging out used to clear
+// only angadi_user, so on a shared phone the next person inherited the
+// previous customer's saved addresses and could track their last order.
+const PERSONAL_KEYS = ['angadi_user','angadi_addresses','angadi_all_orders','angadi_notifs','angadi_last_order'];
+
 function logout() {
   if (!confirm('Log out of your account?')) return;
-  localStorage.removeItem('angadi_user');
+  PERSONAL_KEYS.forEach(k => localStorage.removeItem(k));
   if (sb) sb.auth.signOut().catch(()=>{});
   window.location.href = 'login.html';
 }
 
 function deleteAccount() {
-  if (!confirm('This will permanently delete your account and all order history. Are you sure?')) return;
-  if (!confirm('This cannot be undone. Type "DELETE" to confirm.\n\n(In dev mode this just logs you out)')) return;
-  localStorage.removeItem('angadi_user');
-  localStorage.removeItem('angadi_addresses');
-  localStorage.removeItem('angadi_all_orders');
-  localStorage.removeItem('angadi_notifs');
+  // This button used to claim it permanently deleted the account while only
+  // clearing localStorage. Deletion is a manual request instead, and order
+  // records are retained because tax/accounting rules require it.
+  if (!confirm('Request account deletion?\n\nWe\'ll remove your account and saved details. Past order records are kept as long as tax rules require, then deleted.\n\nThis will open WhatsApp so we can confirm it\'s really you.')) return;
+  const u = JSON.parse(localStorage.getItem('angadi_user') || '{}');
+  const msg = `Hi Angadi, I'd like to delete my account.\nName: ${u.name || '-'}\nPhone: ${u.phone || '-'}\nEmail: ${u.email || '-'}`;
+  window.open('https://wa.me/919949950743?text=' + encodeURIComponent(msg), '_blank');
+  PERSONAL_KEYS.forEach(k => localStorage.removeItem(k));
   if (sb) sb.auth.signOut().catch(()=>{});
   window.location.href = 'index.html';
 }
