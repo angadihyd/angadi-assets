@@ -462,7 +462,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             <div style="margin-top:1.5rem;margin-bottom:0.8rem;">
               <div class="form-label" style="margin-bottom:0.3rem;">Preferred Delivery Slot *</div>
               <div id="slotDeliveryDate" style="display:none;font-size:0.82rem;color:var(--clay-l,#E8956A);font-weight:600;margin-bottom:0.7rem;"></div>
-              <div class="slot-grid">
+              <div class="slot-grid" id="slotGrid">
                 <button type="button" class="slot-btn active" data-slot="Morning (7 AM – 12 PM)" data-key="morning">
                   <div class="slot-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a5 5 0 0 1 10 0"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="4" x2="12" y2="8"/><path d="M9.5 6.5L12 4l2.5 2.5"/></svg></div>
                   <div class="slot-name">Morning</div>
@@ -665,30 +665,71 @@ checkOrderWindow();
 // ─────────────────────────────────────────────
 //  DELIVERY SLOTS — admin can disable any slot (admin/settings.html)
 // ─────────────────────────────────────────────
+// Slots are fully admin-defined (name + timing + on/off) in admin/settings.html,
+// stored as site_settings 'slots' = { list:[{name,time,active}] }. The three
+// buttons in the static HTML are only a fallback for when this fetch fails.
+const DEFAULT_SLOTS = [
+  { name:'Morning',   time:'7 AM – 12 PM', active:true },
+  { name:'Afternoon', time:'12 PM – 5 PM', active:true },
+  { name:'Evening',   time:'5 PM – 8 PM',  active:true },
+];
+const SLOT_ICONS = {
+  morning:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a5 5 0 0 1 10 0"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="4" x2="12" y2="8"/><path d="M9.5 6.5L12 4l2.5 2.5"/></svg>',
+  afternoon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9L19 19M19 5l-2.1 2.1M7.1 16.9L5 19"/></svg>',
+  evening:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a5 5 0 0 1 10 0"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="8" x2="12" y2="4"/><path d="M9.5 5.5L12 8l2.5-2.5"/></svg>',
+  default:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+};
+function slotEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function slotLabel(s){ return s.time ? `${s.name} (${s.time})` : s.name; }
+
+function renderSlots(list){
+  const grid = document.getElementById('slotGrid');
+  if(!grid) return;
+  const usable = (list||[]).filter(s => s && s.active !== false && String(s.name||'').trim());
+  if(!usable.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;font-size:0.82rem;color:rgba(246,237,216,0.5);">No delivery slots are open right now — please contact us on WhatsApp.</div>';
+    selectedSlot = '';
+    return;
+  }
+  grid.innerHTML = usable.map((s,i) => `
+    <button type="button" class="slot-btn${i===0?' active':''}" data-slot="${slotEsc(slotLabel(s))}">
+      <div class="slot-icon">${SLOT_ICONS[String(s.name).trim().toLowerCase()] || SLOT_ICONS.default}</div>
+      <div class="slot-name">${slotEsc(s.name)}</div>
+      ${s.time?`<div class="slot-time">${slotEsc(s.time)}</div>`:''}
+    </button>`).join('');
+  selectedSlot = slotLabel(usable[0]);
+  const disp = document.getElementById('slotDisplay');
+  if(disp) disp.textContent = selectedSlot;
+  // Scoped to #slotGrid — the delivery-date picker reuses .slot-btn, and an
+  // unscoped selector here used to clear the customer's chosen date.
+  grid.querySelectorAll('.slot-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSlot = btn.dataset.slot;
+      const d = document.getElementById('slotDisplay');
+      if(d) d.textContent = selectedSlot;
+      renderSummary();
+    });
+  });
+  renderSummary();
+}
+
 async function applySlotConfig(){
+  let list = DEFAULT_SLOTS;
   try{
     const r = await fetch(SUPABASE_URL+'/rest/v1/site_settings?key=eq.slots&select=value', {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }
     });
-    if(!r.ok) return;
-    const rows = await r.json();
-    const cfg = (rows[0] && rows[0].value) || {};
-    document.querySelectorAll('.slot-btn').forEach(btn=>{
-      const key = btn.dataset.key;
-      if(key && cfg[key]===false) btn.style.display='none';
-    });
-    // If the pre-selected default slot got hidden, fall back to the first visible one.
-    const activeBtn = document.querySelector('.slot-btn.active');
-    if(activeBtn && activeBtn.style.display==='none'){
-      const firstVisible = [...document.querySelectorAll('.slot-btn')].find(b=>b.style.display!=='none');
-      if(firstVisible){
-        activeBtn.classList.remove('active');
-        firstVisible.classList.add('active');
-        selectedSlot = firstVisible.dataset.slot;
-        document.getElementById('slotDisplay').textContent = selectedSlot;
-      }
+    if(r.ok){
+      const rows = await r.json();
+      const cfg = (rows[0] && rows[0].value) || {};
+      if(Array.isArray(cfg.list) && cfg.list.length) list = cfg.list;
+      else if('morning' in cfg || 'afternoon' in cfg || 'evening' in cfg)
+        list = DEFAULT_SLOTS.map(s => ({...s, active: cfg[s.name.toLowerCase()] !== false}));
     }
-  }catch(e){ /* keep all slots visible */ }
+  }catch(e){ /* fall through to defaults */ }
+  renderSlots(list);
 }
 applySlotConfig();
 
@@ -858,16 +899,7 @@ document.getElementById('addressForm').addEventListener('submit', (e) => {
   goToStep(2);
 });
 
-// Slot buttons
-document.querySelectorAll('.slot-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedSlot = btn.dataset.slot;
-    document.getElementById('slotDisplay').textContent = selectedSlot;
-    renderSummary();
-  });
-});
+// Slot button handlers are attached in renderSlots() (scoped to #slotGrid).
 
 // ─────────────────────────────────────────────
 //  STEP 2 — PAYMENT

@@ -26,6 +26,13 @@ textarea.in{resize:vertical;min-height:60px;}
 .row{display:flex;gap:0.8rem;flex-wrap:wrap;}
 .row>div{flex:1;min-width:120px;}
 .toggle{display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0;font-size:0.88rem;}
+.slot-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:0.5rem;align-items:center;margin-bottom:0.5rem;}
+.slot-row .in{margin:0;}
+.slot-on{display:flex;align-items:center;gap:0.35rem;font-size:0.8rem;color:rgba(246,237,216,0.6);margin:0;white-space:nowrap;}
+.btn-x{background:rgba(229,115,115,0.12);border:1px solid rgba(229,115,115,0.3);color:#E57373;border-radius:8px;padding:0.45rem 0.6rem;cursor:pointer;font-size:0.8rem;line-height:1;}
+.btn-sm{background:rgba(255,255,255,0.05);border:1px dashed var(--border);color:var(--clay-l);border-radius:8px;padding:0.5rem 0.9rem;cursor:pointer;font-family:inherit;font-size:0.82rem;margin-top:0.3rem;}
+.slot-head{display:grid;grid-template-columns:1fr 1fr auto auto;gap:0.5rem;font-size:0.7rem;color:rgba(246,237,216,0.35);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;}
+@media(max-width:560px){.slot-head{display:none;}.slot-row{grid-template-columns:1fr auto;gap:0.4rem;padding:0.6rem;border:1px solid var(--border);border-radius:10px;}.slot-row .s-name{grid-column:1/-1;}.slot-row .s-time{grid-column:1/-1;}}
 .btn{background:linear-gradient(135deg,var(--clay),var(--clay-d));color:#fff;border:none;border-radius:10px;padding:0.7rem 1.5rem;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem;}
 #guard{text-align:center;padding:4rem 1rem;}
 #status{margin-left:0.8rem;font-weight:600;font-size:0.85rem;}
@@ -61,10 +68,10 @@ textarea.in{resize:vertical;min-height:60px;}
 
   <div class="card">
     <h2>Delivery Slots</h2>
-    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.5rem;">Which time-of-day slots customers can pick at checkout. Turn one off any time — e.g. if you can't cover Evening this week.</p>
-    <div class="toggle"><input type="checkbox" id="s-morning"> <span>Morning (7 AM – 12 PM)</span></div>
-    <div class="toggle"><input type="checkbox" id="s-afternoon"> <span>Afternoon (12 PM – 5 PM)</span></div>
-    <div class="toggle"><input type="checkbox" id="s-evening"> <span>Evening (5 PM – 8 PM)</span></div>
+    <p style="font-size:0.78rem;color:rgba(246,237,216,0.4);margin-bottom:0.7rem;">The time windows customers choose from at checkout. Rename them, change the timings, or add your own. Untick "On" to hide a slot without deleting it — e.g. if you can't cover Evening this week.</p>
+    <div class="slot-head"><span>Slot name</span><span>Timing</span><span>On</span><span></span></div>
+    <div id="slotRows"></div>
+    <button type="button" class="btn-sm" id="addSlotBtn">+ Add another slot</button>
   </div>
 
   <div class="card">
@@ -97,8 +104,49 @@ textarea.in{resize:vertical;min-height:60px;}
 <script src="admin-api.js"></script>
 <script>
 if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
-else { document.getElementById('app').style.display='block'; load(); }
+else {
+  document.getElementById('app').style.display='block';
+  document.getElementById('addSlotBtn').addEventListener('click',()=>addSlotRow());
+  load();
+}
 function g(id){return document.getElementById(id);}
+
+// ── DELIVERY SLOTS (custom, admin-defined) ──
+// Stored as site_settings 'slots' = { list:[{name,time,active}] }.
+// Older rows used {morning:bool,afternoon:bool,evening:bool} — still read below.
+const DEFAULT_SLOTS=[
+  {name:'Morning',time:'7 AM – 12 PM',active:true},
+  {name:'Afternoon',time:'12 PM – 5 PM',active:true},
+  {name:'Evening',time:'5 PM – 8 PM',active:true},
+];
+function slotsFromSettings(sl){
+  if(sl && Array.isArray(sl.list) && sl.list.length) return sl.list;
+  if(sl && ('morning' in sl || 'afternoon' in sl || 'evening' in sl))
+    return DEFAULT_SLOTS.map(s=>({...s,active:sl[s.name.toLowerCase()]!==false}));
+  return DEFAULT_SLOTS.map(s=>({...s}));
+}
+function addSlotRow(slot){
+  const s=slot||{name:'',time:'',active:true};
+  const row=document.createElement('div');
+  row.className='slot-row';
+  row.innerHTML='<input class="in s-name" placeholder="Morning">'
+    +'<input class="in s-time" placeholder="7 AM – 12 PM">'
+    +'<label class="slot-on"><input type="checkbox" class="s-active"> On</label>'
+    +'<button type="button" class="btn-x" title="Remove this slot">✕</button>';
+  row.querySelector('.s-name').value=s.name||'';
+  row.querySelector('.s-time').value=s.time||'';
+  row.querySelector('.s-active').checked=s.active!==false;
+  row.querySelector('.btn-x').onclick=()=>row.remove();
+  g('slotRows').appendChild(row);
+}
+function renderSlotRows(list){ g('slotRows').innerHTML=''; list.forEach(s=>addSlotRow(s)); }
+function collectSlots(){
+  return [...document.querySelectorAll('#slotRows .slot-row')].map(r=>({
+    name:r.querySelector('.s-name').value.trim(),
+    time:r.querySelector('.s-time').value.trim(),
+    active:r.querySelector('.s-active').checked,
+  })).filter(s=>s.name);
+}
 async function load(){
   try{
     const r=await AdminAPI.db('site_settings','select',{});
@@ -107,7 +155,7 @@ async function load(){
     const f=map.farmer||{}, b=map.banner||{}, x=map.features||{}, d=map.delivery||{}, sl=map.slots||{}, p=map.permanentBanner||{};
     g('f-name').value=f.name||''; g('f-loc').value=f.location||''; g('f-story').value=f.story||''; g('f-photo').value=f.photo||'';
     g('d-standard').value=d.standard_fee!=null?d.standard_fee:49; g('d-free').value=d.free_above!=null?d.free_above:999;
-    g('s-morning').checked=sl.morning!==false; g('s-afternoon').checked=sl.afternoon!==false; g('s-evening').checked=sl.evening!==false;
+    renderSlotRows(slotsFromSettings(sl));
     g('p-active').checked=!!p.active; g('p-text').value=p.text||'';
     g('b-active').checked=!!b.active; g('b-text').value=b.text||'';
     g('x-ticker').checked=x.ticker!==false; g('x-sound').checked=x.sound!==false; g('x-golden').checked=x.goldenHour!==false; g('x-bulk').checked=x.bulkOrder!==false;
@@ -119,11 +167,21 @@ async function put(key,value){
   return r;
 }
 async function saveAll(){
-  const st=g('status'); st.textContent='Saving…'; st.style.color='';
+  const st=g('status');
+  // A checkout with no selectable slot can't be completed at all, so refuse to
+  // save that state — pausing orders is what Order Windows is for.
+  const slotsToSave=collectSlots();
+  if(!slotsToSave.some(s=>s.active)){
+    st.textContent='Keep at least one slot switched On — customers can’t check out otherwise.';
+    st.style.color='#E57373';
+    setTimeout(()=>{st.textContent='';},6000);
+    return;
+  }
+  st.textContent='Saving…'; st.style.color='';
   try{
     await put('farmer',{name:g('f-name').value.trim(),location:g('f-loc').value.trim(),story:g('f-story').value.trim(),photo:g('f-photo').value.trim()});
     await put('delivery',{standard_fee:parseInt(g('d-standard').value,10)||0,free_above:parseInt(g('d-free').value,10)||0});
-    await put('slots',{morning:g('s-morning').checked,afternoon:g('s-afternoon').checked,evening:g('s-evening').checked});
+    await put('slots',{list:slotsToSave});
     await put('permanentBanner',{active:g('p-active').checked,text:g('p-text').value.trim()});
     await put('banner',{active:g('b-active').checked,text:g('b-text').value.trim(),cta:'Order Now'});
     await put('features',{ticker:g('x-ticker').checked,sound:g('x-sound').checked,goldenHour:g('x-golden').checked,bulkOrder:g('x-bulk').checked});
