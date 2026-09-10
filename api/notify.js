@@ -38,10 +38,26 @@ module.exports = async (req, res) => {
     const old  = payload.old_record || {};
 
     let role, title, body, url;
-    if (type === 'INSERT') {
+    if (type === 'INSERT' && rec.payment === 'cod') {
+      // COD is confirmed the moment it's placed (create-order.js inserts it
+      // as status 'confirmed_cod' directly) — safe to notify immediately.
       role = 'admin';
       title = '🛒 New Angadi Order';
-      body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · ${rec.payment === 'cod' ? 'COD' : 'Paid'}`;
+      body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · COD`;
+      url = '/admin/orders.html';
+    } else if (type === 'INSERT' && rec.payment !== 'cod') {
+      // A Razorpay order row is inserted as 'pending' the instant checkout
+      // *starts* — before the customer has actually paid (or even if they
+      // abandon it). Notifying here previously told the admin "Paid" for an
+      // order nobody had paid for yet. Wait for the UPDATE to 'paid' below.
+      res.status(200).json({ skipped: 'razorpay order pending payment' });
+      return;
+    } else if (type === 'UPDATE' && rec.status === 'paid' && old.status !== 'paid') {
+      // This is the actual moment money was captured (set by
+      // verify-payment.js / razorpay-webhook.js) — the real "new paid order".
+      role = 'admin';
+      title = '🛒 New Angadi Order';
+      body = `${(rec.customer && rec.customer.name) || 'Customer'} · ₹${rec.total || 0} · Paid`;
       url = '/admin/orders.html';
     } else if (type === 'UPDATE' && rec.status === 'ready' && old.status !== 'ready') {
       role = 'partner';
