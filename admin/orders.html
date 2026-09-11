@@ -231,6 +231,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
         <div class="filter-tabs-wrap" style="display:flex;gap:0.5rem;flex-wrap:wrap;" id="filterTabs">
           <button class="filter-tab active" data-f="all">All <span class="count-pill" id="cnt-all">0</span></button>
           <button class="filter-tab" data-f="pending">New <span class="count-pill" id="cnt-pending">0</span></button>
+          <button class="filter-tab" data-f="abandoned">🛒 Abandoned <span class="count-pill" id="cnt-abandoned">0</span></button>
           <button class="filter-tab" data-f="confirmed">Confirmed <span class="count-pill" id="cnt-confirmed">0</span></button>
           <button class="filter-tab" data-f="preparing">Preparing <span class="count-pill" id="cnt-preparing">0</span></button>
           <button class="filter-tab" data-f="ready">Ready <span class="count-pill" id="cnt-ready">0</span></button>
@@ -431,7 +432,29 @@ function renderStats(){
   set('cnt-ofd',counts.out_for_delivery);
   set('cnt-delivered',(counts.delivered||0)+(counts.completed||0));
   set('cnt-cancelled',counts.cancelled);
+  set('cnt-abandoned', active.filter(isAbandoned).length);
   set('cnt-archived',archived.length);
+}
+
+// An abandoned checkout: the customer filled in their details and a Razorpay
+// order row was created, but the payment never completed. We still have their
+// name, phone, address and cart — so unlike an anonymous analytics drop-off,
+// these are recoverable. Given a grace period so a customer still mid-payment
+// isn't chased.
+const ABANDONED_AFTER_MIN = 30;
+function isAbandoned(o){
+  if (o.archivedAt) return false;
+  if (o.status !== 'pending') return false;
+  if (o.payment === 'cod' || o.paymentId) return false;
+  const mins = (Date.now() - new Date(o.placedAt).getTime()) / 60000;
+  return mins >= ABANDONED_AFTER_MIN;
+}
+function agoText(iso){
+  const mins = Math.floor((Date.now() - new Date(iso).getTime())/60000);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs/24) + 'd ago';
 }
 
 function renderTable(){
@@ -444,8 +467,9 @@ function renderTable(){
     // "Archived" tab itself shows them. Nothing is ever deleted.
     if(activeFilter==='archived') { if(!o.archivedAt) return false; }
     else if(o.archivedAt) return false;
+    if(activeFilter==='abandoned' && !isAbandoned(o)) return false;
     const s=normaliseStatus(o.status);
-    const mStatus = activeFilter==='all'||activeFilter==='archived'||s===activeFilter;
+    const mStatus = activeFilter==='all'||activeFilter==='archived'||activeFilter==='abandoned'||s===activeFilter;
     const q=searchQuery.toLowerCase();
     const mSearch=!q||(o.orderId||'').toLowerCase().includes(q)||(o.customer?.name||'').toLowerCase().includes(q)||(o.customer?.phone||'').includes(q);
     const mDate=!dateFilter||o.customer?.delivery_date===dateFilter;
@@ -476,7 +500,7 @@ function renderTable(){
         <td class="td-amount">${fmt(o.total||0)}</td>
         <td><span class="payment-badge ${o.payment==='cod'?'cod':'online'}">${o.payment==='cod'?'COD':'Online'}</span></td>
         <td style="font-size:0.75rem;white-space:nowrap;">${formatDeliveryDate(o.customer?.delivery_date)}<br><span style="opacity:0.5;">${(o.customer?.slot||'—').split(' ')[0]}</span></td>
-        <td style="font-size:0.75rem;white-space:nowrap;">${formatDate(o.placedAt)}</td>
+        <td style="font-size:0.75rem;white-space:nowrap;">${formatDate(o.placedAt)}${isAbandoned(o)?`<div style="color:#F0B429;font-size:0.7rem;">abandoned ${agoText(o.placedAt)}</div>`:''}</td>
         <td><span class="status-pill ${s}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
         <td onclick="event.stopPropagation()">
           ${actionButtons(o)}
@@ -570,7 +594,16 @@ function actionButtons(o, big){
   const b = (label, st, kind='') => `<button class="${cls} ${kind}" onclick="event.stopPropagation();setOrderStatus('${o.orderId}','${st}')">${label}</button>`;
   const cancel = `<button class="${cls} danger" onclick="event.stopPropagation();cancelOrder('${o.orderId}')">✕ Cancel</button>`;
   switch(s){
-    case 'pending':   return b('✓ Confirm Order','confirmed','primary') + cancel;
+    case 'pending': {
+      if(isAbandoned(o)){
+        // Payment never landed — the useful actions are reaching the customer
+        // and turning it into a real pay-on-delivery order.
+        return `<button class="${cls}" style="background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.35);color:#25D366;" onclick="event.stopPropagation();waRecover('${o.orderId}')">💬 WhatsApp</button>`
+             + `<button class="${cls} primary" onclick="event.stopPropagation();recoverAsCOD('${o.orderId}')">✓ Confirm as Pay on Delivery</button>`
+             + cancel;
+      }
+      return b('✓ Confirm Order','confirmed','primary') + cancel;
+    }
     case 'confirmed': return b('Start Preparing','preparing','primary') + cancel;
     case 'preparing': return b('Mark Ready','ready','primary') + cancel;
     case 'ready':     return `<span class="act-btn" style="cursor:default;opacity:0.7;">⏳ Finding partner…</span>` + cancel;
@@ -607,6 +640,39 @@ async function verifyRazorpayPayment(orderId){
   } else {
     alert('Razorpay has no payment attempts on record for this order — the customer never completed the payment step.');
   }
+}
+
+// ── Recovering an abandoned checkout ──
+function waRecover(orderId){
+  const o = allOrders.find(x=>x.orderId===orderId);
+  if(!o) return;
+  const phone = String(o.customer?.phone||'').replace(/\D/g,'').slice(-10);
+  if(phone.length!==10){ alert('No valid phone number on this order.'); return; }
+  const items = (o.items||[]).map(i=>i.name.split(' · ')[0]+' ×'+i.qty).join(', ');
+  const msg = `Hi ${o.customer?.name||''}! This is Angadi Village Meat.\n\n`
+    + `We saw your order didn't finish — the online payment didn't go through.\n\n`
+    + `Order ${o.orderId}: ${items}\nTotal: ${fmt(o.total||0)}\n\n`
+    + `Would you like us to send it Cash on Delivery instead? Just reply YES and we'll confirm it.`;
+  window.open('https://wa.me/91'+phone+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+async function recoverAsCOD(orderId){
+  const o = allOrders.find(x=>x.orderId===orderId);
+  if(!o) return;
+  if(!confirm(`Confirm ${orderId} as Pay on Delivery?\n\n${o.customer?.name||''} · ${fmt(o.total||0)}\n\nThe delivery partner will collect the cash. Only do this once the customer has agreed.`)) return;
+  showToast('Confirming…');
+  // payment:'cod' as well as the status, so it counts as real revenue and the
+  // delivery pages show "COLLECT ₹x" rather than treating it as prepaid.
+  const { error } = await AdminAPI.db('orders','update',{
+    match:{ order_id: orderId },
+    values:{ status:'confirmed_cod', payment:'cod' },
+  });
+  if(error){ alert('Could not confirm: '+error); return; }
+  o.status = 'confirmed_cod';
+  o.payment = 'cod';
+  renderStats(); renderTable();
+  if(document.getElementById('detailPanel').classList.contains('open') && currentDetailId===orderId) openDetail(orderId);
+  showToast(`✓ ${orderId} confirmed as Pay on Delivery`);
 }
 
 async function cancelOrder(orderId){
