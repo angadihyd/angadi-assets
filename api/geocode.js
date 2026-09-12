@@ -129,47 +129,6 @@ module.exports = async (req, res) => {
   const lat = params.get('lat');
   const lon = params.get('lon');
 
-  // Safe diagnostic: booleans only, never the key value itself. Exists to
-  // answer "why isn't Google being used" without guessing.
-  if (params.get('debug') === '1') {
-    const rawKey = process.env.GOOGLE_MAPS_API_KEY || '';
-    const trimmedKey = rawKey.trim();
-    const hasKey = !!rawKey;
-    const hasSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-    // Length and whitespace only — never the key itself. A key pasted with a
-    // trailing newline or space (easy to do from a browser field) is invalid
-    // but LOOKS fine everywhere you'd check it, and Google's error for that
-    // is the same generic PERMISSION_DENIED as a genuine permission problem.
-    const keyInfo = { length: rawKey.length, hasWhitespace: rawKey !== trimmedKey };
-    let cfg = null, testWithRawKey = null, testWithTrimmedKey = null;
-    if (hasSupabase) {
-      cfg = await readCap({ SUPABASE_URL: process.env.SUPABASE_URL, KEY: process.env.SUPABASE_SERVICE_ROLE_KEY });
-      if (hasKey && cfg.enabled && cfg.cap > 0) {
-        const tryKey = async (key) => {
-          try {
-            const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': key,
-                'X-Goog-FieldMask': 'places.displayName',
-              },
-              body: JSON.stringify({ textQuery: 'Gachibowli Hyderabad', maxResultCount: 1 }),
-            });
-            const body = await r.text();
-            return { httpStatus: r.status, bodyPreview: body.slice(0, 300) };
-          } catch (e) {
-            return { fetchError: String(e) };
-          }
-        };
-        testWithRawKey = await tryKey(rawKey);
-        if (keyInfo.hasWhitespace) testWithTrimmedKey = await tryKey(trimmedKey);
-      }
-    }
-    res.status(200).json({ hasGoogleKey: hasKey, keyInfo, hasSupabaseEnv: hasSupabase, mapsSettings: cfg, testWithRawKey, testWithTrimmedKey });
-    return;
-  }
-
   // ── Reverse: always the free provider ──
   if (!q) {
     if (!lat || !lon) { res.status(400).json({ error: 'Provide q (search) or lat & lon (reverse)' }); return; }
