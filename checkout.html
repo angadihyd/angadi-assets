@@ -399,7 +399,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
             <div class="loc-card" id="locCard">
               <div class="loc-head">
-                <div class="form-label" style="margin:0;">Share your delivery location</div>
+                <div class="form-label" style="margin:0;">Share your delivery location <span style="opacity:0.55;font-weight:400;">(optional)</span></div>
                 <button type="button" class="loc-detect" id="locDetect">Use my current location</button>
               </div>
               <div class="loc-search-wrap">
@@ -407,7 +407,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 <div class="loc-suggest" id="locSuggest"></div>
               </div>
               <div id="locMap" class="loc-map"></div>
-              <div class="loc-status" id="locStatus">Tap “Use my current location” for exact GPS delivery — or search / drag the pin.</div>
+              <div class="loc-status" id="locStatus">Helps our partner find you faster. Skip it if you like — just fill in the address below.</div>
             </div>
 
             <div class="form-row">
@@ -891,12 +891,17 @@ function validateAddress(){
   // exact spot (Google Maps link is saved with the order). They can set it via
   // "Use my current location" (GPS), search, or by tapping the map. Skipped only
   // if the map library itself couldn't load (manual fallback → typed address).
-  if (!(window.deliveryGeo && window.deliveryGeo.manual)) {
-    if (!window.deliveryGeo || !window.deliveryGeo.lat){
-      setLocStatus('Please share your delivery location — tap “Use my current location” or tap your spot on the map.', 'bad'); ok = false;
-    } else if (window.deliveryGeo.serviceable === false){
-      setLocStatus('Sorry, we currently deliver only in Hyderabad.', 'bad'); ok = false;
-    }
+  // A map pin helps the delivery partner find the exact spot, but it is NOT
+  // required to place an order. This used to hard-block: anyone who declined
+  // the browser's location prompt could fill in a complete address and still
+  // be refused, with no way forward and no explanation of how to continue.
+  // A typed address plus a phone number is enough to deliver.
+  if (window.deliveryGeo && window.deliveryGeo.lat && window.deliveryGeo.serviceable === false){
+    setLocStatus('Sorry, we currently deliver only in Hyderabad.', 'bad');
+    ok = false;
+  } else if (!window.deliveryGeo || !window.deliveryGeo.lat){
+    window.deliveryGeo = Object.assign({}, window.deliveryGeo, { lat:null, lng:null, serviceable:true, unpinned:true });
+    if (ok) setLocStatus('No exact pin set — we’ll call you to confirm the spot.', 'ok');
   }
   return ok;
 }
@@ -949,7 +954,7 @@ async function placeOrder(){
         type:     document.getElementById('ftype').value,
         lat:      window.deliveryGeo ? window.deliveryGeo.lat : null,
         lng:      window.deliveryGeo ? window.deliveryGeo.lng : null,
-        mapsUrl:  window.deliveryGeo ? ('https://www.google.com/maps/search/?api=1&query=' + window.deliveryGeo.lat + ',' + window.deliveryGeo.lng) : null,
+        mapsUrl:  (window.deliveryGeo && window.deliveryGeo.lat) ? ('https://www.google.com/maps/search/?api=1&query=' + window.deliveryGeo.lat + ',' + window.deliveryGeo.lng) : null,
       },
       slot:  selectedSlot,
       notes: document.getElementById('fnotes').value,
@@ -1308,10 +1313,11 @@ function useSavedAddress() {
   const user = JSON.parse(localStorage.getItem('angadi_user') || '{}');
   const a = user.address || {};
   if (!a.flat || !a.area) { enterNewAddress(); return; }
+  // Previously this refused a saved address unless a fresh pin was dropped,
+  // and hid the saved-address banner while doing it — so a returning customer
+  // was left staring at a form with no idea what had gone wrong.
   if (!window.deliveryGeo || !window.deliveryGeo.lat) {
-    setLocStatus('Please pin your location on the map first.', 'bad');
-    document.getElementById('savedAddrBanner').classList.remove('visible');
-    return;
+    window.deliveryGeo = { lat:a.lat||null, lng:a.lng||null, serviceable:true, unpinned:!a.lat };
   }
   const name = user.name || document.getElementById('fname').value;
   document.getElementById('addressChipText').innerHTML =
@@ -1372,7 +1378,7 @@ function detectLocation(){
   setLocStatus('Detecting your location…');
   navigator.geolocation.getCurrentPosition(
     p => applyPlace(p.coords.latitude, p.coords.longitude),
-    () => setLocStatus('Could not auto-detect. Search or drag the pin.'),
+    () => setLocStatus('Location is off — no problem, just type your address below and continue.'),
     { enableHighAccuracy:true, timeout:8000 }
   );
 }
