@@ -275,6 +275,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 .loc-suggest button{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(196,98,45,0.12);color:#F6EDD8;padding:0.6rem 0.8rem;font-size:0.8rem;cursor:pointer;font-family:inherit;}
 .loc-suggest button:hover{background:rgba(196,98,45,0.12);}
 .loc-map{height:240px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(196,98,45,0.2));}
+.loc-sat-btn{background:rgba(8,5,3,0.85);color:#F6EDD8;border:1px solid rgba(196,98,45,0.5);border-radius:7px;padding:0.35rem 0.6rem;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.35);}
+.loc-sat-btn:hover{background:rgba(196,98,45,0.85);}
 .loc-manual{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.45rem 0.9rem;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .loc-manual:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
 #locSearch.loc-search-highlight{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,0.18);}
@@ -1345,7 +1347,7 @@ function enterNewAddress() {
 //  LIVE LOCATION PICKER (free OpenStreetMap / Nominatim)
 // ─────────────────────────────────────────────
 window.deliveryGeo = null;
-let _locMap, _locMarker, _locSearchT;
+let _locMap, _locMarker, _locSearchT, _locStreet, _locSat, _locSatOn = false;
 // When GPS is unavailable or declined, the manual search box is the way to
 // still drop a pin — but customers didn't notice it sitting above the map, so
 // a denied prompt felt like a dead end. Point at it explicitly.
@@ -1379,7 +1381,7 @@ async function applyPlace(lat,lng, presetArea){
   const _si = document.getElementById('locSearch');
   if (_si) _si.classList.remove('loc-search-highlight');
   window.deliveryGeo = { lat:+(+lat).toFixed(6), lng:+(+lng).toFixed(6), serviceable };
-  if(_locMap){ _locMap.setView([lat,lng],16); _locMarker.setLatLng([lat,lng]); }
+  if(_locMap){ _locMap.setView([lat,lng],18); _locMarker.setLatLng([lat,lng]); }   // 18 = building level, not just the neighbourhood
   const info = await reverseGeocode(lat,lng);
   window.deliveryGeo.area = info.area; window.deliveryGeo.pincode = info.pincode;
   if (serviceable && info.area) { try { localStorage.setItem('angadi_location', info.area + ', ' + (info.city||'Hyderabad')); } catch(e){} }
@@ -1389,7 +1391,7 @@ async function applyPlace(lat,lng, presetArea){
   if(farea && (presetArea || (info.area && !farea.value))) farea.value = presetArea || info.area;
   if(fpin && info.pincode) fpin.value = info.pincode;
   if(fcity && info.city) fcity.value = info.city;
-  if(serviceable) setLocStatus('✓ Pinned'+(info.area?' · '+info.area:'')+(info.pincode?' · '+info.pincode:''),'ok');
+  if(serviceable) setLocStatus('✓ Pinned'+(info.area?' · '+info.area:'')+(info.pincode?' · '+info.pincode:'')+' — drag the pin onto your building for an exact spot','ok');
   else setLocStatus('Sorry, we currently deliver only in Hyderabad.','bad');
 }
 function detectLocation(){
@@ -1439,7 +1441,28 @@ function initLocationPicker(){
   }
 
   _locMap = L.map('locMap',{zoomControl:true}).setView([17.385,78.4867],12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(_locMap);
+  _locStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+  // OpenStreetMap has almost no building names for Indian apartments, so a
+  // street map alone can't get you to a specific block. Satellite imagery is
+  // how people actually recognise their own building and drop an exact pin.
+  _locSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
+  _locStreet.addTo(_locMap);
+  const SatToggle = L.Control.extend({
+    options:{ position:'topright' },
+    onAdd: function(){
+      const b = L.DomUtil.create('button','loc-sat-btn');
+      b.type = 'button';
+      b.textContent = '🛰 Satellite';
+      L.DomEvent.disableClickPropagation(b);
+      L.DomEvent.on(b,'click',function(){
+        _locSatOn = !_locSatOn;
+        if(_locSatOn){ _locMap.removeLayer(_locStreet); _locSat.addTo(_locMap); b.textContent = '🗺 Map'; }
+        else { _locMap.removeLayer(_locSat); _locStreet.addTo(_locMap); b.textContent = '🛰 Satellite'; }
+      });
+      return b;
+    }
+  });
+  _locMap.addControl(new SatToggle());
   _locMarker = L.marker([17.385,78.4867],{draggable:true}).addTo(_locMap);
   _locMarker.on('dragend', e => { const ll=e.target.getLatLng(); applyPlace(ll.lat,ll.lng); });
   _locMap.on('click', e => { _locMarker.setLatLng(e.latlng); applyPlace(e.latlng.lat,e.latlng.lng); });
