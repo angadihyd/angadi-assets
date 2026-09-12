@@ -128,7 +128,154 @@ async function dbAction(env, { table, op, values, match, order, limit, select, c
   return { status: 200, body: { data } };
 }
 
+// ── Daily site-health check, called by Vercel Cron (see vercel.json) ──
+// Lives here rather than its own file because Vercel's Hobby plan caps a
+// deployment at 12 serverless functions — this project was already at 13
+// with a standalone cron-health-check.js, which failed the entire deploy
+// with exceeded_serverless_functions_per_deployment. Folding it into an
+// existing function is the fix, not trimming another endpoint.
+//
+// A scheduled Claude cloud agent was tried first and could not reach
+// www.angadi.farm at all — Anthropic's cloud sandbox blocks outbound
+// access to arbitrary domains by default (confirmed by an actual run).
+// These checks are fixed thresholds, not judgment calls, so plain code
+// here is the better fit regardless.
+const HEALTH_SITE = 'https://www.angadi.farm';
+const HEALTH_CHECK_URLS = [
+  HEALTH_SITE + '/',
+  HEALTH_SITE + '/shop.html',
+  HEALTH_SITE + '/checkout.html',
+  HEALTH_SITE + '/my-orders.html',
+  HEALTH_SITE + '/admin/orders.html', // a login gate here is the healthy response
+  HEALTH_SITE + '/api/geocode?q=Hyderabad',
+];
+
+async function runHealthUptimeChecks() {
+  const findings = [];
+  for (const url of HEALTH_CHECK_URLS) {
+    const started = Date.now();
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      const ms = Date.now() - started;
+      const body = await r.text();
+      if (!r.ok || body.length < 20) {
+        findings.push({ severity: 'critical', title: `${url} is not responding correctly`, description: `Got HTTP ${r.status} with a ${body.length}-byte body. Customers hitting this page right now may see a broken page.` });
+      } else if (ms > 5000) {
+        findings.push({ severity: 'warning', title: `${url} responded slowly`, description: `Took ${ms}ms to respond (over the 5s threshold). Not broken, but worth watching if it keeps happening.` });
+      }
+    } catch (e) {
+      findings.push({ severity: 'critical', title: `${url} is unreachable`, description: `Request failed: ${String(e.message || e)}. This page may be completely down for customers right now.` });
+    }
+  }
+  return findings;
+}
+
+async function runHealthOrderChecks(env) {
+  const findings = [];
+  const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+  const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+
+  const [stuckRes, dayRes, mapsRes, usageRes] = await Promise.all([
+    rest(env, `orders?select=order_id,customer,total,placed_at&status=eq.pending&payment=eq.razorpay&payment_id=is.null&placed_at=lt.${twoHoursAgo}&order=placed_at.asc&limit=20`),
+    rest(env, `orders?select=status&placed_at=gte.${dayAgo}`),
+    rest(env, `site_settings?key=eq.maps&select=value`),
+    rest(env, `api_usage?service=eq.google_places&month=eq.${new Date().toISOString().slice(0, 7)}&select=count`),
+  ]);
+  const stuck = stuckRes.ok ? await stuckRes.json() : [];
+  const dayOrders = dayRes.ok ? await dayRes.json() : [];
+  const mapsCfgRows = mapsRes.ok ? await mapsRes.json() : [];
+  const usageRows = usageRes.ok ? await usageRes.json() : [];
+
+  if (stuck.length > 0) {
+    const oldestHours = Math.max(...stuck.map((o) => (Date.now() - new Date(o.placed_at).getTime()) / 3600000));
+    const list = stuck.map((o) => `${o.order_id} (${(o.customer && o.customer.name) || 'no name'}, ₹${o.total}, ${Math.round((Date.now() - new Date(o.placed_at).getTime()) / 3600000 * 10) / 10}h old)`).join('; ');
+    findings.push({
+      severity: stuck.length >= 5 || oldestHours >= 24 ? 'critical' : 'warning',
+      title: `${stuck.length} checkout${stuck.length > 1 ? 's' : ''} started but never paid`,
+      description: `These customers began an online payment that never completed, 2+ hours ago: ${list}. WhatsApp them from the Customers page to offer Pay on Delivery, or check the Abandoned tab in Orders.`,
+    });
+  }
+
+  const total24h = dayOrders.length;
+  const cancelled24h = dayOrders.filter((o) => o.status === 'cancelled').length;
+  const rate = total24h ? (cancelled24h / total24h) * 100 : 0;
+  if (total24h >= 5 && rate > 40) {
+    findings.push({
+      severity: 'warning',
+      title: `High cancellation rate in the last 24 hours`,
+      description: `${cancelled24h} of ${total24h} orders (${Math.round(rate)}%) were cancelled. Worth checking whether this is payment failures, a checkout problem, or something else.`,
+    });
+  }
+
+  const cap = (mapsCfgRows[0] && mapsCfgRows[0].value && mapsCfgRows[0].value.monthly_cap) || 5000;
+  const used = (usageRows[0] && usageRows[0].count) || 0;
+  const pct = cap ? (used / cap) * 100 : 0;
+  if (pct >= 90) {
+    findings.push({
+      severity: 'warning',
+      title: `Google Places search nearing its monthly limit`,
+      description: `${used} of ${cap} searches used this month (${Math.round(pct)}%). The site automatically switches back to the free map once the limit is hit, so this won't cause any charge — just a heads-up.`,
+    });
+  }
+
+  return findings;
+}
+
+async function saveHealthAlert(env, f) {
+  const r = await rest(env, 'health_alerts', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify([{ severity: f.severity, title: f.title, description: f.description, source: 'daily-health-check' }]),
+  });
+  if (!r.ok) { console.error('health-check: could not save alert', await r.text()); return; }
+
+  const { META_ACCESS_TOKEN, META_PHONE_NUMBER_ID, ADMIN_WHATSAPP_NUMBER } = process.env;
+  if (META_ACCESS_TOKEN && META_PHONE_NUMBER_ID && ADMIN_WHATSAPP_NUMBER && f.severity !== 'info') {
+    try {
+      const icon = f.severity === 'critical' ? '🔴' : '🟡';
+      const text = `${icon} Angadi site health — ${f.severity.toUpperCase()}\n\n${f.title}\n\n${f.description}\n\nSee Admin → Dashboard for details.`;
+      await fetch(`https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', to: ADMIN_WHATSAPP_NUMBER, type: 'text', text: { body: text.slice(0, 4096) } }),
+      });
+    } catch (e) { /* the admin panel alert still stands either way */ }
+  }
+}
+
 module.exports = async (req, res) => {
+  // ── Vercel Cron hits this with GET ?cron=health-check, never POST ──
+  const cronParam = req.method === 'GET' ? new URL(req.url, 'http://x').searchParams.get('cron') : null;
+  if (cronParam === 'health-check') {
+    const SUPABASE_URL = process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const CRON_SECRET = process.env.CRON_SECRET, HEALTH_AGENT_TOKEN = process.env.HEALTH_AGENT_TOKEN;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) { res.status(500).json({ error: 'Not configured' }); return; }
+    const authHeader = req.headers.authorization || '';
+    const isVercelCron = CRON_SECRET && timingEq(authHeader, `Bearer ${CRON_SECRET}`);
+    const isManualTest = HEALTH_AGENT_TOKEN && timingEq(req.headers['x-health-token'] || '', HEALTH_AGENT_TOKEN);
+    if (!isVercelCron && !isManualTest) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const henv = { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY };
+    try {
+      const [uptimeFindings, orderFindings] = await Promise.all([runHealthUptimeChecks(), runHealthOrderChecks(henv)]);
+      const findings = [...uptimeFindings, ...orderFindings];
+      if (!findings.length) {
+        await saveHealthAlert(henv, {
+          severity: 'info',
+          title: 'Daily health check: all clear',
+          description: `${HEALTH_CHECK_URLS.length} pages checked, all responding normally. No stuck orders, no unusual cancellation rate, Places quota within range.`,
+        });
+      } else {
+        for (const f of findings.slice(0, 8)) await saveHealthAlert(henv, f);
+      }
+      res.status(200).json({ ok: true, findingsCount: findings.length, checkedAt: new Date().toISOString() });
+    } catch (e) {
+      console.error('health-check cron failed', e);
+      res.status(500).json({ error: String(e.message || e) });
+    }
+    return;
+  }
+
   if (req.method !== 'POST') { res.status(405).json({ error: 'POST only' }); return; }
 
   const env = {

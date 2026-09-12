@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron-health-check",
+      "path": "/api/admin?cron=health-check",
       "schedule": "30 1 * * *"
     }
   ],
