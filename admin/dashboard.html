@@ -392,6 +392,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <div class="section-head">
             <div class="section-title"><span>Alerts</span></div>
           </div>
+          <div class="alert-list" id="mapsAlertBox"></div>
           <div class="alert-list" id="alertList">
             <!-- populated by JS -->
           </div>
@@ -483,6 +484,7 @@ async function initDashboard() {
   renderRecentOrders(orders);
   renderStockList();
   renderAlerts(orders);
+  checkMapsUsage();
 }
 
 async function loadOrders() {
@@ -644,6 +646,38 @@ function renderAlerts(orders) {
       <span class="alert-text">${a.text}</span>
     </div>
   `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  GOOGLE MAPS API USAGE — warn before it becomes chargeable
+// ─────────────────────────────────────────────
+async function checkMapsUsage() {
+  const box = document.getElementById('mapsAlertBox');
+  if (!box) return;
+  const month = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+  const [usageRes, settingsRes] = await Promise.all([
+    AdminAPI.db('api_usage', 'select', { match: { service: 'google_places', month } }),
+    AdminAPI.db('site_settings', 'select', { match: { key: 'maps' } }),
+  ]);
+  const used = (usageRes.data && usageRes.data[0] && usageRes.data[0].count) || 0;
+  const cfg = (settingsRes.data && settingsRes.data[0] && settingsRes.data[0].value) || {};
+  const cap = cfg.monthly_cap != null ? Number(cfg.monthly_cap) : 5000;
+  if (!cap) { box.innerHTML = ''; return; }
+  const pct = Math.min(100, Math.round((used / cap) * 100));
+
+  if (pct >= 100) {
+    box.innerHTML = `<div class="alert-item warning">
+      <span class="alert-icon">🗺️</span>
+      <span class="alert-text"><strong>Google address search hit its monthly limit</strong> (${used}/${cap}) — the site has automatically switched back to the free map so you are not charged. Raise the limit in Settings if you want Google back on this month.</span>
+    </div>`;
+  } else if (pct >= 80) {
+    box.innerHTML = `<div class="alert-item warning">
+      <span class="alert-icon">🗺️</span>
+      <span class="alert-text"><strong>Google address search: ${used}/${cap} searches used this month (${pct}%)</strong> — approaching the limit. Once it's reached, searches switch to the free map automatically — no surprise charge.</span>
+    </div>`;
+  } else {
+    box.innerHTML = '';
+  }
 }
 
 // ─────────────────────────────────────────────
