@@ -275,6 +275,9 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 .loc-suggest button{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(196,98,45,0.12);color:#F6EDD8;padding:0.6rem 0.8rem;font-size:0.8rem;cursor:pointer;font-family:inherit;}
 .loc-suggest button:hover{background:rgba(196,98,45,0.12);}
 .loc-map{height:240px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(196,98,45,0.2));}
+.loc-manual{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:0.45rem 0.9rem;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.loc-manual:hover{border-color:var(--clay);background:rgba(196,98,45,0.1);}
+#locSearch.loc-search-highlight{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,0.18);}
 .loc-status{font-size:0.8rem;margin-top:0.6rem;color:rgba(246,237,216,0.6);font-weight:500;}
 .loc-status.ok{color:#7BC67E;}
 .loc-status.bad{color:#E57373;}
@@ -400,10 +403,13 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
             <div class="loc-card" id="locCard">
               <div class="loc-head">
                 <div class="form-label" style="margin:0;">Share your delivery location <span style="opacity:0.55;font-weight:400;">(optional)</span></div>
-                <button type="button" class="loc-detect" id="locDetect">Use my current location</button>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                  <button type="button" class="loc-detect" id="locDetect">Use my current location</button>
+                  <button type="button" class="loc-manual" id="locManual">Type it myself</button>
+                </div>
               </div>
               <div class="loc-search-wrap">
-                <input class="form-input" id="locSearch" type="text" placeholder="Search area, colony or landmark…" autocomplete="off">
+                <input class="form-input" id="locSearch" type="text" placeholder="Type your area to pin it — e.g. KPHB Phase 5" autocomplete="off">
                 <div class="loc-suggest" id="locSuggest"></div>
               </div>
               <div id="locMap" class="loc-map"></div>
@@ -1340,6 +1346,17 @@ function enterNewAddress() {
 // ─────────────────────────────────────────────
 window.deliveryGeo = null;
 let _locMap, _locMarker, _locSearchT;
+// When GPS is unavailable or declined, the manual search box is the way to
+// still drop a pin — but customers didn't notice it sitting above the map, so
+// a denied prompt felt like a dead end. Point at it explicitly.
+function promptManualLocation(msg){
+  setLocStatus(msg || 'Location is off — type your area below to pin it yourself.');
+  const inp = document.getElementById('locSearch');
+  if(!inp) return;
+  inp.classList.add('loc-search-highlight');
+  try { inp.focus({ preventScroll: true }); } catch(e) { try { inp.focus(); } catch(e2){} }
+}
+
 function setLocStatus(msg, cls){
   const el = document.getElementById('locStatus'); if(!el) return;
   el.textContent = msg; el.classList.remove('ok','bad'); if(cls) el.classList.add(cls);
@@ -1359,6 +1376,8 @@ async function reverseGeocode(lat,lng){
 }
 async function applyPlace(lat,lng, presetArea){
   const serviceable = isHyderabad(lat,lng);
+  const _si = document.getElementById('locSearch');
+  if (_si) _si.classList.remove('loc-search-highlight');
   window.deliveryGeo = { lat:+(+lat).toFixed(6), lng:+(+lng).toFixed(6), serviceable };
   if(_locMap){ _locMap.setView([lat,lng],16); _locMarker.setLatLng([lat,lng]); }
   const info = await reverseGeocode(lat,lng);
@@ -1378,7 +1397,7 @@ function detectLocation(){
   setLocStatus('Detecting your location…');
   navigator.geolocation.getCurrentPosition(
     p => applyPlace(p.coords.latitude, p.coords.longitude),
-    () => setLocStatus('Location is off — no problem, just type your address below and continue.'),
+    () => promptManualLocation('Location is off — type your area below to pin it yourself, or just fill in the address.'),
     { enableHighAccuracy:true, timeout:8000 }
   );
 }
@@ -1425,6 +1444,8 @@ function initLocationPicker(){
   _locMarker.on('dragend', e => { const ll=e.target.getLatLng(); applyPlace(ll.lat,ll.lng); });
   _locMap.on('click', e => { _locMarker.setLatLng(e.latlng); applyPlace(e.latlng.lat,e.latlng.lng); });
   document.getElementById('locDetect').addEventListener('click', detectLocation);
+  const manualBtn = document.getElementById('locManual');
+  if (manualBtn) manualBtn.addEventListener('click', () => promptManualLocation('Type your area, colony or landmark — then pick it from the list.'));
   const search = document.getElementById('locSearch');
   search.addEventListener('input', ()=>{ clearTimeout(_locSearchT); _locSearchT=setTimeout(()=>searchPlaces(search.value),450); });
   document.addEventListener('click', e=>{ if(!e.target.closest('.loc-search-wrap')){ const s=document.getElementById('locSuggest'); if(s) s.classList.remove('open'); } });
