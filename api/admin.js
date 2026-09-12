@@ -245,9 +245,59 @@ module.exports = async (req, res) => {
 
     // ── HEALTH-AGENT-GATED ──
     // A separate credential from ADMIN_TOKEN, on purpose: the daily health
-    // check only ever needs to file a report. Scoping it to this one action
-    // means that even if this token were ever exposed, it could not touch
-    // orders, refunds, coupons, or anything else — unlike ADMIN_TOKEN.
+    // check only ever needs to read a diagnostic snapshot and file a report.
+    // Scoping it to these two actions means that even if this token were ever
+    // exposed, it could not touch orders, refunds, coupons, or anything else
+    // — unlike ADMIN_TOKEN. It never receives the service-role key itself;
+    // the queries run here, server-side, and only the computed numbers go out.
+    if (action === 'health-check-data') {
+      if (!env.HEALTH_AGENT_TOKEN || !timingEq(req.headers['x-health-token'] || '', env.HEALTH_AGENT_TOKEN)) {
+        res.status(401).json({ error: 'Health agent token required' });
+        return;
+      }
+      const nowIso = new Date().toISOString();
+      const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+
+      const [stuckRes, dayRes, mapsRes, usageRes] = await Promise.all([
+        // Razorpay checkout started, never actually paid, sitting 2h+ — a real
+        // customer who tried to pay and got nothing, per the Abandoned tab logic.
+        rest(env, `orders?select=order_id,customer,total,placed_at&status=eq.pending&payment=eq.razorpay&payment_id=is.null&placed_at=lt.${twoHoursAgo}&order=placed_at.asc&limit=20`),
+        rest(env, `orders?select=status,payment,payment_id,total&placed_at=gte.${dayAgo}`),
+        rest(env, `site_settings?key=eq.maps&select=value`),
+        rest(env, `api_usage?service=eq.google_places&month=eq.${nowIso.slice(0, 7)}&select=count`),
+      ]);
+      const stuck = stuckRes.ok ? await stuckRes.json() : [];
+      const dayOrders = dayRes.ok ? await dayRes.json() : [];
+      const mapsCfgRows = mapsRes.ok ? await mapsRes.json() : [];
+      const usageRows = usageRes.ok ? await usageRes.json() : [];
+
+      const total24h = dayOrders.length;
+      const cancelled24h = dayOrders.filter((o) => o.status === 'cancelled').length;
+      const cap = (mapsCfgRows[0] && mapsCfgRows[0].value && mapsCfgRows[0].value.monthly_cap) || 5000;
+      const used = (usageRows[0] && usageRows[0].count) || 0;
+
+      res.status(200).json({
+        checkedAt: nowIso,
+        pendingStuckOrders: {
+          count: stuck.length,
+          orders: stuck.map((o) => ({
+            orderId: o.order_id,
+            name: (o.customer && o.customer.name) || null,
+            total: o.total,
+            hoursOld: Math.round((Date.now() - new Date(o.placed_at).getTime()) / 3600000 * 10) / 10,
+          })),
+        },
+        last24h: {
+          totalOrders: total24h,
+          cancelled: cancelled24h,
+          cancellationRatePct: total24h ? Math.round((cancelled24h / total24h) * 1000) / 10 : 0,
+        },
+        googlePlacesQuota: { used, cap, pct: cap ? Math.round((used / cap) * 1000) / 10 : 0 },
+      });
+      return;
+    }
+
     if (action === 'health-report') {
       if (!env.HEALTH_AGENT_TOKEN || !timingEq(req.headers['x-health-token'] || '', env.HEALTH_AGENT_TOKEN)) {
         res.status(401).json({ error: 'Health agent token required' });
