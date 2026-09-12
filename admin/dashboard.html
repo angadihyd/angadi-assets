@@ -189,6 +189,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 .alert-item{display:flex;align-items:flex-start;gap:0.7rem;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;}
 .alert-item.warning{border-color:rgba(212,160,23,0.2);background:rgba(212,160,23,0.04);}
 .alert-item.info{border-color:rgba(100,181,246,0.2);background:rgba(100,181,246,0.04);}
+.alert-item.critical{border-color:rgba(229,115,115,0.35);background:rgba(229,115,115,0.06);}
 .alert-icon{font-size:0.95rem;flex-shrink:0;margin-top:0.1rem;}
 .alert-text{font-size:0.78rem;color:rgba(246,237,216,0.55);line-height:1.4;}
 .alert-text strong{color:var(--cream);}
@@ -392,6 +393,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <div class="section-head">
             <div class="section-title"><span>Alerts</span></div>
           </div>
+          <div class="alert-list" id="healthAlertBox"></div>
           <div class="alert-list" id="mapsAlertBox"></div>
           <div class="alert-list" id="alertList">
             <!-- populated by JS -->
@@ -485,6 +487,7 @@ async function initDashboard() {
   renderStockList();
   renderAlerts(orders);
   checkMapsUsage();
+  loadHealthAlerts();
 }
 
 async function loadOrders() {
@@ -646,6 +649,42 @@ function renderAlerts(orders) {
       <span class="alert-text">${a.text}</span>
     </div>
   `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  SITE HEALTH — findings from the daily automated health check
+// ─────────────────────────────────────────────
+function healthEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+async function loadHealthAlerts() {
+  const box = document.getElementById('healthAlertBox');
+  if (!box) return;
+  const r = await AdminAPI.db('health_alerts', 'select', {
+    match: { status: 'open' },
+    order: 'created_at.desc',
+    limit: 20,
+  });
+  const rows = r.data || [];
+  if (!rows.length) { box.innerHTML = ''; return; }
+  const icon = { critical: '🔴', warning: '🟡', info: 'ℹ️' };
+  box.innerHTML = rows.map(a => `
+    <div class="alert-item ${a.severity}" data-alert-id="${a.id}">
+      <span class="alert-icon">${icon[a.severity] || '🔔'}</span>
+      <span class="alert-text">
+        <strong>${healthEsc(a.title)}</strong><br>
+        <span style="opacity:0.85;">${healthEsc(a.description)}</span>
+        ${a.proposed_fix ? `<br><span style="opacity:0.7;font-style:italic;">Proposed fix: ${healthEsc(a.proposed_fix)}</span>` : ''}
+        <br><span style="font-size:0.72rem;opacity:0.5;">${new Date(a.created_at).toLocaleString('en-IN')} · ${healthEsc(a.source)}</span>
+      </span>
+      <button type="button" class="btn-sm" style="margin-left:auto;flex-shrink:0;" onclick="dismissHealthAlert('${a.id}')">Dismiss</button>
+    </div>
+  `).join('');
+}
+async function dismissHealthAlert(id) {
+  const { error } = await AdminAPI.db('health_alerts', 'update', { match: { id }, values: { status: 'dismissed' } });
+  if (error) { showToast('Could not dismiss — ' + error); return; }
+  loadHealthAlerts();
 }
 
 // ─────────────────────────────────────────────

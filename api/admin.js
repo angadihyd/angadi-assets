@@ -31,7 +31,7 @@
 
 const crypto = require('crypto');
 
-const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage'];
+const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts'];
 const OPS = ['select', 'insert', 'update', 'upsert', 'delete'];
 const CONFLICT_KEYS = { products: 'slug', site_settings: 'key', coupons: 'code' };
 const PARTNER_STATUSES = ['picked_up', 'out_for_delivery', 'delivered'];
@@ -135,6 +135,7 @@ module.exports = async (req, res) => {
     ADMIN_TOKEN: process.env.ADMIN_TOKEN,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    HEALTH_AGENT_TOKEN: process.env.HEALTH_AGENT_TOKEN,
   };
   if (!env.ADMIN_TOKEN || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
     res.status(500).json({ error: 'Admin API not configured. Set ADMIN_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in Vercel.' });
@@ -239,6 +240,69 @@ module.exports = async (req, res) => {
       }
 
       res.status(400).json({ error: 'Unknown partner action' });
+      return;
+    }
+
+    // ── HEALTH-AGENT-GATED ──
+    // A separate credential from ADMIN_TOKEN, on purpose: the daily health
+    // check only ever needs to file a report. Scoping it to this one action
+    // means that even if this token were ever exposed, it could not touch
+    // orders, refunds, coupons, or anything else — unlike ADMIN_TOKEN.
+    if (action === 'health-report') {
+      if (!env.HEALTH_AGENT_TOKEN || !timingEq(req.headers['x-health-token'] || '', env.HEALTH_AGENT_TOKEN)) {
+        res.status(401).json({ error: 'Health agent token required' });
+        return;
+      }
+      const severity = String(payload.severity || '');
+      const title = String(payload.title || '').trim();
+      const description = String(payload.description || '').trim();
+      if (!['critical', 'warning', 'info'].includes(severity) || !title || !description) {
+        res.status(400).json({ error: 'severity (critical|warning|info), title and description are required' });
+        return;
+      }
+      const row = {
+        severity, title, description,
+        proposed_fix: payload.proposedFix ? String(payload.proposedFix) : null,
+        source: payload.source ? String(payload.source).slice(0, 100) : 'daily-health-check',
+      };
+      const ins = await rest(env, 'health_alerts', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify([row]),
+      });
+      if (!ins.ok) {
+        const t = await ins.text();
+        res.status(500).json({ error: 'Could not save alert: ' + t.slice(0, 200) });
+        return;
+      }
+      const [saved] = await ins.json();
+
+      // Best-effort WhatsApp — the site's WhatsApp bot isn't deployed yet, so
+      // this quietly no-ops until META_ACCESS_TOKEN/META_PHONE_NUMBER_ID/
+      // ADMIN_WHATSAPP_NUMBER are all set. Never fails the report over this.
+      let whatsappSent = false;
+      const { META_ACCESS_TOKEN, META_PHONE_NUMBER_ID, ADMIN_WHATSAPP_NUMBER } = process.env;
+      if (META_ACCESS_TOKEN && META_PHONE_NUMBER_ID && ADMIN_WHATSAPP_NUMBER && severity !== 'info') {
+        try {
+          const icon = severity === 'critical' ? '🔴' : '🟡';
+          const text = `${icon} Angadi site health — ${severity.toUpperCase()}\n\n${title}\n\n${description}`
+            + (row.proposed_fix ? `\n\nProposed fix: ${row.proposed_fix}` : '')
+            + `\n\nSee Admin → Dashboard for details.`;
+          const wr = await fetch(`https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              to: ADMIN_WHATSAPP_NUMBER,
+              type: 'text',
+              text: { body: text.slice(0, 4096) },
+            }),
+          });
+          whatsappSent = wr.ok;
+        } catch (e) { /* non-fatal — the admin panel alert still stands */ }
+      }
+
+      res.status(200).json({ ok: true, alertId: saved && saved.id, whatsappSent });
       return;
     }
 
