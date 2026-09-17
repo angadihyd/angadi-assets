@@ -55,9 +55,18 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
       <div><label>Title</label><input class="in" id="cn-title" placeholder="🎉 Free delivery today!" maxlength="120"></div>
       <div><label>Message</label><input class="in" id="cn-body" placeholder="Order before 6 PM and delivery's on us." maxlength="200"></div>
       <div><label>Link (optional)</label><input class="in" id="cn-url" placeholder="/shop.html"></div>
-      <div><button class="btn primary" onclick="sendCustomNotification()" id="cnBtn">Send notification</button></div>
     </div>
+    <div style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;font-size:0.82rem;">
+      <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="radio" name="cn-when" value="now" checked onchange="toggleScheduleInput()"> Send now</label>
+      <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="radio" name="cn-when" value="later" onchange="toggleScheduleInput()"> Schedule for later</label>
+      <input class="in" id="cn-sendat" type="datetime-local" style="width:auto;display:none;">
+    </div>
+    <div><button class="btn primary" onclick="sendCustomNotification()" id="cnBtn">Send notification</button></div>
     <span id="cnMsg" style="font-size:0.78rem;color:rgba(246,237,216,0.5);"></span>
+  </div>
+  <div class="card" style="flex-direction:column;align-items:stretch;gap:0.6rem;margin-bottom:1.4rem;" id="scheduledCard">
+    <strong style="font-size:0.88rem;">📅 Scheduled notifications</strong>
+    <div id="scheduledList" style="font-size:0.82rem;color:rgba(246,237,216,0.4);">Loading…</div>
   </div>
   <div class="form">
     <div><label>Delivery date</label><input class="in" id="f-date" type="date"></div>
@@ -71,7 +80,7 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
 <script>
 let all=[], editId=null;
 if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
-else { document.getElementById('app').style.display='block'; load(); }
+else { document.getElementById('app').style.display='block'; load(); loadScheduled(); }
 
 // All times are stored as ISO UTC but entered/shown as IST wall-clock (IST = UTC+5:30),
 // independent of whatever timezone the admin's own browser/OS is set to.
@@ -165,18 +174,63 @@ async function notifyCustomers(){
   btn.disabled=false;
   msg.textContent = r.error ? ('Failed: '+r.error) : `Sent to ${r.sent} of ${r.total} subscribed device(s).`;
 }
+function toggleScheduleInput(){
+  const later = document.querySelector('input[name="cn-when"]:checked').value === 'later';
+  document.getElementById('cn-sendat').style.display = later ? 'block' : 'none';
+  document.getElementById('cnBtn').textContent = later ? 'Schedule notification' : 'Send notification';
+}
 async function sendCustomNotification(){
   const title=document.getElementById('cn-title').value.trim();
   const body=document.getElementById('cn-body').value.trim();
   const url=document.getElementById('cn-url').value.trim()||'/shop.html';
+  const later = document.querySelector('input[name="cn-when"]:checked').value === 'later';
   if(!title||!body){ alert('Title and message are both required'); return; }
-  if(!confirm('Send this notification to everyone who has enabled order alerts?'))return;
   const btn=document.getElementById('cnBtn'), msg=document.getElementById('cnMsg');
+
+  if(later){
+    const local = document.getElementById('cn-sendat').value;
+    if(!local){ alert('Pick a date and time to send at'); return; }
+    const sendAt = istInputToISO(local);
+    if(!confirm(`Schedule this to send at ${fmtIST(sendAt)} IST?`))return;
+    btn.disabled=true; msg.textContent='Scheduling…';
+    const r=await AdminAPI.scheduleNotification(title, body, url, sendAt);
+    btn.disabled=false;
+    msg.textContent = r.error ? ('Failed: '+r.error) : `Scheduled for ${fmtIST(sendAt)} IST.`;
+    if(!r.error){ clearCustomNotificationForm(); loadScheduled(); }
+    return;
+  }
+
+  if(!confirm('Send this notification to everyone who has enabled order alerts?'))return;
   btn.disabled=true; msg.textContent='Sending…';
   const r=await AdminAPI.notifyCustomers(title, body, url);
   btn.disabled=false;
   msg.textContent = r.error ? ('Failed: '+r.error) : `Sent to ${r.sent} of ${r.total} subscribed device(s).`;
-  if(!r.error){ document.getElementById('cn-title').value=''; document.getElementById('cn-body').value=''; document.getElementById('cn-url').value=''; }
+  if(!r.error) clearCustomNotificationForm();
+}
+function clearCustomNotificationForm(){
+  document.getElementById('cn-title').value='';
+  document.getElementById('cn-body').value='';
+  document.getElementById('cn-url').value='';
+  document.getElementById('cn-sendat').value='';
+}
+
+async function loadScheduled(){
+  const r = await AdminAPI.db('scheduled_notifications','select',{match:{sent_at:null}, order:'send_at.asc'});
+  const list = document.getElementById('scheduledList');
+  if(r.error){ list.textContent = 'Could not load: '+r.error; return; }
+  const rows = r.data||[];
+  if(!rows.length){ list.textContent = 'Nothing scheduled — notifications you schedule for later will show up here.'; return; }
+  list.innerHTML = rows.map(n=>`
+    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.5rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+      <span style="color:var(--gold);font-weight:700;min-width:130px;">${fmtIST(n.send_at)} IST</span>
+      <span style="flex:1;color:var(--cream);">${esc(n.title)} — <span style="color:rgba(246,237,216,0.5);">${esc(n.body)}</span></span>
+      <button class="btn red" onclick="cancelScheduled('${n.id}')">Cancel</button>
+    </div>`).join('');
+}
+async function cancelScheduled(id){
+  if(!confirm('Cancel this scheduled notification?'))return;
+  await AdminAPI.db('scheduled_notifications','delete',{match:{id}});
+  loadScheduled();
 }
 </script>
 </body>

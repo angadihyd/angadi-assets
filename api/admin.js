@@ -20,6 +20,12 @@
 //       ops:    select | insert | update | upsert | delete
 //    notify-customers {title?, body?, url?} → Web Push broadcast to every
 //       browser that opted into customer alerts (push_subscriptions role=customer)
+//    schedule-notification {title, body, url?, sendAt} → queues a push for
+//       later (scheduled_notifications table). Actually sent by GET
+//       /api/admin?cron=dispatch-notify, meant to be pinged every few minutes
+//       by an external cron (e.g. cron-job.org) with header x-notify-token
+//       matching env NOTIFY_DISPATCH_TOKEN — Vercel's own Hobby-plan cron
+//       only runs once a day, too coarse for a chosen send time.
 //    set-partner-login {id, username, password?} → sets a delivery
 //       partner's login for the /admin/delivery-login.html app. `id` is the
 //       delivery_boys row id; password is optional on an edit (blank keeps
@@ -34,6 +40,7 @@
 //
 //  Required env vars: ADMIN_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //                     VAPID_PUBLIC, VAPID_PRIVATE (for notify-customers)
+//                     NOTIFY_DISPATCH_TOKEN (for the external cron, optional)
 // ═══════════════════════════════════════════════════════════════
 
 const crypto = require('crypto');
@@ -59,7 +66,7 @@ function verifyPasswordHash(password, stored) {
 // with the key baked into push-register.js and used by api/notify.js.
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BPiQcgEVyRxp96djwa3O-eX7XSOvp5lN4PTpP9V1QN2EKBZ9kOINNdK-bppKo4qGOgYrzO3HPaasuBdWjMTVTuQ';
 
-const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts', 'site_visits', 'login_events'];
+const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts', 'site_visits', 'login_events', 'scheduled_notifications'];
 const OPS = ['select', 'insert', 'update', 'upsert', 'delete'];
 const CONFLICT_KEYS = { products: 'slug', site_settings: 'key', coupons: 'code' };
 const PARTNER_STATUSES = ['picked_up', 'out_for_delivery', 'delivered'];
@@ -294,6 +301,57 @@ module.exports = async (req, res) => {
       res.status(200).json({ ok: true, findingsCount: findings.length, checkedAt: new Date().toISOString() });
     } catch (e) {
       console.error('health-check cron failed', e);
+      res.status(500).json({ error: String(e.message || e) });
+    }
+    return;
+  }
+
+  // ── Notification dispatcher — called by an external cron (e.g. cron-job.org)
+  // every few minutes, since Vercel's own Hobby-plan cron only runs once a day
+  // and can't hit a scheduled send-time closely. Sends anything in
+  // scheduled_notifications whose send_at has passed and hasn't gone out yet.
+  if (cronParam === 'dispatch-notify') {
+    const SUPABASE_URL = process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const CRON_SECRET = process.env.CRON_SECRET, NOTIFY_DISPATCH_TOKEN = process.env.NOTIFY_DISPATCH_TOKEN;
+    const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) { res.status(500).json({ error: 'Not configured' }); return; }
+    const authHeader = req.headers.authorization || '';
+    const isVercelCron = CRON_SECRET && timingEq(authHeader, `Bearer ${CRON_SECRET}`);
+    const isExternalCron = NOTIFY_DISPATCH_TOKEN && timingEq(req.headers['x-notify-token'] || '', NOTIFY_DISPATCH_TOKEN);
+    if (!isVercelCron && !isExternalCron) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    if (!VAPID_PRIVATE_KEY) { res.status(500).json({ error: 'VAPID_PRIVATE env not set on Vercel' }); return; }
+
+    const nenv = { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY };
+    try {
+      const now = new Date().toISOString();
+      const dueR = await rest(nenv, `scheduled_notifications?sent_at=is.null&send_at=lte.${encodeURIComponent(now)}&order=send_at.asc&limit=20`);
+      const due = dueR.ok ? await dueR.json() : [];
+      if (!due.length) { res.status(200).json({ ok: true, dispatched: 0 }); return; }
+
+      webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:angadihyd@gmail.com', VAPID_PUBLIC, VAPID_PRIVATE_KEY);
+      const subR = await rest(nenv, 'push_subscriptions?select=*&role=eq.customer');
+      const subs = subR.ok ? await subR.json() : [];
+
+      let dispatched = 0;
+      for (const n of due) {
+        const data = JSON.stringify({ title: n.title, body: n.body, url: n.url || '/shop.html' });
+        let sent = 0;
+        await Promise.all((subs || []).map(s =>
+          webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, data)
+            .then(() => { sent++; })
+            .catch(async err => {
+              if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+                await rest(nenv, `push_subscriptions?endpoint=eq.${encodeURIComponent(s.endpoint)}`, { method: 'DELETE' }).catch(() => {});
+              }
+            })
+        ));
+        await rest(nenv, `scheduled_notifications?id=eq.${encodeURIComponent(n.id)}`,
+          { method: 'PATCH', body: JSON.stringify({ sent_at: new Date().toISOString(), sent_count: sent }) }).catch(() => {});
+        dispatched++;
+      }
+      res.status(200).json({ ok: true, dispatched });
+    } catch (e) {
+      console.error('dispatch-notify failed', e);
       res.status(500).json({ error: String(e.message || e) });
     }
     return;
@@ -565,6 +623,25 @@ module.exports = async (req, res) => {
           })
       ));
       res.status(200).json({ ok: true, sent, total: (subs || []).length });
+      return;
+    }
+
+    if (action === 'schedule-notification') {
+      const title = String(payload.title || '').trim().slice(0, 120);
+      const body = String(payload.body || '').trim().slice(0, 200);
+      const url = String(payload.url || '/shop.html');
+      const sendAt = new Date(payload.sendAt || '');
+      if (!title || !body) { res.status(400).json({ error: 'Title and message are required' }); return; }
+      if (isNaN(sendAt.getTime())) { res.status(400).json({ error: 'Invalid send time' }); return; }
+      if (sendAt.getTime() < Date.now() - 60000) { res.status(400).json({ error: 'Send time must be in the future' }); return; }
+      const r = await rest(env, 'scheduled_notifications', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ title, body, url, send_at: sendAt.toISOString() }),
+      });
+      const rows = r.ok ? await r.json().catch(() => null) : null;
+      if (!r.ok) { res.status(500).json({ error: 'db ' + r.status }); return; }
+      res.status(200).json({ ok: true, data: rows });
       return;
     }
 

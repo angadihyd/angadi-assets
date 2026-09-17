@@ -61,6 +61,9 @@
     partnerSetCredentials: function (id, username, password) {
       return this.call('set-partner-login', { id: id, username: username, password: password });
     },
+    scheduleNotification: function (title, body, url, sendAt) {
+      return this.call('schedule-notification', { title: title, body: body, url: url, sendAt: sendAt });
+    },
 
     // ── delivery partner ──
     ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },
