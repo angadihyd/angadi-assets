@@ -361,6 +361,10 @@ function getRedirect(){
 }
 function saveLocalUser(d){const e=JSON.parse(localStorage.getItem('angadi_user')||'{}');localStorage.setItem('angadi_user',JSON.stringify({...e,...d,loggedIn:true}));}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+// Fire-and-forget: shown in admin/analytics.html. Never blocks the login flow.
+function logLogin(userId,name,email,phone,method){
+  try{fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'login',userId,name,email,phone,method}),keepalive:true}).catch(()=>{});}catch(e){}
+}
 
 document.getElementById('signinForm').addEventListener('submit',async(e)=>{
   e.preventDefault();clearStatus('si-status');
@@ -374,6 +378,8 @@ document.getElementById('signinForm').addEventListener('submit',async(e)=>{
   const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
   setLoading('siBtn',false,'Sign In →');
   if(error){setStatus('si-status','error',error.message);return;}
+  window.gaTrack&&gaTrack('login',{method:'email'});
+  logLogin(data.user?.id,data.user?.user_metadata?.name||'',email,'','email');
   await loadProfile(data.user?.id,email);showSuccessView(data.user?.email?.split('@')[0]||'there');
 });
 
@@ -390,6 +396,7 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   if(error){setStatus('su-status','error',error.message);return;}
   if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){setStatus('su-status','error','This email is already registered. Please sign in instead.');return;}
   if(data.user?.id){saveLocalUser({email,name,phone:phone?'+91'+phone:'',id:data.user.id});try{await sb.from('profiles').upsert({id:data.user.id,name,phone:phone?'+91'+phone:''});}catch(ex){}}
+  window.gaTrack&&gaTrack('sign_up',{method:'email'});
   _lastEmail=email;document.getElementById('verifyEmailDisplay').textContent=email;showView('email-verify');
 });
 
@@ -430,7 +437,7 @@ async function verifyOTP(){
   setLoading('verifyBtn',false,'Verify & Continue →');
   if(error){setStatus('otp-status','error',error.message);return;}
   if(!data.user?.user_metadata?.name){document.getElementById('profilePhoneChip').innerHTML='✓ Verified: <strong>'+phone+'</strong>';showView('profile');}
-  else{await loadProfile(data.user?.id,phone);showSuccessView('there');}
+  else{window.gaTrack&&gaTrack('login',{method:'phone'});logLogin(data.user?.id,data.user?.user_metadata?.name||'','',phone,'phone');await loadProfile(data.user?.id,phone);showSuccessView('there');}
 }
 document.querySelectorAll('.otp-box').forEach((box,i,boxes)=>{
   box.addEventListener('input',()=>{if(box.value&&i<boxes.length-1)boxes[i+1].focus();});
@@ -443,8 +450,8 @@ document.getElementById('profileForm').addEventListener('submit',async(e)=>{
   [{id:'pName',errId:'pNameErr',test:v=>v.length>=2,val:name},{id:'pFlat',errId:'pFlatErr',test:v=>v.length>0,val:flat},{id:'pArea',errId:'pAreaErr',test:v=>v.length>0,val:area},{id:'pPincode',errId:'pPincodeErr',test:v=>/^\d{6}$/.test(v),val:pincode}].forEach(c=>{const el=document.getElementById(c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
   if(!ok)return;
   setLoading('profileBtn',true);
-  if(sb){try{const{data:{user}}=await sb.auth.getUser();if(user?.id){await sb.from('profiles').upsert({id:user.id,name,phone:user.phone||''});await sb.from('addresses').upsert({user_id:user.id,flat,area,pincode,city:'Hyderabad',is_default:true});}}catch(ex){}}
-  saveLocalUser({name,address:{flat,area,pincode,city:'Hyderabad'}});setLoading('profileBtn',false,'Save & Continue →');showSuccessView(name);
+  if(sb){try{const{data:{user}}=await sb.auth.getUser();if(user?.id){await sb.from('profiles').upsert({id:user.id,name,phone:user.phone||''});await sb.from('addresses').upsert({user_id:user.id,flat,area,pincode,city:'Hyderabad',is_default:true});logLogin(user.id,name,'',user.phone||'','phone');}}catch(ex){}}
+  saveLocalUser({name,address:{flat,area,pincode,city:'Hyderabad'}});setLoading('profileBtn',false,'Save & Continue →');window.gaTrack&&gaTrack('sign_up',{method:'phone'});showSuccessView(name);
 });
 function showSuccessView(name){showView('success');const redirect=getRedirect();document.getElementById('redirectMsg').textContent='Taking you to '+(redirect.includes('checkout')?'checkout':redirect.includes('cart')?'your cart':'the shop')+'…';setTimeout(()=>{window.location.href=redirect;},2000);}
 async function loadProfile(userId,email){
@@ -527,6 +534,8 @@ async function signInWithGoogle(){
       const meta=u.user_metadata||{};
       saveLocalUser({ id:u.id, email:u.email||'', name:meta.full_name||meta.name||(u.email||'').split('@')[0], phone:meta.phone||'' });
       try{ await sb.from('profiles').upsert({ id:u.id, name:meta.full_name||meta.name||'', phone:meta.phone||'', email:u.email||'' }); }catch(e){}
+      window.gaTrack&&gaTrack('login',{method:'google'});
+      logLogin(u.id,meta.full_name||meta.name||'',u.email||'',meta.phone||'','google');
       showCustomerLogin();
       showSuccessView((meta.full_name||meta.name||u.email||'there').split(' ')[0]);
     }

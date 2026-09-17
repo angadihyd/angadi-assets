@@ -18,6 +18,8 @@
 //       tables: orders | delivery_boys | products | coupons |
 //               site_settings | reviews
 //       ops:    select | insert | update | upsert | delete
+//    notify-customers {title?, body?, url?} → Web Push broadcast to every
+//       browser that opted into customer alerts (push_subscriptions role=customer)
 //
 //  Partner actions:
 //    partner-login {username, password}
@@ -27,11 +29,17 @@
 //
 //  Required env vars: ADMIN_TOKEN, SUPABASE_URL,
 //                     SUPABASE_SERVICE_ROLE_KEY, PARTNER_CREDS (optional)
+//                     VAPID_PUBLIC, VAPID_PRIVATE (for notify-customers)
 // ═══════════════════════════════════════════════════════════════
 
 const crypto = require('crypto');
+const webpush = require('web-push');
 
-const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts'];
+// Public key is safe to ship; private key is a Vercel secret. Kept in sync
+// with the key baked into push-register.js and used by api/notify.js.
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BPiQcgEVyRxp96djwa3O-eX7XSOvp5lN4PTpP9V1QN2EKBZ9kOINNdK-bppKo4qGOgYrzO3HPaasuBdWjMTVTuQ';
+
+const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts', 'site_visits', 'login_events'];
 const OPS = ['select', 'insert', 'update', 'upsert', 'delete'];
 const CONFLICT_KEYS = { products: 'slug', site_settings: 'key', coupons: 'code' };
 const PARTNER_STATUSES = ['picked_up', 'out_for_delivery', 'delivered'];
@@ -283,6 +291,7 @@ module.exports = async (req, res) => {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     HEALTH_AGENT_TOKEN: process.env.HEALTH_AGENT_TOKEN,
+    VAPID_PRIVATE: process.env.VAPID_PRIVATE,
   };
   if (!env.ADMIN_TOKEN || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
     res.status(500).json({ error: 'Admin API not configured. Set ADMIN_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in Vercel.' });
@@ -512,6 +521,33 @@ module.exports = async (req, res) => {
     if (action === 'db') {
       const out = await dbAction(env, payload);
       res.status(out.status).json(out.body);
+      return;
+    }
+
+    if (action === 'notify-customers') {
+      if (!env.VAPID_PRIVATE) { res.status(500).json({ error: 'VAPID_PRIVATE env not set on Vercel' }); return; }
+      webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:angadihyd@gmail.com', VAPID_PUBLIC, env.VAPID_PRIVATE);
+      const title = String(payload.title || '🛒 Orders are open at Angadi!').slice(0, 120);
+      const body = String(payload.body || 'Order fresh village meat now before the cutoff.').slice(0, 200);
+      const url = String(payload.url || '/shop.html');
+      const r = await fetch(env.SUPABASE_URL + '/rest/v1/push_subscriptions?select=*&role=eq.customer', {
+        headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY }
+      });
+      const subs = r.ok ? await r.json() : [];
+      const data = JSON.stringify({ title, body, url });
+      let sent = 0;
+      await Promise.all((subs || []).map(s =>
+        webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, data)
+          .then(() => { sent++; })
+          .catch(async err => {
+            if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+              await fetch(env.SUPABASE_URL + '/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint), {
+                method: 'DELETE', headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY }
+              });
+            }
+          })
+      ));
+      res.status(200).json({ ok: true, sent, total: (subs || []).length });
       return;
     }
 

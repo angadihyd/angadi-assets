@@ -45,6 +45,20 @@ a.back{color:var(--clay-l);text-decoration:none;font-size:0.85rem;}
   <div class="top"><h1>Order Windows</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
   <div class="sub">Controls which delivery date customers are ordering for right now — enforced on the website's checkout and the WhatsApp bot. Ordering is open as soon as you add a date, all the way up to its cutoff. Add another one any time — for a normal week, or an extra mid-week delivery — and whichever cutoff comes soonest is the one customers see. All times are IST.</div>
   <div id="nowBadge"></div>
+  <div style="margin-bottom:1.2rem;"><button class="btn primary" onclick="notifyCustomers()" id="notifyBtn">📣 Notify customers: orders are open</button> <span id="notifyMsg" style="font-size:0.78rem;color:rgba(246,237,216,0.5);margin-left:0.6rem;"></span></div>
+  <div class="card" style="flex-direction:column;align-items:stretch;gap:0.7rem;margin-bottom:1.4rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;">
+      <strong style="font-size:0.88rem;">✎ Custom notification</strong>
+      <span style="font-size:0.72rem;color:rgba(246,237,216,0.4);">Sent to every device with alerts enabled — e.g. an offer, a delay, a restock</span>
+    </div>
+    <div class="form" style="margin-bottom:0;">
+      <div><label>Title</label><input class="in" id="cn-title" placeholder="🎉 Free delivery today!" maxlength="120"></div>
+      <div><label>Message</label><input class="in" id="cn-body" placeholder="Order before 6 PM and delivery's on us." maxlength="200"></div>
+      <div><label>Link (optional)</label><input class="in" id="cn-url" placeholder="/shop.html"></div>
+      <div><button class="btn primary" onclick="sendCustomNotification()" id="cnBtn">Send notification</button></div>
+    </div>
+    <span id="cnMsg" style="font-size:0.78rem;color:rgba(246,237,216,0.5);"></span>
+  </div>
   <div class="form">
     <div><label>Delivery date</label><input class="in" id="f-date" type="date"></div>
     <div><label>Order cutoff (orders close)</label><input class="in" id="f-closes" type="datetime-local"></div>
@@ -139,6 +153,30 @@ async function del(id){
   if(!confirm('Delete this order window?'))return;
   await AdminAPI.db('order_windows','delete',{match:{id}});
   all=all.filter(x=>x.id!==id); renderNowBadge(); render();
+}
+async function notifyCustomers(){
+  const open=currentWindow();
+  if(!open){ alert('No open delivery date right now — add one before notifying customers.'); return; }
+  if(!confirm('Send a push notification to everyone who has enabled order alerts?'))return;
+  const btn=document.getElementById('notifyBtn'), msg=document.getElementById('notifyMsg');
+  btn.disabled=true; msg.textContent='Sending…';
+  const body=`Delivery ${open.delivery_date} · order before ${fmtIST(open.closes_at)} IST`;
+  const r=await AdminAPI.notifyCustomers('🛒 Orders are open at Angadi!', body, '/shop.html');
+  btn.disabled=false;
+  msg.textContent = r.error ? ('Failed: '+r.error) : `Sent to ${r.sent} of ${r.total} subscribed device(s).`;
+}
+async function sendCustomNotification(){
+  const title=document.getElementById('cn-title').value.trim();
+  const body=document.getElementById('cn-body').value.trim();
+  const url=document.getElementById('cn-url').value.trim()||'/shop.html';
+  if(!title||!body){ alert('Title and message are both required'); return; }
+  if(!confirm('Send this notification to everyone who has enabled order alerts?'))return;
+  const btn=document.getElementById('cnBtn'), msg=document.getElementById('cnMsg');
+  btn.disabled=true; msg.textContent='Sending…';
+  const r=await AdminAPI.notifyCustomers(title, body, url);
+  btn.disabled=false;
+  msg.textContent = r.error ? ('Failed: '+r.error) : `Sent to ${r.sent} of ${r.total} subscribed device(s).`;
+  if(!r.error){ document.getElementById('cn-title').value=''; document.getElementById('cn-body').value=''; document.getElementById('cn-url').value=''; }
 }
 </script>
 </body>

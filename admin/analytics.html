@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angadi Admin">
+<link rel="apple-touch-icon" href="/angadi/icon-180.png">
+<title>Analytics — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:#F6EDD8;min-height:100vh;padding:1.2rem;}
+:root{--clay:#C4622D;--gold:#D4A017;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.4rem;flex-wrap:wrap;}
+.top h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+a.back{color:var(--clay);text-decoration:none;font-size:0.85rem;}
+.sub{font-size:0.8rem;color:rgba(246,237,216,0.4);margin-bottom:1.4rem;}
+#guard{text-align:center;padding:4rem 1rem;}
+.hidden{display:none;}
+.section-title{font-family:'Playfair Display',serif;font-size:1.05rem;margin:1.6rem 0 0.7rem;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.8rem;}
+.stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;}
+.stat .n{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold);letter-spacing:0.02em;}
+.stat .l{font-size:0.72rem;color:rgba(246,237,216,0.5);text-transform:uppercase;letter-spacing:0.06em;}
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th{text-align:left;color:rgba(246,237,216,0.4);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;padding:0.5rem 0.6rem;border-bottom:1px solid var(--border);}
+td{padding:0.55rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+.table-wrap{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;overflow-x:auto;}
+.pill{font-size:0.66rem;font-weight:700;border-radius:100px;padding:0.15rem 0.6rem;background:rgba(196,98,45,0.15);color:var(--clay);text-transform:capitalize;}
+.empty{text-align:center;color:rgba(246,237,216,0.4);padding:2rem;font-size:0.85rem;}
+.note{font-size:0.72rem;color:rgba(246,237,216,0.3);margin-top:0.6rem;}
+.bar-row{display:flex;align-items:center;gap:0.7rem;padding:0.35rem 0;font-size:0.78rem;}
+.bar-date{width:78px;color:rgba(246,237,216,0.5);flex-shrink:0;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:6px;height:10px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--clay),var(--gold));border-radius:6px;}
+.bar-n{width:34px;text-align:right;color:rgba(246,237,216,0.6);flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="guard" class="hidden"><h1 style="font-family:'Playfair Display',serif;">Admin only</h1><p style="color:rgba(246,237,216,0.5);margin-top:0.6rem;">Please <a href="dashboard.html" style="color:var(--clay);">log in</a> first.</p></div>
+<div id="app" style="display:none;">
+  <div class="top"><h1>Analytics</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <div class="sub">Site visits and customer logins, logged directly by the site (in addition to Google Analytics). Based on the most recent 1000 events of each kind.</div>
+
+  <div class="section-title">👀 Visits</div>
+  <div class="stat-grid" id="visitStats"></div>
+  <div class="table-wrap" style="margin-top:0.9rem;padding:0.9rem 1rem;" id="visitBars"></div>
+
+  <div class="section-title">🔑 Logins</div>
+  <div class="stat-grid" id="loginStats"></div>
+  <div class="section-title" style="font-size:0.92rem;margin-top:1.2rem;">Recent logins</div>
+  <div class="table-wrap"><table id="loginTable"><thead><tr><th>When</th><th>Name</th><th>Contact</th><th>Method</th></tr></thead><tbody></tbody></table></div>
+
+  <div class="note" id="loadNote"></div>
+</div>
+<script src="admin-api.js"></script>
+<script>
+if(!AdminAPI.isAdmin()){ document.getElementById('guard').classList.remove('hidden'); }
+else { document.getElementById('app').style.display='block'; load(); }
+
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function dayKey(iso){ return new Date(iso).toLocaleDateString('en-CA'); } // YYYY-MM-DD, local time
+function since(days){ const d=new Date(); d.setDate(d.getDate()-days); return d; }
+function fmtWhen(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function load(){
+  const [visitsR, loginsR] = await Promise.all([
+    AdminAPI.db('site_visits','select',{order:'created_at.desc',limit:1000}),
+    AdminAPI.db('login_events','select',{order:'created_at.desc',limit:1000}),
+  ]);
+  const visits = visitsR.data||[];
+  const logins = loginsR.data||[];
+  let note='';
+  if(visitsR.error) note+='Visits load failed: '+visitsR.error+'. ';
+  if(loginsR.error) note+='Logins load failed: '+loginsR.error+'. ';
+  if(!visitsR.error && !visits.length) note+='No visits logged yet — this starts counting from today’s deploy onward. ';
+  document.getElementById('loadNote').textContent = note;
+
+  renderVisits(visits);
+  renderLogins(logins);
+}
+
+function countSince(rows,days){ const cut=since(days); return rows.filter(r=>new Date(r.created_at)>=cut).length; }
+function uniqueSince(rows,days,key){ const cut=since(days); return new Set(rows.filter(r=>new Date(r.created_at)>=cut).map(r=>r[key]).filter(Boolean)).size; }
+
+function renderVisits(rows){
+  const stats=document.getElementById('visitStats');
+  stats.innerHTML = [
+    {n:countSince(rows,1),l:'Page views today'},
+    {n:countSince(rows,7),l:'Last 7 days'},
+    {n:countSince(rows,30),l:'Last 30 days'},
+    {n:uniqueSince(rows,30,'visitor_id'),l:'Unique visitors (30d)'},
+  ].map(s=>`<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
+
+  // last 14 days, oldest first
+  const byDay={};
+  rows.forEach(r=>{ const k=dayKey(r.created_at); byDay[k]=(byDay[k]||0)+1; });
+  const days=[]; for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toLocaleDateString('en-CA')); }
+  const max=Math.max(1,...days.map(k=>byDay[k]||0));
+  const wrap=document.getElementById('visitBars');
+  if(!rows.length){ wrap.innerHTML='<div class="empty">No visit data yet.</div>'; return; }
+  wrap.innerHTML = days.map(k=>{
+    const n=byDay[k]||0;
+    const label=new Date(k).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    return `<div class="bar-row"><span class="bar-date">${label}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/max*100).toFixed(0)}%"></div></div><span class="bar-n">${n}</span></div>`;
+  }).join('');
+}
+
+function renderLogins(rows){
+  const stats=document.getElementById('loginStats');
+  stats.innerHTML = [
+    {n:countSince(rows,1),l:'Logins today'},
+    {n:countSince(rows,7),l:'Last 7 days'},
+    {n:countSince(rows,30),l:'Last 30 days'},
+    {n:uniqueSince(rows,30,'user_id')||uniqueSince(rows,30,'email'),l:'Unique customers (30d)'},
+  ].map(s=>`<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
+
+  const tbody=document.querySelector('#loginTable tbody');
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">No logins logged yet.</td></tr>'; return; }
+  tbody.innerHTML = rows.slice(0,50).map(r=>`
+    <tr>
+      <td>${fmtWhen(r.created_at)}</td>
+      <td>${esc(r.name)||'—'}</td>
+      <td>${esc(r.email)||esc(r.phone)||'—'}</td>
+      <td><span class="pill">${esc(r.method)||'—'}</span></td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>

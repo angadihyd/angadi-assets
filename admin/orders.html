@@ -157,12 +157,19 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 .empty-state{text-align:center;padding:4rem 2rem;color:rgba(246,237,216,0.25);}
 .empty-state .icon{font-size:3rem;margin-bottom:1rem;opacity:0.3;}
 
+/* ── HAMBURGER (mobile only) ── */
+.menu-toggle{display:none;background:none;border:1px solid var(--border);color:var(--cream);width:36px;height:36px;border-radius:8px;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:1.1rem;}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99;}
+.sidebar-backdrop.show{display:block;}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .admin-sidebar{width:60px;min-width:60px;}
-  .admin-main{margin-left:60px;}
-  .sidebar-logo-text,.sidebar-logo-sub,.sidebar-link span:not(.icon),.sidebar-user,.btn-logout span{display:none;}
-  .sidebar-link{padding:0.9rem;justify-content:center;}
+  .menu-toggle{display:flex;}
+  .admin-sidebar{width:230px;min-width:230px;transform:translateX(-100%);transition:transform 0.25s ease;box-shadow:24px 0 48px rgba(0,0,0,0.5);}
+  .admin-sidebar.open{transform:translateX(0);}
+  .admin-main{margin-left:0;}
+  .sidebar-link{padding:0.75rem 1.2rem;justify-content:flex-start;}
+  .admin-topbar{flex-wrap:wrap;height:auto;min-height:60px;padding:0.7rem 1rem;row-gap:0.5rem;}
   .admin-content{padding:1rem;}
   .order-detail-panel{width:100%;right:-100%;}
   .filter-bar{gap:0.5rem;}
@@ -181,9 +188,10 @@ tr:hover td{background:rgba(255,255,255,0.012);}
 </div>
 
 <div class="admin-layout" id="adminLayout">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeAdminSidebar()"></div>
 
   <!-- SIDEBAR -->
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-text">ANGADI <span>↗</span></div>
       <div class="sidebar-logo-sub">Admin Panel</div>
@@ -197,6 +205,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
       <a class="sidebar-link" href="delivery.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></span> <span>Delivery</span></a>
       <a class="sidebar-link" href="delivery-areas.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span> <span>Delivery Areas</span></a>
       <a class="sidebar-link" href="order-windows.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span> <span>Order Windows</span></a>
+      <a class="sidebar-link" href="analytics.html"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></span> <span>Analytics</span></a>
       <div class="sidebar-divider"></div>
       <a class="sidebar-link" href="../shop.html" target="_blank"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg></span> <span>View Shop</span></a>
       <a class="sidebar-link" href="../index.html" target="_blank"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.6 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3z"/></svg></span> <span>View Site</span></a>
@@ -206,12 +215,18 @@ tr:hover td{background:rgba(255,255,255,0.012);}
       <button class="btn-logout" onclick="adminLogout()"><span>Logout</span></button>
     </div>
   </aside>
+  <script>
+    function toggleAdminSidebar(){document.getElementById('adminSidebar').classList.toggle('open');document.getElementById('sidebarBackdrop').classList.toggle('show');}
+    function closeAdminSidebar(){document.getElementById('adminSidebar').classList.remove('open');document.getElementById('sidebarBackdrop').classList.remove('show');}
+    document.querySelectorAll('.sidebar-link').forEach(function(a){a.addEventListener('click',closeAdminSidebar);});
+  </script>
 
   <!-- MAIN -->
   <div class="admin-main">
     <div class="admin-topbar">
+      <button class="menu-toggle" onclick="toggleAdminSidebar()" aria-label="Menu">☰</button>
       <div class="topbar-title">All <span>Orders</span></div>
-      <div style="display:flex;gap:0.8rem;align-items:center;">
+      <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
         <button class="btn-sm" id="alertsBtn" onclick="enableAlerts()" title="Enable push notifications on this device">Alerts</button>
         <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
         <button class="btn-sm" onclick="archiveOldOrders()">📦 Archive Old Orders</button>

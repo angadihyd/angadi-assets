@@ -55,6 +55,9 @@
     checkRazorpayPayment: function (orderId) {
       return this.call('check-razorpay-payment', { orderId: orderId });
     },
+    notifyCustomers: function (title, body, url) {
+      return this.call('notify-customers', { title: title, body: body, url: url });
+    },
 
     // ── delivery partner ──
     ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },

@@ -31,3 +31,16 @@ window.gaItems = function (items) {
     return { item_name: i.name, price: i.price, quantity: i.qty || 1 };
   });
 };
+
+// ── In-house visit log, shown in admin/analytics.html (in addition to GA4) ──
+// visitorId is a random id kept in localStorage — just enough to tell repeat
+// browsers apart from new ones, never tied to a real identity.
+(function trackVisit() {
+  try {
+    var id = localStorage.getItem('angadi_visitor_id');
+    if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('angadi_visitor_id', id); }
+    var payload = JSON.stringify({ type: 'visit', path: location.pathname, visitorId: id, referrer: document.referrer });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/subscribe', new Blob([payload], { type: 'application/json' }));
+    else fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
+  } catch (e) { /* never break the shop */ }
+})();
