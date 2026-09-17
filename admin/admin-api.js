@@ -59,7 +59,7 @@
       return this.call('notify-customers', { title: title, body: body, url: url });
     },
     partnerSetCredentials: function (id, username, password) {
-      return this.call('partner-set-credentials', { id: id, username: username, password: password });
+      return this.call('set-partner-login', { id: id, username: username, password: password });
     },
 
     // ── delivery partner ──

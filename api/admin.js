@@ -10,7 +10,7 @@
 //    • Partner: header x-partner-token is a stateless signed token
 //      issued by {action:'partner-login', username, password}. Credentials
 //      live in the delivery_boys table itself (username + salted password
-//      hash) — set/changed by the admin via {action:'partner-set-credentials'}.
+//      hash) — set/changed by the admin via {action:'set-partner-login'}.
 //
 //  Admin actions:
 //    login {password}
@@ -20,7 +20,7 @@
 //       ops:    select | insert | update | upsert | delete
 //    notify-customers {title?, body?, url?} → Web Push broadcast to every
 //       browser that opted into customer alerts (push_subscriptions role=customer)
-//    partner-set-credentials {id, username, password?} → sets a delivery
+//    set-partner-login {id, username, password?} → sets a delivery
 //       partner's login for the /admin/delivery-login.html app. `id` is the
 //       delivery_boys row id; password is optional on an edit (blank keeps
 //       the existing one). Also sets `code` = username, the identifier used
@@ -568,7 +568,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (action === 'partner-set-credentials') {
+    if (action === 'set-partner-login') {
       const id = String(payload.id || '');
       const username = String(payload.username || '').trim().toLowerCase();
       const password = String(payload.password || '');
