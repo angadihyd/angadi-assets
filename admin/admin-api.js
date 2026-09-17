@@ -58,6 +58,9 @@
     notifyCustomers: function (title, body, url) {
       return this.call('notify-customers', { title: title, body: body, url: url });
     },
+    partnerSetCredentials: function (id, username, password) {
+      return this.call('partner-set-credentials', { id: id, username: username, password: password });
+    },
 
     // ── delivery partner ──
     ptoken: function () { return localStorage.getItem('angadi_partner_token') || ''; },

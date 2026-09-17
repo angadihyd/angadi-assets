@@ -379,6 +379,12 @@ function fromDb(r){
     assignedTo:r.assigned_to, acceptedBy:r.accepted_by,
     readyAt:r.ready_at, placedAt:r.placed_at };
 }
+function fromDbBoy(r){
+  return { id:r.id, name:r.name, phone:r.phone, vehicle:r.vehicle, area:r.area,
+    status:r.status, emergencyContact:r.emergency_contact, vehicleNumber:r.vehicle_number,
+    deliveredToday:r.delivered_today, totalDelivered:r.total_delivered,
+    code:r.code, username:r.username, activeOrderId:r.active_order_id };
+}
 
 // A Razorpay order is only actually paid once payment_id is recorded, and an
 // order can be switched to pay-on-delivery after a failed payment — so cash due
@@ -438,7 +444,7 @@ async function loadData(){
     AdminAPI.db('delivery_boys', 'select', {}),
   ]);
   if (!ord.error && ord.data) allOrders = ord.data.map(fromDb);
-  if (!boys.error && boys.data && boys.data.length) deliveryBoys = boys.data;
+  if (!boys.error && boys.data) deliveryBoys = boys.data.map(fromDbBoy);
 }
 
 // (local demo orders removed — the guarded API is the only data source)
@@ -633,7 +639,8 @@ function buildDBoyCard(b, idx){
         <div class="dboy-stat"><div class="dboy-stat-val" style="font-size:0.8rem;">${b.vehicle||'Bike'}</div><div class="dboy-stat-label">Vehicle</div></div>
       </div>
 
-      <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-bottom:0.8rem;">${b.area}</div>
+      <div style="font-size:0.72rem;color:rgba(246,237,216,0.3);margin-bottom:0.4rem;">${b.area}</div>
+      <div style="font-size:0.7rem;margin-bottom:0.8rem;color:${b.username?'rgba(76,175,80,0.7)':'rgba(246,237,216,0.3)'};">${b.username?`🔒 App login: <strong style="color:var(--cream);">${b.username}</strong>`:'No app login set up yet'}</div>
 
       ${activeOrder ? `
         <div class="dboy-active-order">
@@ -733,10 +740,14 @@ function cycleStatus(idx){
   showToast(`${deliveryBoys[idx].name} → ${deliveryBoys[idx].status}`);
 }
 
-function deleteBoy(idx){
-  if(!confirm(`Remove ${deliveryBoys[idx].name} from delivery team?`)) return;
+async function deleteBoy(idx){
+  const boy = deliveryBoys[idx];
+  if(!confirm(`Remove ${boy.name} from delivery team?`)) return;
+  if (boy.id) {
+    const r = await AdminAPI.db('delivery_boys', 'delete', { match: { id: boy.id } });
+    if (r.error) { alert('Could not remove: ' + r.error); return; }
+  }
   deliveryBoys.splice(idx, 1);
-  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
   renderStats(); renderDBoys();
   showToast('Delivery boy removed');
 }
@@ -791,31 +802,61 @@ function buildBoyForm(b, idx){
         <label class="form-label">Vehicle Number (optional)</label>
         <input class="form-input" id="bf-vehicle-num" type="text" placeholder="e.g. TS 09 AB 1234" value="${b?.vehicleNumber||''}">
       </div>
+      <div class="form-group" style="margin-top:0.4rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <label class="form-label" style="color:var(--gold);">Delivery Partner App Login</label>
+        <div style="font-size:0.72rem;color:rgba(246,237,216,0.4);margin-bottom:0.6rem;">Give these to them to sign in at /admin/delivery-login.html. Leave both blank if they don't need app access yet.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Login Username</label>
+        <input class="form-input" id="bf-username" type="text" placeholder="e.g. raju" value="${b?.username||''}" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Login Password${b?.username?' (leave blank to keep the current one)':''}</label>
+        <input class="form-input" id="bf-password" type="text" placeholder="${b?.username?'Leave blank to keep unchanged':'Set a password to share with them'}" autocomplete="off">
+      </div>
       <button type="submit" class="btn-primary">${isEdit?'Save Changes':'Add Delivery Boy'}</button>
     </form>
     <button class="btn-ghost-full" onclick="closePanel()">Cancel</button>
   `;
 }
 
-function saveBoy(e, idx){
+async function saveBoy(e, idx){
   e.preventDefault();
-  const boy = {
-    id:               idx === -1 ? 'db' + Date.now() : deliveryBoys[idx].id,
-    name:             document.getElementById('bf-name').value.trim(),
-    phone:            document.getElementById('bf-phone').value.replace(/\D/g,''),
-    vehicle:          document.getElementById('bf-vehicle').value,
-    status:           document.getElementById('bf-status').value,
-    area:             document.getElementById('bf-area').value.trim(),
-    emergencyContact: document.getElementById('bf-emergency').value.trim(),
-    vehicleNumber:    document.getElementById('bf-vehicle-num').value.trim().toUpperCase(),
-    deliveredToday:   idx === -1 ? 0 : (deliveryBoys[idx].deliveredToday||0),
-    totalDelivered:   idx === -1 ? 0 : (deliveryBoys[idx].totalDelivered||0),
+  const name = document.getElementById('bf-name').value.trim();
+  const row = {
+    name,
+    phone:             document.getElementById('bf-phone').value.replace(/\D/g,''),
+    vehicle:           document.getElementById('bf-vehicle').value,
+    status:            document.getElementById('bf-status').value,
+    area:              document.getElementById('bf-area').value.trim(),
+    emergency_contact: document.getElementById('bf-emergency').value.trim(),
+    vehicle_number:    document.getElementById('bf-vehicle-num').value.trim().toUpperCase(),
   };
-  if (idx === -1) deliveryBoys.push(boy);
-  else deliveryBoys[idx] = boy;
-  localStorage.setItem('angadi_dboys', JSON.stringify(deliveryBoys));
+  const username = document.getElementById('bf-username').value.trim().toLowerCase();
+  const password = document.getElementById('bf-password').value;
+
+  let saved, isNew = idx === -1;
+  if (isNew) {
+    const r = await AdminAPI.db('delivery_boys', 'insert', { values: row });
+    if (r.error) { alert('Could not save: ' + r.error); return; }
+    saved = fromDbBoy((r.data || [])[0]);
+    deliveryBoys.push(saved);
+  } else {
+    const id = deliveryBoys[idx].id;
+    const r = await AdminAPI.db('delivery_boys', 'update', { match: { id }, values: row });
+    if (r.error) { alert('Could not save: ' + r.error); return; }
+    saved = fromDbBoy((r.data || [])[0] || { id, ...row });
+    deliveryBoys[idx] = saved;
+  }
+
+  if (username) {
+    const cr = await AdminAPI.partnerSetCredentials(saved.id, username, password);
+    if (cr.error) { alert(`${name} was saved, but the login could not be set: ${cr.error}`); }
+    else { saved.username = username; saved.code = username; }
+  }
+
   closePanel(); renderStats(); renderDBoys();
-  showToast(`✓ ${boy.name} ${idx===-1?'added':'updated'}`);
+  showToast(`✓ ${name} ${isNew?'added':'updated'}`);
 }
 
 // ─────────────────────────────────────────────

@@ -8,9 +8,9 @@
 //    • Admin: header  x-admin-token  must equal env ADMIN_TOKEN.
 //      Obtained via {action:'login', password} (password === token).
 //    • Partner: header x-partner-token is a stateless signed token
-//      issued by {action:'partner-login', username, password}.
-//      Credentials live in env PARTNER_CREDS (JSON):
-//        {"raju":{"password":"…","code":"db1","name":"Raju Kumar"}}
+//      issued by {action:'partner-login', username, password}. Credentials
+//      live in the delivery_boys table itself (username + salted password
+//      hash) — set/changed by the admin via {action:'partner-set-credentials'}.
 //
 //  Admin actions:
 //    login {password}
@@ -20,6 +20,11 @@
 //       ops:    select | insert | update | upsert | delete
 //    notify-customers {title?, body?, url?} → Web Push broadcast to every
 //       browser that opted into customer alerts (push_subscriptions role=customer)
+//    partner-set-credentials {id, username, password?} → sets a delivery
+//       partner's login for the /admin/delivery-login.html app. `id` is the
+//       delivery_boys row id; password is optional on an edit (blank keeps
+//       the existing one). Also sets `code` = username, the identifier used
+//       to route orders (assigned_to) to that partner.
 //
 //  Partner actions:
 //    partner-login {username, password}
@@ -27,13 +32,28 @@
 //    partner-accept {orderId}                   → race-safe claim
 //    partner-advance {orderId, status}          → picked_up | out_for_delivery | delivered
 //
-//  Required env vars: ADMIN_TOKEN, SUPABASE_URL,
-//                     SUPABASE_SERVICE_ROLE_KEY, PARTNER_CREDS (optional)
+//  Required env vars: ADMIN_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //                     VAPID_PUBLIC, VAPID_PRIVATE (for notify-customers)
 // ═══════════════════════════════════════════════════════════════
 
 const crypto = require('crypto');
 const webpush = require('web-push');
+
+// Salted scrypt hash, stored in delivery_boys.password as "salt:hash" (hex).
+// Never store or return the plaintext password once this runs.
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 32).toString('hex');
+  return salt + ':' + hash;
+}
+function verifyPasswordHash(password, stored) {
+  if (!stored || !stored.includes(':')) return false;
+  const [salt, hash] = stored.split(':');
+  try {
+    const check = crypto.scryptSync(password || '', salt, 32);
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), check);
+  } catch { return false; }
+}
 
 // Public key is safe to ship; private key is a Vercel secret. Kept in sync
 // with the key baked into push-register.js and used by api/notify.js.
@@ -71,11 +91,6 @@ function verifyPartnerToken(token, secret) {
   const [, username, sig] = parts;
   if (!timingEq(sig, partnerSig(username, secret))) return null;
   return username;
-}
-
-function getPartners() {
-  try { return JSON.parse(process.env.PARTNER_CREDS || '{}'); }
-  catch { return {}; }
 }
 
 // ── Minimal PostgREST helper (service role) ──
@@ -315,10 +330,11 @@ module.exports = async (req, res) => {
     }
 
     if (action === 'partner-login') {
-      const partners = getPartners();
       const u = String(payload.username || '').trim().toLowerCase();
-      const p = partners[u];
-      if (p && timingEq(payload.password || '', p.password)) {
+      const pr = await rest(env, `delivery_boys?username=eq.${encodeURIComponent(u)}&select=code,name,password`);
+      const prows = pr.ok ? await pr.json() : [];
+      const p = prows[0];
+      if (p && verifyPasswordHash(payload.password || '', p.password)) {
         res.status(200).json({ ok: true, token: makePartnerToken(u, env.ADMIN_TOKEN), code: p.code, name: p.name });
       } else {
         res.status(401).json({ error: 'Invalid username or password' });
@@ -330,8 +346,9 @@ module.exports = async (req, res) => {
     const partnerUser = verifyPartnerToken(req.headers['x-partner-token'], env.ADMIN_TOKEN);
     if (action && action.startsWith('partner-')) {
       if (!partnerUser) { res.status(401).json({ error: 'Partner login required' }); return; }
-      const partners = getPartners();
-      const me = partners[partnerUser] || { code: partnerUser, name: partnerUser };
+      const mr = await rest(env, `delivery_boys?username=eq.${encodeURIComponent(partnerUser)}&select=code,name`);
+      const mrows = mr.ok ? await mr.json() : [];
+      const me = mrows[0] || { code: partnerUser, name: partnerUser };
 
       if (action === 'partner-orders') {
         const r = await rest(env,
@@ -548,6 +565,26 @@ module.exports = async (req, res) => {
           })
       ));
       res.status(200).json({ ok: true, sent, total: (subs || []).length });
+      return;
+    }
+
+    if (action === 'partner-set-credentials') {
+      const id = String(payload.id || '');
+      const username = String(payload.username || '').trim().toLowerCase();
+      const password = String(payload.password || '');
+      if (!id) { res.status(400).json({ error: 'Missing delivery boy id' }); return; }
+      if (!/^[a-z0-9_.-]{3,20}$/.test(username)) { res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, . _ -' }); return; }
+      if (password && password.length < 6) { res.status(400).json({ error: 'Password must be at least 6 characters' }); return; }
+      const dupR = await rest(env, `delivery_boys?username=eq.${encodeURIComponent(username)}&select=id`);
+      const dupRows = dupR.ok ? await dupR.json() : [];
+      if (dupRows[0] && dupRows[0].id !== id) { res.status(400).json({ error: 'That username is already taken' }); return; }
+      const values = { username, code: username };
+      if (password) values.password = hashPassword(password);
+      const r = await rest(env, `delivery_boys?id=eq.${encodeURIComponent(id)}`,
+        { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(values) });
+      const rows = r.ok ? await r.json().catch(() => null) : null;
+      if (!r.ok) { res.status(500).json({ error: 'db ' + r.status }); return; }
+      res.status(200).json({ ok: true, data: rows });
       return;
     }
 
