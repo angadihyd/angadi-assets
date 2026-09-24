@@ -13,18 +13,42 @@ module.exports = async (req, res) => {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
 
+    // ── checkout lead: name + phone saved when the customer taps Continue on the
+    // address step, one row per browser, so admins can follow up if they leave ──
+    if (body.type === 'lead') {
+      try {
+        const phone = String(body.phone || '').replace(/\D/g, '').slice(-10);
+        const visitor = String(body.visitorId || '').slice(0, 64);
+        if (/^[6-9]\d{9}$/.test(phone) && visitor) {
+          const items = (Array.isArray(body.items) ? body.items : []).slice(0, 30)
+            .map(i => ({ name: String(i.name || '').slice(0, 80), qty: Number(i.qty) || 1, price: Number(i.price) || 0 }));
+          await fetch(`${SUPABASE_URL}/rest/v1/checkout_leads?on_conflict=visitor_id`, {
+            method: 'POST',
+            headers: { apikey: DB_KEY, Authorization: 'Bearer ' + DB_KEY, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+            body: JSON.stringify({ visitor_id: visitor, name: String(body.name || '').slice(0, 120), phone, items, total: Number(body.total) || 0, source: String(body.source || '').slice(0, 40) || null, updated_at: new Date().toISOString() })
+          });
+        }
+      } catch (e) { /* never break checkout */ }
+      res.status(200).json({ ok: true });
+      return;
+    }
+
     // ── analytics: never let a logging hiccup surface as an error to the caller ──
     if (body.type === 'visit' || body.type === 'login') {
       try {
         const table = body.type === 'visit' ? 'site_visits' : 'login_events';
         const row = body.type === 'visit'
-          ? { path: String(body.path || '').slice(0, 200), visitor_id: String(body.visitorId || '').slice(0, 64), referrer: String(body.referrer || '').slice(0, 300) }
+          ? { path: String(body.path || '').slice(0, 200), visitor_id: String(body.visitorId || '').slice(0, 64), referrer: String(body.referrer || '').slice(0, 300), source: String(body.source || '').slice(0, 40) || null }
           : { user_id: body.userId || null, name: String(body.name || '').slice(0, 120), email: String(body.email || '').slice(0, 160), phone: String(body.phone || '').slice(0, 20), method: String(body.method || '').slice(0, 20) };
-        await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+        const insert = (r) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
           method: 'POST',
           headers: { apikey: DB_KEY, Authorization: 'Bearer ' + DB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-          body: JSON.stringify(row)
+          body: JSON.stringify(r)
         });
+        const r = await insert(row);
+        // site_visits.source is added by supabase-analytics.sql; until that has
+        // been run, keep logging the visit without it rather than losing it.
+        if (!r.ok && 'source' in row) { delete row.source; await insert(row); }
       } catch (e) { /* analytics must never break the site */ }
       res.status(200).json({ ok: true });
       return;

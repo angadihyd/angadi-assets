@@ -66,7 +66,7 @@ function verifyPasswordHash(password, stored) {
 // with the key baked into push-register.js and used by api/notify.js.
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BPiQcgEVyRxp96djwa3O-eX7XSOvp5lN4PTpP9V1QN2EKBZ9kOINNdK-bppKo4qGOgYrzO3HPaasuBdWjMTVTuQ';
 
-const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts', 'site_visits', 'login_events', 'scheduled_notifications'];
+const TABLES = ['orders', 'delivery_boys', 'products', 'coupons', 'site_settings', 'reviews', 'delivery_areas', 'order_windows', 'api_usage', 'health_alerts', 'site_visits', 'login_events', 'scheduled_notifications', 'checkout_leads'];
 const OPS = ['select', 'insert', 'update', 'upsert', 'delete'];
 const CONFLICT_KEYS = { products: 'slug', site_settings: 'key', coupons: 'code' };
 const PARTNER_STATUSES = ['picked_up', 'out_for_delivery', 'delivered'];

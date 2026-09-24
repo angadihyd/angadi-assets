@@ -27,3 +27,26 @@ create table if not exists login_events (
 create index if not exists login_events_created_at_idx on login_events(created_at desc);
 alter table login_events enable row level security;
 -- ═══════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════
+--  Sep 2026 — traffic sources + checkout leads
+--  source: the ?src= tag from a tracked link (e.g. ?src=insta-bio),
+--  so the admin can see exactly which post / group sent each visitor.
+--  checkout_leads: name + phone the moment they're typed at checkout,
+--  one row per browser, so people who leave before paying can be
+--  WhatsApp'd. Same lockdown: RLS on, zero policies.
+-- ═══════════════════════════════════════════════════
+alter table site_visits add column if not exists source text;
+
+create table if not exists checkout_leads (
+  visitor_id  text primary key,   -- same random browser id as site_visits
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  name        text,
+  phone       text,
+  items       jsonb,              -- [{name, qty, price}] at the time they left
+  total       numeric,
+  source      text
+);
+create index if not exists checkout_leads_updated_at_idx on checkout_leads(updated_at desc);
+alter table checkout_leads enable row level security;

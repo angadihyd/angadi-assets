@@ -49,6 +49,24 @@ td{padding:0.55rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.04);}
   <div class="stat-grid" id="visitStats"></div>
   <div class="table-wrap" style="margin-top:0.9rem;padding:0.9rem 1rem;" id="visitBars"></div>
 
+  <div class="section-title">🛒 Left at checkout</div>
+  <div class="table-wrap"><table id="leadTable"><thead><tr><th>When</th><th>Name</th><th>Phone</th><th>Cart</th><th>Source</th><th></th></tr></thead><tbody></tbody></table></div>
+  <div class="note">People who filled in their name and phone at checkout but haven't placed an order with that number since. Anyone who later orders drops off this list automatically.</div>
+
+  <div class="section-title">🧭 Where visitors come from</div>
+  <div class="table-wrap"><table id="srcTable"><thead><tr><th>Source</th><th>People</th><th>Reached cart</th><th>Reached checkout</th></tr></thead><tbody></tbody></table></div>
+  <div class="note">One row per browser, labelled by how it first arrived. “Direct / WhatsApp” means no referrer was sent — WhatsApp and typed links look the same. Use tracked links below to tell them apart.</div>
+
+  <div class="section-title">🔗 Tracked links</div>
+  <div class="table-wrap" style="padding:0.9rem 1rem;">
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+      <input id="srcName" placeholder="e.g. insta-bio, wa-kondapur-group, flyer" style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;color:#F6EDD8;font:inherit;">
+      <button id="srcMake" style="background:var(--clay);color:#fff;border:0;border-radius:10px;padding:0.6rem 1rem;font:inherit;font-weight:600;cursor:pointer;">Make link</button>
+    </div>
+    <div id="srcOut" style="margin-top:0.8rem;font-family:'Space Mono',monospace;font-size:0.8rem;word-break:break-all;"></div>
+    <div class="note">Use a different link for every place you share Angadi — Instagram bio, each post, each WhatsApp group, flyers (put it in a QR code). Visitors from it show up above under that name.</div>
+  </div>
+
   <div class="section-title">🔑 Logins</div>
   <div class="stat-grid" id="loginStats"></div>
   <div class="section-title" style="font-size:0.92rem;margin-top:1.2rem;">Recent logins</div>
@@ -83,8 +101,88 @@ async function load(){
   document.getElementById('loadNote').textContent = note;
 
   renderVisits(visits);
+  renderSources(visits);
   renderLogins(logins);
+  loadLeads();
 }
+
+async function loadLeads(){
+  const tbody=document.querySelector('#leadTable tbody');
+  const [leadsR, ordersR] = await Promise.all([
+    AdminAPI.db('checkout_leads','select',{order:'updated_at.desc',limit:200}),
+    AdminAPI.db('orders','select',{select:'customer,placed_at,status',order:'placed_at.desc',limit:1000}),
+  ]);
+  if(leadsR.error){ tbody.innerHTML=`<tr><td colspan="6" class="empty">Not set up yet — run the Sep 2026 block of supabase-analytics.sql in Supabase.</td></tr>`; return; }
+  // A lead is recovered once that phone number has a real (non-cancelled) order placed after it.
+  const last10=p=>String(p||'').replace(/\D/g,'').slice(-10);
+  const ordered={};
+  (ordersR.data||[]).forEach(o=>{
+    if(o.status==='cancelled') return;
+    const p=last10(o.customer&&o.customer.phone); const t=new Date(o.placed_at).getTime();
+    if(p && (!ordered[p]||t>ordered[p])) ordered[p]=t;
+  });
+  const leads=(leadsR.data||[]).filter(l=>!(ordered[l.phone] && ordered[l.phone]>=new Date(l.updated_at).getTime()-60000));
+  if(!leads.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Nobody has left at checkout yet.</td></tr>'; return; }
+  tbody.innerHTML=leads.map(l=>{
+    const items=(l.items||[]).map(i=>`${i.name} ×${i.qty}`).join(', ');
+    const first=(l.name||'').trim().split(/\s+/)[0]||'there';
+    const msg=`Hi ${first}, this is Angadi 🙏 We noticed you didn't finish your order${items?` (${items})`:''}. Can we help you complete it? Reply here and we'll book it for you.`;
+    return `<tr>
+      <td style="white-space:nowrap;">${fmtWhen(l.updated_at)}</td>
+      <td>${esc(l.name)||'—'}</td>
+      <td>${esc(l.phone)}</td>
+      <td style="font-size:0.75rem;">${esc(items)||'—'}${l.total?`<div style="color:var(--gold);">₹${Number(l.total).toLocaleString('en-IN')}</div>`:''}</td>
+      <td>${l.source?`<span class="pill">${esc(l.source)}</span>`:'—'}</td>
+      <td><a href="https://wa.me/91${l.phone}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="color:var(--green);text-decoration:none;font-weight:700;white-space:nowrap;">WhatsApp →</a></td>
+    </tr>`;
+  }).join('');
+}
+
+// Label a visit by how it arrived: tracked-link tag first, then the referring site.
+// Returns null for clicks between our own pages, which say nothing about origin.
+function sourceOf(r){
+  if(r.source) return '🔗 '+r.source;
+  let host=''; try{ host=new URL(r.referrer).hostname; }catch(e){}
+  if(!host) return 'Direct / WhatsApp';
+  if(/angadi\.farm$/.test(host)) return null;
+  if(/instagram/.test(host)) return 'Instagram';
+  if(/facebook|fb\.com/.test(host)) return 'Facebook';
+  if(/google/.test(host)) return 'Google';
+  if(/wl\.co|whatsapp/.test(host)) return 'WhatsApp';
+  if(/farm\.angadi\.www\.twa/.test(host)) return 'Angadi app';
+  return host;
+}
+
+function renderSources(rows){
+  const byVisitor={};
+  rows.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).forEach(r=>{
+    const v=byVisitor[r.visitor_id]||(byVisitor[r.visitor_id]={src:null,cart:false,checkout:false});
+    const s=sourceOf(r);
+    // a tracked-link tag outranks whatever the first page view said
+    if(s && (!v.src || (s.startsWith('🔗') && !v.src.startsWith('🔗')))) v.src=s;
+    if(r.path==='/cart.html') v.cart=true;
+    if(r.path==='/checkout.html') v.checkout=true;
+  });
+  const agg={};
+  Object.values(byVisitor).forEach(v=>{
+    const k=v.src||'Direct / WhatsApp';
+    const a=agg[k]||(agg[k]={people:0,cart:0,checkout:0});
+    a.people++; if(v.cart) a.cart++; if(v.checkout) a.checkout++;
+  });
+  const list=Object.entries(agg).sort((a,b)=>b[1].people-a[1].people);
+  const tbody=document.querySelector('#srcTable tbody');
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">No visit data yet.</td></tr>'; return; }
+  tbody.innerHTML=list.map(([k,a])=>`<tr><td>${esc(k)}</td><td>${a.people}</td><td>${a.cart}</td><td>${a.checkout}</td></tr>`).join('');
+}
+
+document.getElementById('srcMake').addEventListener('click',()=>{
+  const tag=document.getElementById('srcName').value.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9_-]/g,'').slice(0,40);
+  const out=document.getElementById('srcOut');
+  if(!tag){ out.textContent='Type a short name first.'; return; }
+  const link='https://www.angadi.farm/?src='+tag;
+  out.innerHTML=`${esc(link)} <button id="srcCopy" style="margin-left:0.5rem;background:transparent;border:1px solid var(--clay);color:var(--clay);border-radius:8px;padding:0.2rem 0.6rem;cursor:pointer;font:inherit;font-size:0.75rem;">Copy</button>`;
+  document.getElementById('srcCopy').onclick=()=>{ navigator.clipboard.writeText(link).then(()=>{ document.getElementById('srcCopy').textContent='Copied ✓'; }); };
+});
 
 function countSince(rows,days){ const cut=since(days); return rows.filter(r=>new Date(r.created_at)>=cut).length; }
 function uniqueSince(rows,days,key){ const cut=since(days); return new Set(rows.filter(r=>new Date(r.created_at)>=cut).map(r=>r[key]).filter(Boolean)).size; }

@@ -286,7 +286,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
 .loc-eta{display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.6rem;font-size:0.78rem;color:var(--gold,#D4A017);background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.2);border-radius:100px;padding:0.3rem 0.8rem;}
 .leaflet-container{background:#0d0502;}
 </style>
-<script src="/analytics.js?v=1"></script>
+<script src="/analytics.js?v=2"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -427,7 +427,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
               <div class="form-group">
                 <label class="form-label">Phone Number *</label>
                 <input class="form-input" id="fphone" type="tel" placeholder="+91 XXXXXXXXXX" maxlength="13" autocomplete="tel">
-                <span class="form-hint">For delivery coordination only</span>
+                <span class="form-hint">For delivery coordination — and we may WhatsApp you if your order isn't completed</span>
                 <span class="form-error" id="fphone-err">Enter a valid 10-digit mobile number</span>
               </div>
             </div>
@@ -917,6 +917,14 @@ function validateAddress(){
 document.getElementById('addressForm').addEventListener('submit', (e) => {
   e.preventDefault();
   if (!validateAddress()) return;
+  // Saved so admins can follow up if the customer leaves before paying
+  // (the hint under the phone field says so). See admin/analytics.html.
+  window.angadiLead && angadiLead({
+    name:  document.getElementById('fname').value,
+    phone: document.getElementById('fphone').value,
+    items: cart,
+    total: total(),
+  });
   // Fill address chip on step 2
   const name    = document.getElementById('fname').value;
   const flat    = document.getElementById('fflat').value;

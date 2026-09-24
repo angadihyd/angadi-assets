@@ -39,8 +39,23 @@ window.gaItems = function (items) {
   try {
     var id = localStorage.getItem('angadi_visitor_id');
     if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('angadi_visitor_id', id); }
-    var payload = JSON.stringify({ type: 'visit', path: location.pathname, visitorId: id, referrer: document.referrer });
+    // ?src= tag from a tracked link (built in admin/analytics.html, e.g.
+    // angadi.farm/?src=insta-bio). Remembered so later pages keep the label.
+    var q = new URLSearchParams(location.search);
+    var tag = (q.get('src') || q.get('utm_source') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+    if (tag) localStorage.setItem('angadi_src', tag);
+    var payload = JSON.stringify({ type: 'visit', path: location.pathname, visitorId: id, referrer: document.referrer, source: localStorage.getItem('angadi_src') || '' });
     if (navigator.sendBeacon) navigator.sendBeacon('/api/subscribe', new Blob([payload], { type: 'application/json' }));
     else fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
   } catch (e) { /* never break the shop */ }
 })();
+
+// Checkout calls this when the customer taps Continue on the address step
+// (the form tells them we may WhatsApp if they don't finish), so admins can
+// follow up with people who leave before paying — see admin/analytics.html.
+window.angadiLead = function (lead) {
+  try {
+    var payload = JSON.stringify(Object.assign({ type: 'lead', visitorId: localStorage.getItem('angadi_visitor_id') || '', source: localStorage.getItem('angadi_src') || '' }, lead));
+    fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
+  } catch (e) { /* never break checkout */ }
+};
