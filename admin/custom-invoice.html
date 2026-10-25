@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Custom Invoice · Angadi Admin</title>
+<script src="admin-api.js"></script>
+<style>
+:root{--bg:#f2ece3;--card:#fff;--ink:#1c1410;--muted:#6b5d52;--line:#e0d5c6;--clay:#a8431f}
+@media (prefers-color-scheme:dark){:root{--bg:#14100d;--card:#211a15;--ink:#f3e9d8;--muted:#a89a8a;--line:#3a2f27}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue',Arial,sans-serif;padding:16px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:22px;margin:6px 0 4px}
+p.sub{color:var(--muted);margin:0 0 16px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:14px}
+.card h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.item{display:grid;grid-template-columns:3fr 1fr 1.2fr auto;gap:8px;margin-bottom:8px;align-items:end}
+.item button,.add{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:10px 12px;cursor:pointer;font:inherit}
+.add{margin-top:4px}
+.go{width:100%;background:var(--clay);border:0;color:#fff;font-weight:700;padding:14px;border-radius:9px;font-size:15px;cursor:pointer}
+.total{text-align:right;font-weight:700;margin-top:8px}
+a.back{color:var(--clay);text-decoration:none;font-size:14px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}.item{grid-template-columns:1fr 1fr}.item>div:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="orders.html">← Orders</a>
+  <h1>Custom Invoice</h1>
+  <p class="sub">For WhatsApp or offline orders that aren't in the system. Nothing is saved — fill in, print, done.</p>
+
+  <div class="card"><h2>Customer</h2>
+    <div class="grid">
+      <div><label>Name</label><input id="cname" autocomplete="off"></div>
+      <div><label>Phone</label><input id="cphone" inputmode="tel" autocomplete="off"></div>
+      <div class="full"><label>Address</label><textarea id="caddr" rows="2"></textarea></div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Items</h2>
+    <div id="items"></div>
+    <button class="add" type="button" onclick="addRow()">+ Add item</button>
+  </div>
+
+  <div class="card"><h2>Bill</h2>
+    <div class="grid">
+      <div><label>Delivery fee (₹)</label><input id="delivery" type="number" min="0" value="0" oninput="calc()"></div>
+      <div><label>Discount (₹)</label><input id="discount" type="number" min="0" value="0" oninput="calc()"></div>
+      <div><label>Date</label><input id="date" type="date"></div>
+      <div><label>Invoice no.</label><input id="invno" placeholder="auto"></div>
+      <div class="full"><label>Payment</label>
+        <select id="pay">
+          <option value="paid_cash">Paid — Cash</option>
+          <option value="paid_upi">Paid — UPI</option>
+          <option value="paid_online">Paid — Online (Razorpay)</option>
+          <option value="due_cod">Payment due — Cash on Delivery</option>
+        </select></div>
+    </div>
+    <div class="total" id="tot">Total ₹0</div>
+  </div>
+
+  <button class="go" onclick="make()">Generate Invoice</button>
+</div>
+
+<script>
+function inr(n){return '₹'+Number(n||0).toLocaleString('en-IN');}
+function addRow(n,q,p){
+  var d=document.createElement('div');d.className='item';
+  d.innerHTML='<div><label>Item</label><input class="in" value="'+(n||'')+'" placeholder="e.g. Village Goat Meat · 1 kg"></div>'+
+    '<div><label>Qty</label><input class="iq" type="number" min="0" step="any" value="'+(q||1)+'" oninput="calc()"></div>'+
+    '<div><label>Rate (₹)</label><input class="ip" type="number" min="0" step="any" value="'+(p||'')+'" oninput="calc()"></div>'+
+    '<button type="button" onclick="this.parentNode.remove();calc()" aria-label="Remove">✕</button>';
+  document.getElementById('items').appendChild(d);
+}
+function rows(){
+  return Array.prototype.map.call(document.querySelectorAll('.item'),function(r){
+    return {name:r.querySelector('.in').value.trim(),qty:parseFloat(r.querySelector('.iq').value)||0,price:parseFloat(r.querySelector('.ip').value)||0};
+  }).filter(function(i){return i.name&&i.qty>0;});
+}
+function calc(){
+  var sub=rows().reduce(function(s,i){return s+i.qty*i.price;},0);
+  var t=Math.max(0,sub-(parseFloat(document.getElementById('discount').value)||0)+(parseFloat(document.getElementById('delivery').value)||0));
+  document.getElementById('tot').textContent='Total '+inr(t);
+}
+function make(){
+  var items=rows();
+  if(!document.getElementById('cname').value.trim()){alert('Enter the customer name');return;}
+  if(!items.length){alert('Add at least one item with a quantity');return;}
+  var sub=items.reduce(function(s,i){return s+i.qty*i.price;},0);
+  var disc=Math.min(parseFloat(document.getElementById('discount').value)||0,sub);
+  var del=parseFloat(document.getElementById('delivery').value)||0;
+  var date=document.getElementById('date').value;
+  var inv=document.getElementById('invno').value.trim()||('CUS-'+Date.now().toString(36).toUpperCase().slice(-6));
+  var data={order_id:inv,placed_at:date?new Date(date+'T12:00:00+05:30').toISOString():new Date().toISOString(),
+    customer:{name:document.getElementById('cname').value.trim(),phone:document.getElementById('cphone').value.trim(),addressText:document.getElementById('caddr').value.trim()},
+    items:items,subtotal:sub,discount:disc,delivery:del,total:sub-disc+del,pay:document.getElementById('pay').value};
+  var b=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  window.open('../invoice.html?custom='+encodeURIComponent(b),'_blank');
+}
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+addRow();
+if(!(window.AdminAPI&&AdminAPI.isAdmin()))location.href='dashboard.html';
+</script>
+</body>
+</html>

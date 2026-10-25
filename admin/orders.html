@@ -228,6 +228,7 @@ tr:hover td{background:rgba(255,255,255,0.012);}
       <div class="topbar-title">All <span>Orders</span></div>
       <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
         <button class="btn-sm" id="alertsBtn" onclick="enableAlerts()" title="Enable push notifications on this device">Alerts</button>
+        <a class="btn-sm" href="custom-invoice.html" style="text-decoration:none;">🧾 Custom Invoice</a>
         <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
         <button class="btn-sm" onclick="archiveOldOrders()">📦 Archive Old Orders</button>
         <button class="btn-sm primary" onclick="refreshOrders()">↻ Refresh</button>
@@ -553,6 +554,7 @@ function openDetail(orderId){
       <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${actionButtons(o, true)}${(o.payment==='razorpay' && !o.paymentId && o.razorpayOrderId) ? `<button class="act-btn" onclick="event.stopPropagation();verifyRazorpayPayment('${o.orderId}')">🔍 Verify with Razorpay</button>` : ''}</div>
       ${s==='ready' ? `<div style="margin-top:0.7rem;font-size:0.76rem;color:var(--clay-l);">Broadcasting to available delivery partners… <a href="delivery.html" style="color:var(--gold);">Open delivery board →</a></div>` : ''}
       ${o.acceptedBy ? `<div style="margin-top:0.7rem;font-size:0.78rem;color:rgba(246,237,216,0.6);">Partner: <strong style="color:var(--cream);">${o.acceptedBy}</strong></div>` : ''}
+      <a class="act-btn" style="display:inline-block;margin-top:0.7rem;text-decoration:none;" href="../invoice.html?admin=1&id=${encodeURIComponent(o.orderId)}" target="_blank">🧾 Invoice (Print / PDF)</a>
       <select class="status-select" style="width:100%;padding:0.55rem 1rem;margin-top:0.7rem;" onchange="if(this.value){setOrderStatus('${o.orderId}',this.value);this.value='';}">
         <option value="">Manual override…</option>
         ${[...STATUS_FLOW,'cancelled'].map(st=>`<option value="${st}">${statusLabel(st)}</option>`).join('')}

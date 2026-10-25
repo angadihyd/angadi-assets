@@ -375,6 +375,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:3rem 4
     <!-- CTAs -->
     <div class="confirm-ctas">
       <a href="my-orders.html" class="btn-ghost">Track Your Order</a>
+      <a href="#" class="btn-ghost" id="invoiceBtn" target="_blank">Download Invoice</a>
       <a href="#" class="btn-whatsapp" id="waConfirmBtn" target="_blank">View on WhatsApp</a>
       <a href="shop.html" class="btn-primary">Shop Again →</a>
     </div>
@@ -606,6 +607,7 @@ function render(){
 
   // ── Order ID chip
   document.getElementById('orderIdDisplay').textContent  = order.orderId;
+  document.getElementById('invoiceBtn').href = 'invoice.html?id=' + encodeURIComponent(order.orderId);
   document.getElementById('orderStatusDisplay').innerHTML = isCOD
     ? '<span style="color:var(--gold);">COD Confirmed</span>'
     : '<span style="color:var(--green);">Payment Received</span>';
