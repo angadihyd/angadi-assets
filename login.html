@@ -184,7 +184,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 
   <div class="login-panel">
     <div class="login-box">
-      <button class="back-link" onclick="showRolePage()">← Choose Role</button>
+      <a class="back-link" href="index.html" style="text-decoration:none;display:inline-block;">← Back to Home</a>
 
       <div class="auth-mode-tabs">
         <div class="auth-mode-tab active" id="tabSignin" onclick="switchAuthMode('signin')">Sign In</div>
@@ -249,7 +249,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
           <div class="form-group" style="display:none"><label class="form-label">Confirm Password</label><div class="pw-wrap"><input class="form-input" id="suPass2" type="password" placeholder="Repeat password"><button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPass2Err">Passwords do not match</span></div>
           <button type="submit" class="btn-primary" id="suBtn">Create Account →</button>
         </form>
-        <p class="terms-note">By signing up you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a></p>
+        <p class="terms-note">By signing up you agree to our <a href="terms.html">Terms</a> & <a href="privacy.html">Privacy Policy</a></p>
       </div>
 
       <!-- FORGOT -->
@@ -335,6 +335,8 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <h1 class="view-title">You're <span>In!</span></h1>
         <p class="view-sub"><span id="redirectMsg">Taking you to the shop…</span></p>
       </div>
+
+      <p class="terms-note" id="teamLinks" style="margin-top:1.4rem;padding-top:.9rem;border-top:1px solid var(--border);">Angadi team: <a href="admin/dashboard.html">Admin login</a> &nbsp;·&nbsp; <a href="admin/delivery-login.html">Delivery login</a></p>
 
     </div>
   </div>
@@ -584,7 +586,9 @@ async function signInWithMicrosoft(){
 // Check URL params
 const _p=new URLSearchParams(window.location.search);
 // Arriving from cart/checkout means they are a customer — skip the Admin/Delivery role picker.
-if(_p.get('role')==='customer'||_p.get('redirect'))showCustomerLogin();
+// Customers land straight on the sign-in form. The Admin / Delivery picker is only
+// reachable on purpose, via login.html?role=staff or the Admin / Delivery links at the bottom of the form.
+if(_p.get('role')!=='staff')showCustomerLogin();
 
 // Supabase sends the recovery link back with type=recovery in the URL hash and
 // (with detectSessionInUrl on) establishes a temporary session. Without this the
