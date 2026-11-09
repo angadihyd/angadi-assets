@@ -120,6 +120,7 @@ nav{
 
 /* ── FORM ── */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-row.keep2{grid-template-columns:1fr 1fr;}
 .form-row.full{grid-template-columns:1fr;}
 .form-group{display:flex;flex-direction:column;gap:0.4rem;}
 .form-label{font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(246,237,216,0.4);}
@@ -258,6 +259,8 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
   .breadcrumb-bar,.checkout-header{padding:1rem 1.5rem;}
   .checkout-body{padding:1.5rem 1.5rem 3rem;}
   .form-row{grid-template-columns:1fr;}
+  .form-row.keep2{grid-template-columns:3fr 2fr;gap:0.6rem;}
+  .loc-map{height:190px !important;}
   .slot-grid{grid-template-columns:1fr 1fr;}
   footer{padding:1.5rem;}
   .order-steps{overflow-x:auto;padding-bottom:0.5rem;}
@@ -401,6 +404,20 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
           </div>
 
           <form id="addressForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input class="form-input" id="fname" type="text" placeholder="Your full name" autocomplete="name">
+                <span class="form-error" id="fname-err">Please enter your name</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number *</label>
+                <input class="form-input" id="fphone" type="tel" placeholder="+91 XXXXXXXXXX" maxlength="13" autocomplete="tel">
+                <span class="form-hint">For delivery coordination — and we may WhatsApp you if your order isn't completed</span>
+                <span class="form-error" id="fphone-err">Enter a valid 10-digit mobile number</span>
+              </div>
+            </div>
+
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
             <div class="loc-card" id="locCard">
               <div class="loc-head">
@@ -418,20 +435,6 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
               <div class="loc-status" id="locStatus">Helps our partner find you faster. Skip it if you like — just fill in the address below.</div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Full Name *</label>
-                <input class="form-input" id="fname" type="text" placeholder="Your full name" autocomplete="name">
-                <span class="form-error" id="fname-err">Please enter your name</span>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Phone Number *</label>
-                <input class="form-input" id="fphone" type="tel" placeholder="+91 XXXXXXXXXX" maxlength="13" autocomplete="tel">
-                <span class="form-hint">For delivery coordination — and we may WhatsApp you if your order isn't completed</span>
-                <span class="form-error" id="fphone-err">Enter a valid 10-digit mobile number</span>
-              </div>
-            </div>
-
             <div class="form-row full">
               <div class="form-group">
                 <label class="form-label">Flat / House No. & Building *</label>
@@ -440,33 +443,28 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row keep2">
               <div class="form-group">
                 <label class="form-label">Area / Locality *</label>
                 <input class="form-input" id="farea" type="text" placeholder="e.g. Banjara Hills, Madhapur" autocomplete="address-line2">
                 <span class="form-error" id="farea-err">Please enter your area / locality</span>
               </div>
               <div class="form-group">
-                <label class="form-label">Pincode *</label>
+                <label class="form-label">Pincode <span style="opacity:0.55;font-weight:400;">(optional)</span></label>
                 <input class="form-input" id="fpincode" type="tel" inputmode="numeric" maxlength="6" placeholder="500001" autocomplete="postal-code">
-                <span class="form-error" id="fpincode-err">Enter your 6-digit pincode</span>
+                <span class="form-error" id="fpincode-err">Pincode should be 6 digits (or leave it blank)</span>
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row full">
               <div class="form-group">
                 <label class="form-label">Landmark (optional)</label>
                 <input class="form-input" id="flandmark" type="text" placeholder="e.g. Near Apollo Hospital">
               </div>
-              <div class="form-group">
-                <label class="form-label">Address Type</label>
-                <select class="form-select" id="ftype">
-                  <option value="Home">Home</option>
-                  <option value="Work">Work</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
             </div>
+            <select id="ftype" style="display:none" aria-hidden="true" tabindex="-1">
+              <option value="Home" selected>Home</option><option value="Work">Work</option><option value="Other">Other</option>
+            </select>
             <input type="hidden" id="fcity" value="Hyderabad">
 
             <!-- DELIVERY DATE (only shown when more than one date is open) -->
@@ -888,7 +886,7 @@ function validateAddress(){
     { id:'fphone', errId:'fphone-err', test: v => /^[6-9]\d{9}$/.test(v.replace(/\D/g,'').slice(-10)) },
     { id:'fflat',    errId:'fflat-err',    test: v => v.trim().length >= 3 },
     { id:'farea',    errId:'farea-err',    test: v => v.trim().length >= 3 },
-    { id:'fpincode', errId:'fpincode-err', test: v => /^\d{6}$/.test(v.trim()) },
+    { id:'fpincode', errId:'fpincode-err', test: v => v.trim()==='' || /^\d{6}$/.test(v.trim()) },
   ].forEach(f => {
     const el = document.getElementById(f.id);
     const err = document.getElementById(f.errId);
@@ -910,6 +908,10 @@ function validateAddress(){
   } else if (!window.deliveryGeo || !window.deliveryGeo.lat){
     window.deliveryGeo = Object.assign({}, window.deliveryGeo, { lat:null, lng:null, serviceable:true, unpinned:true });
     if (ok) setLocStatus('No exact pin set — we’ll call you to confirm the spot.', 'ok');
+  }
+  if (!ok) {
+    const bad = document.querySelector('#addressForm .form-input.error');
+    if (bad) { bad.scrollIntoView({behavior:'smooth', block:'center'}); try { bad.focus({preventScroll:true}); } catch(e){} }
   }
   return ok;
 }
@@ -948,9 +950,42 @@ function selectPayment(el){
   renderSummary();
 }
 
+
+// ── In-page dialogs (replace browser alert()/confirm(), which look broken inside
+//    a payment flow and gave customers a confusing "OK = ... Cancel = ..." prompt).
+function angadiDialog(title, body, buttons){
+  const old = document.getElementById('angDlg'); if (old) old.remove();
+  const w = document.createElement('div'); w.id = 'angDlg';
+  w.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;';
+  const c = document.createElement('div');
+  c.style.cssText = 'width:100%;max-width:440px;background:#1b1209;border:1px solid rgba(212,160,23,.3);border-radius:18px 18px 0 0;padding:1.4rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom,0px));color:#F6EDD8;';
+  const h = document.createElement('div'); h.textContent = title;
+  h.style.cssText = 'font-weight:700;font-size:1.1rem;margin-bottom:.6rem;';
+  const p = document.createElement('div'); p.textContent = body;
+  p.style.cssText = 'font-size:.92rem;line-height:1.55;color:rgba(246,237,216,.78);white-space:pre-line;margin-bottom:1.1rem;';
+  c.append(h, p);
+  (buttons || [{ label:'OK', primary:true }]).forEach(b => {
+    const el = document.createElement('button'); el.type = 'button'; el.textContent = b.label;
+    el.style.cssText = 'display:block;width:100%;padding:.85rem;margin-top:.55rem;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;' +
+      (b.primary ? 'background:linear-gradient(135deg,#C4622D,#9a4a20);color:#F6EDD8;border:none;'
+                 : 'background:transparent;color:#F6EDD8;border:1px solid rgba(246,237,216,.25);');
+    el.onclick = () => { w.remove(); if (b.fn) b.fn(); };
+    c.appendChild(el);
+  });
+  w.appendChild(c); document.body.appendChild(w);
+}
+// Any failure in the order/payment path: say what happened and give a human a way out.
+function orderProblem(msg){
+  const wa = 'https://wa.me/919949950743?text=' + encodeURIComponent('Hi Angadi! I had a problem placing my order: ' + msg);
+  angadiDialog('Couldn’t complete your order', msg, [
+    { label:'OK, try again', primary:true },
+    { label:'Order on WhatsApp instead', fn: () => window.open(wa, '_blank') },
+  ]);
+}
+
 async function placeOrder(){
   if (!orderWindowOpen) {
-    alert("Ordering is currently closed. We'll be back for the next delivery window.");
+    orderProblem("Ordering is currently closed. We'll be back for the next delivery window.");
     return;
   }
   const btn = document.getElementById('btnPay');
@@ -1019,9 +1054,15 @@ async function placeOrder(){
     loggedIn: user.loggedIn === true,
   }));
 
-  selectedMethod === 'cod' ? await placeCOD(order) : await placeRazorpay(order);
-  btn.disabled = false;
-  renderSummary();
+  try {
+    selectedMethod === 'cod' ? await placeCOD(order) : await placeRazorpay(order);
+  } catch (e) {
+    // e.g. the Razorpay script was blocked/failed to load — never leave the button stuck on "Processing…"
+    btn.disabled = false; renderSummary();
+    orderProblem('Online payment could not start (' + (e && e.message ? e.message : 'network issue') + '). You can retry, or choose Cash on Delivery.');
+  }
+  // Buttons are re-enabled by each path itself (failure / dismiss). Re-enabling here
+  // unlocked the Pay button while the Razorpay window was still open → double orders.
 }
 
 // ── CASH ON DELIVERY (server-authorised, same price validation as online) ──
@@ -1045,13 +1086,13 @@ async function placeCOD(order){
     });
     data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Could not place your order. Please try again or order on WhatsApp.');
+      orderProblem(data.error || 'Could not place your order. Please try again or order on WhatsApp.');
       document.getElementById('btnPay').disabled = false;
       renderSummary();
       return;
     }
   } catch (e) {
-    alert('Network error. Please check your connection and try again.');
+    orderProblem('Network error. Please check your connection and try again.');
     document.getElementById('btnPay').disabled = false;
     renderSummary();
     return;
@@ -1074,34 +1115,44 @@ async function placeCOD(order){
 // the order (locking the price), then verify-payment / the webhook confirm it.
 async function placeRazorpay(order){
   const fail = (msg) => {
-    alert(msg);
     document.getElementById('btnPay').disabled = false;
     renderSummary();
+    orderProblem(msg);
   };
 
   const savedUser = JSON.parse(localStorage.getItem('angadi_user') || '{}');
   const promoCode = localStorage.getItem('angadi_promo_code') || null;
 
-  // 1. Ask our server to create the order with validated prices
+  // 1. Ask our server to create the order with validated prices.
+  //    If they already got this far with identical details (payment window closed,
+  //    card declined…), reuse that order — otherwise every retry left another
+  //    pending duplicate for the admin to untangle.
+  const payload = {
+    items:     order.items,
+    slot:      order.customer.slot,
+    deliveryDate: selectedDeliveryDate,
+    promoCode: promoCode,
+    customer:  order.customer,
+    userId:    savedUser.id || null,
+  };
+  const sig = JSON.stringify(payload);
   let data;
-  try {
-    const res = await fetch('/api/create-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items:     order.items,
-        slot:      order.customer.slot,
-        deliveryDate: selectedDeliveryDate,
-        promoCode: promoCode,
-        customer:  order.customer,
-        userId:    savedUser.id || null,
-      }),
-    });
-    data = await res.json();
-    if (!res.ok) { fail(data.error || 'Could not start payment. Please try again.'); return; }
-  } catch (e) {
-    fail('Network error. Please check your connection and try again.');
-    return;
+  if (window._rzpPending && window._rzpPending.sig === sig) {
+    data = window._rzpPending.data;
+  } else {
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      data = await res.json();
+      if (!res.ok) { fail(data.error || 'Could not start payment. Please try again.'); return; }
+      window._rzpPending = { sig, data };
+    } catch (e) {
+      fail('Network error. Please check your connection and try again.');
+      return;
+    }
   }
 
   // 2. Open Razorpay with the server-created order
@@ -1182,16 +1233,18 @@ async function offerCodFallback(order, orderId, reason) {
   if (!orderId || !order) return;
   const phone = order.customer && order.customer.phone;
   if (Number(order.total || 0) > COD_LIMIT_CHECKOUT) {
-    alert(reason + '\n\nYou can try the payment again.');
+    angadiDialog('Payment not completed', reason + '\n\nYour order is saved \u2014 you can try the payment again.', [
+      { label:'Try payment again', primary:true, fn: () => placeOrder() },
+      { label:'Close' },
+    ]);
     return;
   }
-  const ok = confirm(
-    reason +
-    '\n\nYour order is saved. Confirm it now and pay later on delivery?' +
-    '\n\nIf you still want to pay online, you can — just tap Cancel and try again.' +
-    '\n\nOK = Confirm order, pay on delivery   ·   Cancel = try paying again'
-  );
-  if (!ok) return;
+  angadiDialog('Payment not completed', reason + '\n\nYour order is saved. How would you like to pay?', [
+    { label:'Pay cash on delivery', primary:true, fn: () => convertOrderToCod(order, orderId, phone) },
+    { label:'Try online payment again', fn: () => placeOrder() },
+  ]);
+}
+async function convertOrderToCod(order, orderId, phone) {
   try {
     const r = await fetch('/api/convert-to-cod', {
       method: 'POST',
@@ -1199,7 +1252,7 @@ async function offerCodFallback(order, orderId, reason) {
       body: JSON.stringify({ orderId, phone }),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) { alert(j.error || 'Could not switch to Cash on Delivery. Please message us on WhatsApp.'); return; }
+    if (!r.ok) { orderProblem(j.error || 'Could not switch to Cash on Delivery.'); return; }
     localStorage.setItem('angadi_last_order', JSON.stringify({
       ...order, orderId, payment: 'cod', status: 'confirmed_cod',
     }));
@@ -1208,7 +1261,7 @@ async function offerCodFallback(order, orderId, reason) {
     localStorage.removeItem('angadi_promo_discount');
     window.location.href = 'order-confirm.html?method=cod&order=' + encodeURIComponent(orderId);
   } catch (e) {
-    alert('Network error. Please check your connection and try again.');
+    orderProblem('Network error. Please check your connection and try again.');
   }
 }
 
@@ -1300,10 +1353,7 @@ function autoFillFromProfile() {
     if (a.area)     document.getElementById('farea').value     = a.area;
     if (a.landmark) document.getElementById('flandmark').value = a.landmark;
     if (a.pincode)  document.getElementById('fpincode').value  = a.pincode;
-    if (a.city) {
-      const sel = document.getElementById('fcity');
-      for (let o of sel.options) if (o.value === a.city) { sel.value = a.city; break; }
-    }
+    if (a.city) document.getElementById('fcity').value = a.city;
     if (a.type) {
       const sel = document.getElementById('ftype');
       for (let o of sel.options) if (o.value === a.type) { sel.value = a.type; break; }

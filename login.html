@@ -51,6 +51,9 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 .brand-panel{position:relative;overflow:hidden;display:flex;flex-direction:column;padding:3rem;}
 .brand-bg{position:absolute;inset:0;background:url('ux ui design/hero-shepherd-sunset.webp') center/cover no-repeat;}
 .brand-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,5,3,0.9) 0%,rgba(8,5,3,0.6) 60%,rgba(8,5,3,0.85) 100%);}
+/* Must come AFTER the .brand-panel rule above: it used to sit before it, so on phones the big hero
+   stayed visible and pushed the sign-in form half a screen down. */
+@media(max-width:768px){.brand-panel{display:none;}.login-panel{padding:1.5rem 1.2rem;align-items:flex-start;min-height:100vh;}}
 .brand-content{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;}
 .brand-logo{display:flex;align-items:center;text-decoration:none;margin-bottom:auto;}
 .brand-copy{margin-top:auto;padding-bottom:2rem;}
@@ -191,9 +194,13 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
       <!-- One-tap sign-in. Shown only when the provider is actually enabled on
            the backend, so it can never appear as a button that does nothing. -->
       <div id="socialAuth" style="display:none;">
-        <button type="button" id="googleBtn" onclick="signInWithGoogle()" style="width:100%;background:#fff;color:#1f1f1f;border:none;padding:0.85rem;border-radius:12px;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:0.6rem;">
+        <button type="button" id="googleBtn" onclick="signInWithGoogle()" style="display:none;width:100%;background:#fff;color:#1f1f1f;border:none;padding:0.85rem;border-radius:12px;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;align-items:center;align-items:center;justify-content:center;gap:0.6rem;">
           <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
           Continue with Google
+        </button>
+        <button type="button" id="msBtn" onclick="signInWithMicrosoft()" style="display:none;width:100%;background:#fff;color:#1f1f1f;border:none;padding:0.85rem;border-radius:12px;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;align-items:center;justify-content:center;gap:0.6rem;margin-top:0.6rem;">
+          <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
+          Continue with Microsoft
         </button>
         <div style="display:flex;align-items:center;gap:0.8rem;margin:1.2rem 0;">
           <div style="flex:1;height:1px;background:var(--border);"></div>
@@ -204,7 +211,7 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
 
       <div class="method-tabs" id="methodTabs">
         <div class="method-tab active" data-method="email" onclick="switchMethod('email')">Email</div>
-        <div class="method-tab" data-method="phone" id="methodTabPhone" onclick="switchMethod('phone')">Phone OTP</div>
+        <div class="method-tab" data-method="phone" id="methodTabPhone" onclick="switchMethod('phone')">Phone number</div>
       </div>
 
       <!-- SIGN IN -->
@@ -237,9 +244,9 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <form id="signupForm" novalidate>
           <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="suName" type="text" placeholder="Your full name"><span class="field-error" id="suNameErr">Please enter your name</span></div>
           <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="suEmail" type="email" placeholder="you@email.com"><span class="field-error" id="suEmailErr">Enter a valid email</span></div>
-          <div class="form-group"><label class="form-label">Phone (optional)</label><div class="phone-wrap" id="suPhoneWrap"><span class="phone-prefix">+91</span><input class="phone-input" id="suPhone" type="tel" placeholder="9876543210"></div><span class="field-error" id="suPhoneErr">Enter valid 10-digit number</span></div>
+          <div class="form-group"><label class="form-label">Phone Number</label><div class="phone-wrap" id="suPhoneWrap"><span class="phone-prefix">+91</span><input class="phone-input" id="suPhone" type="tel" placeholder="9876543210"></div><span class="field-error" id="suPhoneErr">Enter valid 10-digit number</span></div>
           <div class="form-group"><label class="form-label">Password</label><div class="pw-wrap"><input class="form-input" id="suPass" type="password" placeholder="Min 8 characters"><button type="button" class="pw-toggle" onclick="togglePw('suPass',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPassErr">Min 8 characters</span></div>
-          <div class="form-group"><label class="form-label">Confirm Password</label><div class="pw-wrap"><input class="form-input" id="suPass2" type="password" placeholder="Repeat password"><button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPass2Err">Passwords do not match</span></div>
+          <div class="form-group" style="display:none"><label class="form-label">Confirm Password</label><div class="pw-wrap"><input class="form-input" id="suPass2" type="password" placeholder="Repeat password"><button type="button" class="pw-toggle" onclick="togglePw('suPass2',this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div><span class="field-error" id="suPass2Err">Passwords do not match</span></div>
           <button type="submit" class="btn-primary" id="suBtn">Create Account →</button>
         </form>
         <p class="terms-note">By signing up you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a></p>
@@ -276,7 +283,11 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
         <div class="success-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 7l9.5 6.5L21.5 7"/></svg></div>
         <div class="view-eyebrow">Check Your Email</div>
         <h1 class="view-title">Verify <span>Email</span></h1>
-        <p class="view-sub">We sent a link to <strong id="verifyEmailDisplay"></strong>. Click it to activate.</p>
+        <p class="view-sub">We sent a link to <strong id="verifyEmailDisplay"></strong>. Tap it and you'll come straight back here to finish your order.</p>
+        <p class="view-sub" style="margin-top:.4rem;">Can't see it? Check <strong>Spam / Promotions</strong>.</p>
+        <div class="auth-status" id="ve-status"></div>
+        <a class="btn-primary" id="openMailBtn" href="mailto:" style="display:block;text-align:center;text-decoration:none;margin-top:1rem;">Open my email →</a>
+        <button class="btn-ghost" id="resendMailBtn" onclick="resendConfirmEmail()">Resend email</button>
         <button class="btn-ghost" onclick="showView('email-signin')">← Back to Sign In</button>
       </div>
 
@@ -306,13 +317,13 @@ body{font-family:'DM Sans',sans-serif;background:radial-gradient(ellipse 120% 60
       <!-- PROFILE -->
       <div class="auth-view" id="view-profile">
         <div class="view-eyebrow">Almost Done!</div>
-        <h1 class="view-title">Your <span>Details</span></h1>
+        <h1 class="view-title">Your <span>Name</span></h1>
         <div class="auth-status success visible" id="profilePhoneChip"></div>
         <form id="profileForm" novalidate>
           <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="pName" type="text" placeholder="Your full name"><span class="field-error" id="pNameErr">Required</span></div>
-          <div class="form-group"><label class="form-label">Flat / House No.</label><input class="form-input" id="pFlat" type="text" placeholder="Flat 4B, Sunrise Apts"><span class="field-error" id="pFlatErr">Required</span></div>
-          <div class="form-group"><label class="form-label">Area / Locality</label><input class="form-input" id="pArea" type="text" placeholder="Banjara Hills"><span class="field-error" id="pAreaErr">Required</span></div>
-          <div class="form-group"><label class="form-label">Pincode</label><input class="form-input" id="pPincode" type="tel" placeholder="500034" maxlength="6"><span class="field-error" id="pPincodeErr">6-digit pincode</span></div>
+          <div class="form-group" style="display:none"><label class="form-label">Flat / House No.</label><input class="form-input" id="pFlat" type="text" placeholder="Flat 4B, Sunrise Apts"><span class="field-error" id="pFlatErr">Required</span></div>
+          <div class="form-group" style="display:none"><label class="form-label">Area / Locality</label><input class="form-input" id="pArea" type="text" placeholder="Banjara Hills"><span class="field-error" id="pAreaErr">Required</span></div>
+          <div class="form-group" style="display:none"><label class="form-label">Pincode</label><input class="form-input" id="pPincode" type="tel" placeholder="500034" maxlength="6"><span class="field-error" id="pPincodeErr">6-digit pincode</span></div>
           <button type="submit" class="btn-primary" id="profileBtn">Save & Continue →</button>
         </form>
       </div>
@@ -383,21 +394,33 @@ document.getElementById('signinForm').addEventListener('submit',async(e)=>{
   await loadProfile(data.user?.id,email);showSuccessView(data.user?.email?.split('@')[0]||'there');
 });
 
+
+function setMailLink(email){
+  const d=(email.split('@')[1]||'').toLowerCase(),a=document.getElementById('openMailBtn');if(!a)return;
+  a.href=/gmail\.com|googlemail\.com/.test(d)?'https://mail.google.com/mail/u/'+encodeURIComponent(email)+'/#inbox':/outlook|hotmail|live\./.test(d)?'https://outlook.live.com/mail/':/yahoo|ymail/.test(d)?'https://mail.yahoo.com/':'mailto:'+email;
+}
+async function resendConfirmEmail(){
+  if(!sb||!_lastEmail)return;
+  const b=document.getElementById('resendMailBtn');b.disabled=true;b.textContent='Sending…';
+  const{error}=await sb.auth.resend({type:'signup',email:_lastEmail,options:{emailRedirectTo:window.location.origin+'/login.html?redirect='+encodeURIComponent(getRedirect())}});
+  setStatus('ve-status',error?'error':'success',error?error.message:'\u2713 Sent again \u2014 check your inbox.');
+  setTimeout(()=>{b.disabled=false;b.textContent='Resend email';},30000);
+}
 document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   e.preventDefault();clearStatus('su-status');
-  const name=document.getElementById('suName').value.trim(),email=document.getElementById('suEmail').value.trim(),phone=document.getElementById('suPhone').value.replace(/\D/g,''),pass=document.getElementById('suPass').value,pass2=document.getElementById('suPass2').value;
+  const name=document.getElementById('suName').value.trim(),email=document.getElementById('suEmail').value.trim(),phone=document.getElementById('suPhone').value.replace(/\D/g,''),pass=document.getElementById('suPass').value,pass2=pass; /* confirm-password field removed: the eye icon already lets people check what they typed */
   let ok=true;
-  [{id:'suName',errId:'suNameErr',test:v=>v.length>=2,val:name},{id:'suEmail',errId:'suEmailErr',test:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),val:email},{id:'suPhone',errId:'suPhoneErr',test:v=>v===''||/^[6-9]\d{9}$/.test(v),val:phone,wrap:'suPhoneWrap'},{id:'suPass',errId:'suPassErr',test:v=>v.length>=8,val:pass},{id:'suPass2',errId:'suPass2Err',test:v=>v===pass,val:pass2}].forEach(c=>{const el=document.getElementById(c.wrap||c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
+  [{id:'suName',errId:'suNameErr',test:v=>v.length>=2,val:name},{id:'suEmail',errId:'suEmailErr',test:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),val:email},{id:'suPhone',errId:'suPhoneErr',test:v=>/^[6-9]\d{9}$/.test(v),val:phone,wrap:'suPhoneWrap'},{id:'suPass',errId:'suPassErr',test:v=>v.length>=8,val:pass},{id:'suPass2',errId:'suPass2Err',test:v=>v===pass,val:pass2}].forEach(c=>{const el=document.getElementById(c.wrap||c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
   if(!ok)return;
   setLoading('suBtn',true);
   if(!sb){setLoading('suBtn',false,'Create Account →');setStatus('su-status','error','Can\u2019t reach our sign-in service right now. Please check your connection and try again.');return;}
-  const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,phone:phone?'+91'+phone:''}}});
+  const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,phone:phone?'+91'+phone:''},emailRedirectTo:window.location.origin+'/login.html?redirect='+encodeURIComponent(getRedirect())}});
   setLoading('suBtn',false,'Create Account →');
   if(error){setStatus('su-status','error',error.message);return;}
   if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0){setStatus('su-status','error','This email is already registered. Please sign in instead.');return;}
   if(data.user?.id){saveLocalUser({email,name,phone:phone?'+91'+phone:'',id:data.user.id});try{await sb.from('profiles').upsert({id:data.user.id,name,phone:phone?'+91'+phone:''});}catch(ex){}}
   window.gaTrack&&gaTrack('sign_up',{method:'email'});
-  _lastEmail=email;document.getElementById('verifyEmailDisplay').textContent=email;showView('email-verify');
+  _lastEmail=email;document.getElementById('verifyEmailDisplay').textContent=email;setMailLink(email);showView('email-verify');
 });
 
 document.getElementById('forgotForm').addEventListener('submit',async(e)=>{
@@ -447,13 +470,13 @@ document.getElementById('profileForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
   const name=document.getElementById('pName').value.trim(),flat=document.getElementById('pFlat').value.trim(),area=document.getElementById('pArea').value.trim(),pincode=document.getElementById('pPincode').value.replace(/\D/g,'');
   let ok=true;
-  [{id:'pName',errId:'pNameErr',test:v=>v.length>=2,val:name},{id:'pFlat',errId:'pFlatErr',test:v=>v.length>0,val:flat},{id:'pArea',errId:'pAreaErr',test:v=>v.length>0,val:area},{id:'pPincode',errId:'pPincodeErr',test:v=>/^\d{6}$/.test(v),val:pincode}].forEach(c=>{const el=document.getElementById(c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
+  [{id:'pName',errId:'pNameErr',test:v=>v.length>=2,val:name}].forEach(c=>{const el=document.getElementById(c.id),err=document.getElementById(c.errId);if(!c.test(c.val)){el.classList.add('error');err.classList.add('visible');ok=false;}else{el.classList.remove('error');err.classList.remove('visible');}});
   if(!ok)return;
   setLoading('profileBtn',true);
-  if(sb){try{const{data:{user}}=await sb.auth.getUser();if(user?.id){await sb.from('profiles').upsert({id:user.id,name,phone:user.phone||''});await sb.from('addresses').upsert({user_id:user.id,flat,area,pincode,city:'Hyderabad',is_default:true});logLogin(user.id,name,'',user.phone||'','phone');}}catch(ex){}}
+  if(sb){try{const{data:{user}}=await sb.auth.getUser();if(user?.id){await sb.from('profiles').upsert({id:user.id,name,phone:user.phone||''});if(flat&&area)await sb.from('addresses').upsert({user_id:user.id,flat,area,pincode,city:'Hyderabad',is_default:true});logLogin(user.id,name,'',user.phone||'','phone');}}catch(ex){}}
   saveLocalUser({name,address:{flat,area,pincode,city:'Hyderabad'}});setLoading('profileBtn',false,'Save & Continue →');window.gaTrack&&gaTrack('sign_up',{method:'phone'});showSuccessView(name);
 });
-function showSuccessView(name){showView('success');const redirect=getRedirect();document.getElementById('redirectMsg').textContent='Taking you to '+(redirect.includes('checkout')?'checkout':redirect.includes('cart')?'your cart':'the shop')+'…';setTimeout(()=>{window.location.href=redirect;},2000);}
+function showSuccessView(name){showView('success');const redirect=getRedirect();document.getElementById('redirectMsg').textContent='Taking you to '+(redirect.includes('checkout')?'checkout':redirect.includes('cart')?'your cart':'the shop')+'…';setTimeout(()=>{window.location.href=redirect;},700);}
 async function loadProfile(userId,email){
   if(!sb||!userId)return;
   try{
@@ -507,6 +530,20 @@ async function signInWithGoogle(){
   if(btn){ btn.disabled=false; btn.style.opacity='1'; }
 }
 
+async function signInWithMicrosoft(){
+  if(!sb){ setStatus('si-status','error','Can\u2019t reach our sign-in service right now. Please try again.'); return; }
+  const btn=document.getElementById('msBtn');
+  if(btn){ btn.disabled=true; btn.style.opacity='0.6'; }
+  try{
+    const { error } = await sb.auth.signInWithOAuth({
+      provider:'azure',
+      options:{ scopes:'email', redirectTo: window.location.origin+'/login.html?redirect='+encodeURIComponent(getRedirect()) }
+    });
+    if(error){ setStatus('si-status','error',error.message); }
+  }catch(e){ setStatus('si-status','error','Microsoft sign-in is unavailable right now.'); }
+  if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+}
+
 // Only offer login methods the backend actually has switched on. Phone OTP was
 // shown as an option while the provider was disabled, so tapping it sent people
 // down a flow that could never succeed.
@@ -516,7 +553,9 @@ async function signInWithGoogle(){
     if(!r.ok) return;
     const s=await r.json();
     const ext=s.external||{};
-    if(ext.google) document.getElementById('socialAuth').style.display='block';
+    if(ext.google||ext.azure) document.getElementById('socialAuth').style.display='block';
+    if(ext.google) document.getElementById('googleBtn').style.display='flex';
+    if(ext.azure) document.getElementById('msBtn').style.display='flex';
     const phoneTab=document.getElementById('methodTabPhone');
     if(phoneTab && !ext.phone) phoneTab.style.display='none';
   }catch(e){ /* leave the default email form visible */ }
@@ -534,8 +573,8 @@ async function signInWithGoogle(){
       const meta=u.user_metadata||{};
       saveLocalUser({ id:u.id, email:u.email||'', name:meta.full_name||meta.name||(u.email||'').split('@')[0], phone:meta.phone||'' });
       try{ await sb.from('profiles').upsert({ id:u.id, name:meta.full_name||meta.name||'', phone:meta.phone||'', email:u.email||'' }); }catch(e){}
-      window.gaTrack&&gaTrack('login',{method:'google'});
-      logLogin(u.id,meta.full_name||meta.name||'',u.email||'',meta.phone||'','google');
+      window.gaTrack&&gaTrack('login',{method:(u.app_metadata&&u.app_metadata.provider)||'google'});
+      logLogin(u.id,meta.full_name||meta.name||'',u.email||'',meta.phone||'',(u.app_metadata&&u.app_metadata.provider)||'google');
       showCustomerLogin();
       showSuccessView((meta.full_name||meta.name||u.email||'there').split(' ')[0]);
     }
@@ -544,7 +583,8 @@ async function signInWithGoogle(){
 
 // Check URL params
 const _p=new URLSearchParams(window.location.search);
-if(_p.get('role')==='customer')showCustomerLogin();
+// Arriving from cart/checkout means they are a customer — skip the Admin/Delivery role picker.
+if(_p.get('role')==='customer'||_p.get('redirect'))showCustomerLogin();
 
 // Supabase sends the recovery link back with type=recovery in the URL hash and
 // (with detectSessionInUrl on) establishes a temporary session. Without this the
