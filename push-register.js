@@ -47,8 +47,14 @@
   function showBtn() {
     if (btn) return;
     btn = document.createElement('button');
-    btn.innerHTML = '🔔 Enable alerts';
+    // On phones a wide "Enable alerts" pill sat on top of product cards and text.
+    // Show just a small bell there (still one tap); keep the full label on larger screens.
+    var small = window.innerWidth <= 768;
+    btn.innerHTML = small ? '🔔' : '🔔 Enable alerts';
+    btn.setAttribute('aria-label', 'Enable order alerts');
+    btn.title = 'Enable order alerts';
     btn.style.cssText = 'position:fixed;right:1rem;bottom:5.2rem;z-index:100000;background:linear-gradient(135deg,#C4622D,#7A3318);color:#F6EDD8;border:1px solid rgba(246,237,216,0.25);border-radius:100px;padding:0.65rem 1.1rem;font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.45);font-family:inherit;';
+    if (small) { btn.style.padding = '0'; btn.style.width = '44px'; btn.style.height = '44px'; btn.style.fontSize = '1.1rem'; btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center'; btn.style.opacity = '0.92'; }
     btn.onclick = enable;
     document.body.appendChild(btn);
   }
