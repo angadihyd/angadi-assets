@@ -266,6 +266,13 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
   footer{padding:1.5rem;}
   .order-steps{overflow-x:auto;padding-bottom:0.5rem;}
 }
+@media(max-width:480px){
+  /* progress steps: fit all four on a phone instead of clipping "Confirm" off-screen */
+  .order-steps{overflow:hidden !important;padding-bottom:0 !important;}
+  .order-step{gap:.3rem !important;font-size:.7rem !important;letter-spacing:0 !important;}
+  .order-step .step-circle{width:24px !important;height:24px !important;font-size:.75rem !important;}
+  .step-line{width:.7rem !important;margin:0 .25rem !important;flex-shrink:1;}
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
