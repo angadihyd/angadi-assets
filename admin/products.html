@@ -261,7 +261,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--cream);m
 // DB row → UI product (admin uses ../ image prefix)
 function rowToProduct(r){
   return { id:r.slug, name:r.name, nameTE:r.name_te, price:Number(r.price), unit:r.unit,
-    img:(r.image||'').startsWith('../')?r.image:'../'+(r.image||''), category:r.category,
+    img:/^(https?:|data:)/.test(r.image||'')?r.image:((r.image||'').startsWith('../')?r.image:'../'+(r.image||'')), category:r.category,
     badge:r.badge, inStock:r.in_stock, active:r.active!==false, featured:r.featured, sortOrder:r.sort_order,
     cutTime:r.cut_time, stockQty:r.stock_qty, boardDate:r.board_date };
 }
@@ -331,7 +331,17 @@ async function uploadProductImage(file, statusEl, previewEl, pathInputEl){
     if (pathInputEl) pathInputEl.value = r.publicUrl;
     if (previewEl){ previewEl.src = r.publicUrl; previewEl.classList.add('visible'); }
     if (statusEl){ statusEl.textContent = '✓ Uploaded'; statusEl.classList.remove('uploading'); }
-    showToast('✓ Image uploaded');
+    // Save it to the product straight away — before, the image only stuck if you
+    // also pressed Save afterwards, so a closed panel meant a lost picture.
+    if (window._editIdx != null && products[window._editIdx]) {
+      products[window._editIdx].img = r.publicUrl;
+      saveProducts();
+      const ok = await persistProduct(products[window._editIdx]);
+      renderProducts();
+      showToast(ok ? '✓ Image uploaded and saved to ' + products[window._editIdx].name : 'Image uploaded but NOT saved — press Save');
+    } else {
+      showToast('✓ Image uploaded — now press Add Product to save it');
+    }
   } catch(e){
     console.error('upload failed', e);
     showToast('Upload failed: ' + (e.message||e));
@@ -353,6 +363,7 @@ function imgUploadHTML(currentImg){
     <input class="form-input" id="ef-img" type="text" placeholder="Auto-filled after upload — or paste a URL" value="${currentImg||''}">
     <span style="font-size:0.7rem;color:rgba(246,237,216,0.3);margin-top:0.2rem;display:block;">${currentImg?'Current: '+currentImg.split('/').pop():''}</span>`;
 }
+window._editIdx = null;
 function handleImgUpload(input){
   const file = input.files && input.files[0]; if(!file) return;
   const btn = document.getElementById('ef-img-btn');
@@ -367,7 +378,8 @@ function handleImgUpload(input){
 
 async function persistProduct(p){
   const { error } = await AdminAPI.db('products', 'upsert', { values: productToRow(p) });
-  if(error){ console.warn('save failed', error); showToast('Save failed: '+error); }
+  if(error){ console.warn('save failed', error); showToast('NOT SAVED to the website: '+error); return false; }
+  return true;
 }
 
 const IS_ADMIN = AdminAPI.isAdmin();
@@ -522,6 +534,7 @@ function resetToDefaults(){
 //  EDIT PANEL
 // ─────────────────────────────────────────────
 function openEditProduct(idx){
+  window._editIdx = idx;
   const p = products[idx];
   showPanel(`
     <div style="margin-bottom:1.5rem;">
@@ -583,6 +596,7 @@ function openEditProduct(idx){
 }
 
 function openAddProduct(){
+  window._editIdx = null;
   showPanel(`
     <div style="margin-bottom:1.5rem;">
       <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--clay-l);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;">New Product</div>
@@ -650,8 +664,8 @@ function saveEdit(e, idx){
     inStock:  document.getElementById('ef-stock').value === '1',
     img:      document.getElementById('ef-img').value.trim(),
   };
-  saveProducts(); persistProduct(products[idx]); renderProducts(); closePanel();
-  showToast(`✓ ${products[idx].name} updated`);
+  saveProducts(); renderProducts();
+  persistProduct(products[idx]).then(ok => { if (ok) { closePanel(); showToast(`✓ ${products[idx].name} updated`); } });
 }
 
 function saveNewProduct(e){
@@ -669,8 +683,8 @@ function saveNewProduct(e){
     featured: false,
   };
   products.push(newP);
-  saveProducts(); persistProduct(newP); renderProducts(); closePanel();
-  showToast(`✓ ${newP.name} added`);
+  saveProducts(); renderProducts();
+  persistProduct(newP).then(ok => { if (ok) { closePanel(); showToast(`✓ ${newP.name} added`); } });
 }
 
 function showPanel(html){

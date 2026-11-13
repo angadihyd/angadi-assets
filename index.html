@@ -596,6 +596,7 @@ section{padding:6rem 4rem;}
 .product-card:hover .product-img-wrap:not(.has-video) img{
   transform:scale(1.05);
 }
+.img-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.04em;color:rgba(246,237,216,.55);background:linear-gradient(135deg,#2a140a,#150a05);}
 .product-badge{
   position:absolute;top:0.7rem;left:0.7rem;
   background:rgba(8,5,3,0.7);
@@ -1849,7 +1850,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
     }
     grid.innerHTML=list.map(function(p){
       var unit=!p.unit||p.unit==='kg'?'per kilogram':'per '+p.unit;
-      var img=p.image?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'">':'';
+      var img=p.image?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'img-ph\',textContent:this.alt}))">':'<div class="img-ph">'+esc(p.name)+'</div>';
       var out=p.in_stock===false;
       return '<div class="product-card" data-name="'+esc(p.name)+'">'+
         '<div class="product-img-wrap">'+img+(p.badge?'<div class="product-badge">'+esc(p.badge)+'</div>':'')+'</div>'+
