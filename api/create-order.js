@@ -138,7 +138,13 @@ module.exports = async (req, res) => {
   // Stored in one consistent 10-digit form. It used to be saved exactly as
   // typed ("+91 98765 43210", "098765…"), which is why every lookup had to
   // fuzzy-match on the last digits.
-  const normalisedCustomer = { ...(customer || {}), name: customerName, phone: phone10 };
+  // Email is the second half of the guest "find my orders" key (phone + email).
+  const customerEmail = String((customer && customer.email) || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(customerEmail)) {
+    res.status(400).json({ error: 'Please enter a valid email address — you use it with your phone number to see your orders later.' });
+    return;
+  }
+  const normalisedCustomer = { ...(customer || {}), name: customerName, phone: phone10, email: customerEmail };
 
   // ── Ordering is open for any not-yet-closed delivery date (see
   // admin/order-windows.html) — no separate "opens at" concept, a date is

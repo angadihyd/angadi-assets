@@ -127,6 +127,33 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Guest history: phone AND email must both match an order. Needs no account,
+    // so someone who checked out as a guest can come back hours/days later.
+    if (action === 'lookup') {
+      const ip = String((req.headers['x-forwarded-for'] || '').split(',')[0] || 'x').trim();
+      const now = Date.now();
+      global.__lookupHits = (global.__lookupHits || []).filter(h => now - h.t < 600000);
+      if (global.__lookupHits.filter(h => h.ip === ip).length >= 20) {
+        res.status(429).json({ error: 'Too many attempts. Please try again in a few minutes.' });
+        return;
+      }
+      global.__lookupHits.push({ ip, t: now });
+      const phone = last10(payload.phone);
+      const email = String(payload.email || '').trim().toLowerCase();
+      if (phone.length !== 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        res.status(400).json({ error: 'Enter the phone number and email you used at checkout' });
+        return;
+      }
+      const rows = await fetchOrders(`select=*&customer->>phone.like.*${encodeURIComponent(phone.slice(-4))}*&order=placed_at.desc&limit=500`);
+      const mine = (Array.isArray(rows) ? rows : []).filter(o => {
+        const c = o.customer || {};
+        return last10(c.phone) === phone && String(c.email || '').trim().toLowerCase() === email;
+      });
+      if (!mine.length) { res.status(404).json({ error: 'No orders found for that phone and email' }); return; }
+      res.status(200).json({ data: mine });
+      return;
+    }
+
     if (action === 'cancel') {
       const orderId = String(payload.orderId || '').trim();
       if (!orderId) { res.status(400).json({ error: 'Order ID required' }); return; }

@@ -1412,7 +1412,7 @@ footer{
       </a>
       <a href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20place%20an%20order" class="ah-btn ah-ghost" target="_blank">Order on WhatsApp</a>
     </div>
-    <div class="ah-nudge"><span class="ah-pulse"></span><span>Order by <b>11 AM</b> for same-morning delivery&nbsp;·&nbsp;cut fresh at dawn</span></div>
+    <div class="ah-nudge"><span class="ah-pulse"></span><span id="heroNudgeText">Checking delivery dates…</span></div>
   </div>
 </section>
 
@@ -1478,97 +1478,11 @@ footer{
     </div>
     <a href="shop.html" class="view-all-link">View All Products →</a>
   </div>
-  <div class="products-grid">
-
-    <!-- 1 · Village Goat Meat (featured, video) -->
-    <div class="product-card fade-up" data-name="Village Pottel mutton (Goat Meat)">
-      <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline class="lazy-video">
-          <source data-src="product/gaot farmer animated video.mp4" type="video/mp4">
-        </video>
-        <img loading="lazy" decoding="async" src="product/mutton.webp" alt="Village Goat Meat" class="pip-product-img">
-        <div class="product-badge">Bestseller</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Meka Mamsam</div>
-        <div class="product-name">Village Goat Meat</div>
-        <div class="product-desc">Farm-raised Telangana goat, hand-cut to curry pieces. Rich flavour, tender texture. No hormones, no antibiotics.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹1,099</span>
-            <span class="product-price-unit">per kilogram</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Village Pottel mutton (Goat Meat)',1099,this)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2 · Country Chicken (video) -->
-    <div class="product-card fade-up">
-      <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline class="lazy-video">
-          <source data-src="product/country chiken animated video.mp4" type="video/mp4">
-        </video>
-        <img loading="lazy" decoding="async" src="product/country chiken.webp" alt="Country Chicken" class="pip-product-img">
-        <div class="product-badge">Free-range</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Nati Kodi</div>
-        <div class="product-name">Country Chicken</div>
-        <div class="product-desc">Free-range country chicken raised in open villages. Firm and flavourful — made for slow cooking.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹900</span>
-            <span class="product-price-unit">per kilogram</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Country Chicken',900,this)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3 · Fresh River Fish (video) -->
-    <div class="product-card fade-up">
-      <div class="product-img-wrap has-video">
-        <video autoplay muted loop playsinline class="lazy-video">
-          <source data-src="product/fisher man animated video.mp4" type="video/mp4">
-        </video>
-        <img loading="lazy" decoding="async" src="product/fish.webp" alt="Fresh River Fish" class="pip-product-img">
-        <div class="product-badge">Today's catch</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Chepa Mukkalu</div>
-        <div class="product-name">Fresh River Fish</div>
-        <div class="product-desc">Freshwater fish from Telangana rivers, cleaned and cut to order. Packed same day.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹450</span>
-            <span class="product-price-unit">per kilogram</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Fresh River Fish',450,this)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4 · Country Eggs -->
-    <div class="product-card fade-up">
-      <div class="product-img-wrap">
-        <img loading="lazy" decoding="async" src="product/country-eggs.webp" alt="Country Eggs">
-        <div class="product-badge">Farm fresh</div>
-      </div>
-      <div class="product-body">
-        <div class="product-name-te">Nati Kodi Gudlu</div>
-        <div class="product-name">Country Eggs</div>
-        <div class="product-desc">Deep golden yolk, rich flavour. Free-range hens from Telangana farms. Packed in 6s and 12s.</div>
-        <div class="product-footer">
-          <div class="product-price">
-            <span class="product-price-main">₹18</span>
-            <span class="product-price-unit">per egg</span>
-          </div>
-          <button class="btn-add" onclick="addToCart('Country Eggs',18,this)">+</button>
-        </div>
-      </div>
-    </div>
-
+  <div class="products-grid" id="homeGrid">
+    <p id="homeGridMsg" style="grid-column:1/-1;text-align:center;opacity:.7;padding:2rem 0;">Loading today's fresh cuts…</p>
+  </div>
+  <div style="text-align:center;margin-top:1.6rem;">
+    <a href="shop.html" class="view-all-link" style="font-size:1rem;">View all products →</a>
   </div>
 </section>
 
@@ -1926,9 +1840,36 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
 /* Live prices/stock — deferred until page is idle so it doesn't block first paint */
 (function(){
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
-  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=slug,name,price,unit,in_stock,active,category,cut_time,stock_qty,board_date,sort_order&order=sort_order.asc',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function renderHomeGrid(list){
+    var grid=document.getElementById('homeGrid'); if(!grid) return;
+    if(!Array.isArray(list)||!list.length){
+      grid.innerHTML='<p style="grid-column:1/-1;text-align:center;padding:2rem 0;"><a href="shop.html" class="view-all-link">Browse all products →</a></p>'; return;
+    }
+    grid.innerHTML=list.map(function(p){
+      var unit=!p.unit||p.unit==='kg'?'per kilogram':'per '+p.unit;
+      var img=p.image?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'">':'';
+      var out=p.in_stock===false;
+      return '<div class="product-card" data-name="'+esc(p.name)+'">'+
+        '<div class="product-img-wrap">'+img+(p.badge?'<div class="product-badge">'+esc(p.badge)+'</div>':'')+'</div>'+
+        '<div class="product-body">'+
+        (p.name_te?'<div class="product-name-te">'+esc(p.name_te)+'</div>':'')+
+        '<div class="product-name">'+esc(p.name)+'</div>'+
+        '<div class="product-desc">'+esc(p.short_desc||'')+'</div>'+
+        '<div class="product-footer"><div class="product-price"><span class="product-price-main">₹'+Number(p.price).toLocaleString('en-IN')+'</span>'+
+        '<span class="product-price-unit">'+esc(unit)+'</span></div>'+
+        '<button class="btn-add"'+(out?' disabled style="opacity:.35;cursor:not-allowed"':'')+' data-n="'+esc(p.name)+'" data-p="'+Number(p.price)+'">'+(out?'Sold out':'+')+'</button></div>'+
+        '</div></div>';
+    }).join('');
+    grid.querySelectorAll('.btn-add:not([disabled])').forEach(function(b){
+      b.onclick=function(e){e.preventDefault();e.stopPropagation();addToCart(b.dataset.n,Number(b.dataset.p),b);};
+    });
+  }
+  function run(){ fetch('https://www.angadi.farm/api/supabase/rest/v1/products?select=slug,name,name_te,image,badge,short_desc,price,unit,in_stock,active,category,cut_time,stock_qty,board_date,sort_order&order=sort_order.asc',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
     .then(function(r){return r.ok?r.json():[];})
     .then(function(list){
+      renderHomeGrid(list);
       if(!Array.isArray(list)||!list.length) return;
       var byName={}; list.forEach(function(p){byName[p.name]=p;});
       document.querySelectorAll('.products-grid .product-card').forEach(function(card){
@@ -1947,7 +1888,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
         }
       });
       renderMarketBoard(list);
-    }).catch(function(){});}
+    }).catch(function(){ renderHomeGrid([]); });}
 
   function renderMarketBoard(list){
     var today = new Date().toISOString().slice(0,10);
@@ -2088,16 +2029,20 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       lEl.textContent='to order for delivery '+dateStr;
       bar.style.display='block';
     }
+    // ONE delivery message for the whole page, taken from the open order window.
+    var nudge=document.getElementById('heroNudgeText');
+    bar.style.display='none';
     var now=new Date().toISOString();
     fetch('https://www.angadi.farm/api/supabase/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:H})
       .then(function(r){return r.ok?r.json():[];})
       .then(function(rows){
-        if(!rows.length){ bar.style.display='none'; return; }
+        if(!nudge) return;
+        if(!rows.length){ nudge.textContent='Ordering is closed right now — the next delivery date will be announced soon'; return; }
         var d=new Date(rows[0].delivery_date+'T00:00:00');
-        var dateStr=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
-        tick(rows[0].closes_at, dateStr);
-        timer=setInterval(function(){ tick(rows[0].closes_at, dateStr); },1000);
-      }).catch(function(){ bar.style.display='none'; });
+        var day=d.toLocaleDateString('en-IN',{weekday:'long'});
+        var by=new Date(rows[0].closes_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true});
+        nudge.innerHTML='<b>'+day+' orders are now open</b>&nbsp;·&nbsp;order by '+by;
+      }).catch(function(){ if(nudge) nudge.textContent='Fresh village cuts, delivered to your door'; });
   }
 
   function farmer(f){
@@ -2168,7 +2113,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
         startCountdown();
         farmer(m.farmer);
         permanentBanner(m.permanentBanner);
-        banner(m.banner);
+        // (yellow admin banner removed from the homepage: it repeated/contradicted the single delivery line)
         bulk(m.features.bulkOrder);
         villageSound(m.features.sound);
         ticker(m.features.ticker);

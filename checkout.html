@@ -416,6 +416,12 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 <span class="form-hint">For delivery coordination — and we may WhatsApp you if your order isn't completed</span>
                 <span class="form-error" id="fphone-err">Enter a valid 10-digit mobile number</span>
               </div>
+              <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input class="form-input" id="femail" type="email" placeholder="you@example.com" autocomplete="email" inputmode="email">
+                <span class="form-hint">Your phone + email let you see your orders any time on “My Orders” — no password needed</span>
+                <span class="form-error" id="femail-err">Enter a valid email address</span>
+              </div>
             </div>
 
             <!-- LIVE LOCATION PICKER (free OpenStreetMap) -->
@@ -884,6 +890,7 @@ function validateAddress(){
   [
     { id:'fname',  errId:'fname-err',  test: v => v.trim().length >= 2 },
     { id:'fphone', errId:'fphone-err', test: v => /^[6-9]\d{9}$/.test(v.replace(/\D/g,'').slice(-10)) },
+    { id:'femail', errId:'femail-err', test: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) },
     { id:'fflat',    errId:'fflat-err',    test: v => v.trim().length >= 3 },
     { id:'farea',    errId:'farea-err',    test: v => v.trim().length >= 3 },
     { id:'fpincode', errId:'fpincode-err', test: v => v.trim()==='' || /^\d{6}$/.test(v.trim()) },
@@ -996,6 +1003,7 @@ async function placeOrder(){
     customer: {
       name:    document.getElementById('fname').value,
       phone:   document.getElementById('fphone').value,
+      email:   document.getElementById('femail').value.trim().toLowerCase(),
       address: {
         flat:     document.getElementById('fflat').value,
         area:     document.getElementById('farea').value,
@@ -1030,7 +1038,7 @@ async function placeOrder(){
       const sUser = data && data.session && data.session.user;
       if (sUser) {
         order.customer.user_id = sUser.id;
-        if (sUser.email) order.customer.email = sUser.email;
+        if (!order.customer.email && sUser.email) order.customer.email = sUser.email;
         const metaPhone = sUser.user_metadata && sUser.user_metadata.phone;
         if (!metaPhone && order.customer.phone) {
           try { await supabaseClient.auth.updateUser({ data: { phone: order.customer.phone } }); } catch(e){}
@@ -1347,6 +1355,7 @@ function autoFillFromProfile() {
   if (!user) return;
   if (user.name)  document.getElementById('fname').value  = user.name;
   if (user.phone) document.getElementById('fphone').value = user.phone.replace('+91','');
+  if (user.email && document.getElementById('femail')) document.getElementById('femail').value = user.email;
   if (user.address) {
     const a = user.address;
     if (a.flat)     document.getElementById('fflat').value     = a.flat;
@@ -1393,7 +1402,7 @@ function useSavedAddress() {
 
 function enterNewAddress() {
   document.getElementById('savedAddrBanner').classList.remove('visible');
-  ['fname','fphone','fflat','farea','flandmark','fpincode'].forEach(id => {
+  ['fname','fphone','femail','fflat','farea','flandmark','fpincode'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   window.deliveryGeo = null;
@@ -1558,7 +1567,9 @@ if (true) { // Supabase connected
 
 loadSavedAddress();
 updateGuestPrompt();
-enforceLoginIfRequired();
+// Guest checkout is allowed: forced login was removed (it cost orders). Orders are
+// found again later via phone + email on My Orders, no account needed.
+// enforceLoginIfRequired();
 loadAccountProfile();
 renderSummary();
 initLocationPicker();
