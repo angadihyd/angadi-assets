@@ -127,7 +127,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Guest history: phone AND email must both match an order. Needs no account,
+    // Guest history: a matching phone OR email is enough. Needs no account,
     // so someone who checked out as a guest can come back hours/days later.
     if (action === 'lookup') {
       const ip = String((req.headers['x-forwarded-for'] || '').split(',')[0] || 'x').trim();
@@ -140,16 +140,22 @@ module.exports = async (req, res) => {
       global.__lookupHits.push({ ip, t: now });
       const phone = last10(payload.phone);
       const email = String(payload.email || '').trim().toLowerCase();
-      if (phone.length !== 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        res.status(400).json({ error: 'Enter the phone number and email you used at checkout' });
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+      if (phone.length !== 10 && !emailOk) {
+        res.status(400).json({ error: 'Enter the phone number or the email you used at checkout' });
         return;
       }
-      const rows = await fetchOrders(`select=*&customer->>phone.like.*${encodeURIComponent(phone.slice(-4))}*&order=placed_at.desc&limit=500`);
+      // Either one is enough to find the orders.
+      const f = [];
+      if (phone.length === 10) f.push(`customer->>phone.like.*${encodeURIComponent(phone.slice(-4))}*`);
+      if (emailOk) f.push(`customer->>email.ilike.${encodeURIComponent(email)}`);
+      const rows = await fetchOrders(`select=*&or=(${f.join(',')})&order=placed_at.desc&limit=500`);
       const mine = (Array.isArray(rows) ? rows : []).filter(o => {
         const c = o.customer || {};
-        return last10(c.phone) === phone && String(c.email || '').trim().toLowerCase() === email;
+        return (phone.length === 10 && last10(c.phone) === phone) ||
+               (emailOk && String(c.email || '').trim().toLowerCase() === email);
       });
-      if (!mine.length) { res.status(404).json({ error: 'No orders found for that phone and email' }); return; }
+      if (!mine.length) { res.status(404).json({ error: 'No orders found for that phone or email' }); return; }
       res.status(200).json({ data: mine });
       return;
     }

@@ -487,11 +487,11 @@ async function fetchMyOrders(){
   const saved = JSON.parse(localStorage.getItem('angadi_guest_lookup') || 'null');
   const gPhone = (saved && saved.phone) || (last && last.customer && last.customer.phone) || user.phone;
   const gEmail = (saved && saved.email) || (last && last.customer && last.customer.email) || user.email;
-  if (gPhone && gEmail){
+  if (gPhone || gEmail){
     try {
       const r = await fetch('/api/my-orders', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ action:'lookup', phone: gPhone, email: gEmail }),
+        body: JSON.stringify({ action:'lookup', phone: gPhone || '', email: gEmail || '' }),
       });
       if (r.ok){ const j = await r.json(); if (j.data && j.data.length) return j.data.map(fromDb); }
     } catch(e){ /* fall through */ }
@@ -525,6 +525,7 @@ async function pollCustomer(){
 async function guestLookup(e){
   e.preventDefault();
   const phone = document.getElementById('glPhone').value, email = document.getElementById('glEmail').value.trim();
+  if (!phone.trim() && !email){ document.getElementById('glErr').textContent = 'Enter your phone or email'; return false; }
   const btn = document.getElementById('glBtn'), err = document.getElementById('glErr');
   btn.disabled = true; err.textContent = '';
   try {
@@ -537,7 +538,7 @@ async function guestLookup(e){
       window._lastSig = JSON.stringify(allOrders.map(o => [o.orderId, o.status]));
       renderOrders();
       if (!window._poll) window._poll = setInterval(pollCustomer, 8000);
-    } else { err.textContent = j.error || 'No orders found for that phone and email'; }
+    } else { err.textContent = j.error || 'No orders found for that phone or email'; }
   } catch(x){ err.textContent = 'Network problem — please try again'; }
   btn.disabled = false;
   return false;
@@ -629,10 +630,10 @@ function renderOrders(){
     const signedIn = !!(JSON.parse(localStorage.getItem('angadi_user') || '{}').loggedIn);
     const emptyBody = (activeFilter === 'all' && !signedIn)
       ? `<div class="empty-title">Find your orders</div>
-         <p class="empty-sub">Enter the phone number and email you used at checkout — no password needed.</p>
+         <p class="empty-sub">Enter the phone number <b>or</b> the email you used at checkout — no password needed.</p>
          <form id="guestLookup" onsubmit="return guestLookup(event)" style="display:flex;flex-direction:column;gap:.6rem;max-width:320px;margin:0 auto 1rem;">
-           <input id="glPhone" type="tel" placeholder="Phone number" maxlength="13" autocomplete="tel" required style="padding:.8rem;border-radius:10px;border:1px solid rgba(246,237,216,.2);background:rgba(255,255,255,.05);color:inherit;font:inherit;">
-           <input id="glEmail" type="email" placeholder="Email" autocomplete="email" required style="padding:.8rem;border-radius:10px;border:1px solid rgba(246,237,216,.2);background:rgba(255,255,255,.05);color:inherit;font:inherit;">
+           <input id="glPhone" type="tel" placeholder="Phone number" maxlength="13" autocomplete="tel" style="padding:.8rem;border-radius:10px;border:1px solid rgba(246,237,216,.2);background:rgba(255,255,255,.05);color:inherit;font:inherit;">
+           <input id="glEmail" type="email" placeholder="Email (or phone above)" autocomplete="email" style="padding:.8rem;border-radius:10px;border:1px solid rgba(246,237,216,.2);background:rgba(255,255,255,.05);color:inherit;font:inherit;">
            <div id="glErr" style="color:#e88;font-size:.82rem;min-height:1em;"></div>
            <button type="submit" class="btn-primary" id="glBtn">Show my orders</button>
          </form>
