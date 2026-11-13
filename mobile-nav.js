@@ -344,6 +344,31 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
 
+  // ── sticky "View cart" bar (browse pages, phones): one tap from any product to the cart ──
+  (function stickyCart() {
+    var page = (location.pathname.split('/').pop() || 'index.html');
+    if (['', 'index.html', 'shop.html', 'product-detail.html'].indexOf(page) < 0) return;
+    var st = document.createElement('style');
+    st.textContent = '#angCartBar{display:none;position:fixed;left:12px;right:12px;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:1150;' +
+      'background:#8C2433;color:#F5EFE3;border-radius:14px;padding:.85rem 1.1rem;text-decoration:none;font:600 .95rem "DM Sans",sans-serif;' +
+      'box-shadow:0 8px 26px rgba(0,0,0,.5);padding-right:4.4rem;align-items:center;justify-content:space-between;gap:.6rem;}' +
+      '@media(max-width:768px){#angCartBar.show{display:flex;}}';
+    document.head.appendChild(st);
+    var a = document.createElement('a'); a.id = 'angCartBar'; a.href = 'cart.html';
+    document.body.appendChild(a);
+    function paint() {
+      try {
+        var c = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
+        var n = c.reduce(function (s, i) { return s + (i.qty || 0); }, 0);
+        var t = c.reduce(function (s, i) { return s + (i.qty || 0) * (Number(i.price) || 0); }, 0);
+        a.classList.toggle('show', n > 0);
+        a.innerHTML = '<span>' + n + (n === 1 ? ' item' : ' items') + ' · ₹' + Math.round(t).toLocaleString('en-IN') + '</span><span>View cart →</span>';
+      } catch (e) {}
+    }
+    paint(); setInterval(paint, 1000);
+    window.addEventListener('storage', paint);
+  })();
+
   window.addEventListener('storage', function (e) { if (e.key === 'angadi_cart') refreshBadge(); });
   window.addEventListener('focus', refreshBadge);
   window.addEventListener('pageshow', refreshBadge);

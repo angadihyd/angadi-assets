@@ -702,6 +702,7 @@ let cart        = JSON.parse(localStorage.getItem('angadi_cart') || '[]');
 let promoCode   = null;
 let promoDiscount = 0;
 let appliedCoupon = null;   // {code,type,value,min_order,label} from DB or PROMOS
+var deliveryWhenHTML = '';
 let selectedDelivery = 'standard';
 
 const COUPON_URL = 'https://www.angadi.farm/api/supabase';
@@ -902,6 +903,7 @@ function renderCartBody() {
   document.getElementById('cartBody').innerHTML = `
     <!-- LEFT COL -->
     <div class="cart-items-col">
+      ${deliveryWhenHTML}
       ${nudgeHTML}
       <div class="cart-section-label">Items in Your Cart</div>
       ${itemsHTML}
@@ -1116,6 +1118,22 @@ async function loadDeliveryConfig(){
     render();
   }catch(e){ /* keep defaults */ }
 }
+// One clear line about WHEN this order will arrive and the cutoff, from the open order window.
+async function loadDeliveryWhen(){
+  try{
+    const now = new Date().toISOString();
+    const r = await fetch(COUPON_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
+    const a = r.ok ? await r.json() : [];
+    if(!a.length){ deliveryWhenHTML='<div class="delivery-nudge" style="border-color:rgba(229,115,115,.4)">Ordering is closed right now — the next delivery date will be announced soon.</div>'; }
+    else {
+      const day = new Date(a[0].delivery_date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+      const by = new Date(a[0].closes_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true});
+      deliveryWhenHTML='<div class="delivery-nudge" style="border-color:rgba(76,175,80,.3);background:rgba(76,175,80,.06)"><strong>Delivery: '+day+'</strong> · order by '+by+'<br><span style="opacity:.7">Delivery ₹'+(DELIVERY_OPTIONS[0].price)+', free above ₹'+(DELIVERY_OPTIONS[0].free_above)+' · fresh or refunded</span></div>';
+    }
+    render();
+  }catch(e){}
+}
+loadDeliveryWhen();
 loadDeliveryConfig();
 renderReferBlock();
 
@@ -1154,6 +1172,6 @@ syncUpsellPrices();
 </script>
 <script>window.ANGADI_PUSH_ROLE='customer';</script>
 <script src="push-register.js" defer></script>
-<script src="mobile-nav.js?v=5" defer></script>
+<script src="mobile-nav.js?v=6" defer></script>
 </body>
 </html>
