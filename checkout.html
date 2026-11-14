@@ -467,6 +467,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--border);padding:2rem 4
                 <label class="form-label">Pincode <span style="opacity:0.55;font-weight:400;">(optional)</span></label>
                 <input class="form-input" id="fpincode" type="tel" inputmode="numeric" maxlength="6" placeholder="500001" autocomplete="postal-code">
                 <span class="form-error" id="fpincode-err">Pincode should be 6 digits (or leave it blank)</span>
+                <span id="fpincode-info" aria-live="polite" style="display:none;font-size:0.74rem;margin-top:0.25rem;line-height:1.4;"></span>
               </div>
             </div>
 
@@ -1644,5 +1645,44 @@ function closeMobile(){ document.getElementById('mobileMenu').classList.remove('
 <script>window.ANGADI_PUSH_ROLE='customer';</script>
 <script src="push-register.js" defer></script>
 <script src="mobile-nav.js?v=6" defer></script>
+<script>
+// Pincode check — advisory only. Never blocks checkout; if the lookup fails
+// the form just carries on. Calls our own /api/pincode (server-side proxy).
+(function(){
+  const pin = document.getElementById('fpincode');
+  const info = document.getElementById('fpincode-info');
+  const area = document.getElementById('farea');
+  if (!pin || !info) return;
+  let seq = 0;
+  function show(msg, color){
+    if (!msg){ info.style.display = 'none'; info.textContent = ''; return; }
+    info.textContent = msg; info.style.color = color; info.style.display = 'block';
+  }
+  async function check(){
+    const v = pin.value.trim();
+    if (!/^[1-9]\d{5}$/.test(v)){ show(''); return; }
+    const mine = ++seq;
+    show('Checking pincode…', 'rgba(246,237,216,0.6)');
+    try {
+      const r = await fetch('/api/pincode?pin=' + v);
+      const d = await r.json();
+      if (mine !== seq) return;
+      if (!d || !d.ok){ show(''); return; }
+      if (d.found === false){ show('We could not find this pincode — please double-check it.', '#E8956A'); return; }
+      if (d.zone === 'in'){
+        show('✓ We deliver to ' + d.areas[0] + ', ' + d.district, '#4CAF50');
+        if (area && !area.value.trim()) area.value = d.areas[0];
+      } else if (d.zone === 'unsure'){
+        show('This pincode (' + d.district + ') is outside our usual area. Message us on WhatsApp to confirm before ordering.', '#E8956A');
+      } else {
+        show('Sorry, we currently deliver only within Hyderabad, Telangana.', '#E57373');
+      }
+    } catch(e){ if (mine === seq) show(''); }
+  }
+  pin.addEventListener('input', check);
+  pin.addEventListener('blur', check);
+  if (pin.value) check();
+})();
+</script>
 </body>
 </html>
