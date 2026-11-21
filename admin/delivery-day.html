@@ -95,6 +95,14 @@ input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px so
     <button class="btn wa" id="saveImp" style="display:none;margin-top:.6rem;">Save to Orders</button>
   </div>
 
+  <div class="panel" id="bcPanel">
+    <span class="label">Send to everyone — one message</span>
+    <div class="sub" style="margin-bottom:.5rem;"><span id="bcCount"></span> This is the same message for all customers (no name). Edit it if you like.</div>
+    <textarea id="bcMsg" rows="8" style="width:100%;background:rgba(37,211,102,.07);border:1px solid rgba(37,211,102,.25);border-radius:12px;padding:.7rem .8rem;color:var(--cream);font-family:inherit;font-size:.88rem;line-height:1.5;"></textarea>
+    <div class="row" style="margin-top:.6rem;"><button class="btn wa" id="bcOpen">1. Open WhatsApp with this message</button><button class="btn" id="bcCopyMsg">Copy message</button><button class="btn" id="bcCopyNums">Copy all numbers</button></div>
+    <div class="sub" style="margin:.7rem 0 0;line-height:1.6;"><b>How it is sent:</b> tap the green button → WhatsApp opens with the message → choose your <b>Broadcast list</b> (or a group) → press send. Customers receive it only if they have <b>saved your number</b>. To make a new Broadcast list: WhatsApp Business → Chats → ⋮ → New broadcast → paste the copied numbers (they must be saved contacts).</div>
+  </div>
+
   <button class="btn wa big" id="nextBtn">Send next →</button>
   <div class="count" id="count"></div>
   <div id="list"></div>
@@ -129,6 +137,31 @@ function phoneOf(o){ var p=String((o.customer&&o.customer.phone)||'').replace(/\
 function firstName(o){ return String((o.customer&&o.customer.name)||'there').trim().split(/\s+/)[0]; }
 // WhatsApp-entered orders have the phone number inside their id — show only a short code to the customer.
 function shortId(id){ id=String(id||''); return /^W[AF]-/.test(id) ? '#'+id.replace(/\D/g,'').slice(-4) : id; }
+var GEN = {
+  en: {
+    ready: function(t){ return 'Dear customer, namaste 🙏 Your Angadi order is packed fresh and ready. Our delivery boys will be leaving shortly.'; },
+    onway: function(t){ return 'Dear customer, namaste 🙏 Your Angadi meat is on the way 🛵 Our delivery boys will reach you by '+t+'. Kindly keep your phone handy. Thank you!'; },
+    delay: function(t){ return 'Dear customer, namaste 🙏 We are sorry for the small delay today. Your Angadi order will reach you by '+t+'. Thank you so much for your patience.'; },
+    thanks:function(t){ return 'Dear customer, namaste 🙏 Your Angadi order has been delivered. Thank you for choosing us. We would love to hear how it was!'; }
+  },
+  te: {
+    ready: function(t){ return 'నమస్తే 🙏 మీ Angadi ఆర్డర్ తాజాగా ప్యాక్ చేయబడి సిద్ధంగా ఉంది. మా డెలివరీ బాయ్స్ త్వరలో బయలుదేరుతారు.'; },
+    onway: function(t){ return 'నమస్తే 🙏 మీ Angadi మాంసం బయలుదేరింది 🛵 మా డెలివరీ బాయ్ '+t+' లోపు మీ వద్దకు చేరుకుంటారు. దయచేసి మీ ఫోన్ అందుబాటులో ఉంచగలరు. ధన్యవాదాలు!'; },
+    delay: function(t){ return 'నమస్తే 🙏 ఈరోజు కొంచెం ఆలస్యం అయినందుకు క్షమించండి. మీ Angadi ఆర్డర్ '+t+' లోపు చేరుతుంది. మీ ఓపికకు చాలా ధన్యవాదాలు.'; },
+    thanks:function(t){ return 'నమస్తే 🙏 మీ Angadi ఆర్డర్ డెలివరీ అయింది. మమ్మల్ని ఎంచుకున్నందుకు ధన్యవాదాలు. మీ అభిప్రాయం తెలియజేయగలరు!'; }
+  }
+};
+var bcEdited = false;
+function buildGeneral(){
+  var m = GEN[state.lang][state.type](document.getElementById('timeIn').value.trim()||'10 AM');
+  if (state.type==='ready') m += reportBlock(state.lang);
+  return m;
+}
+function refreshBroadcast(){
+  var list = currentList(), phones = list.map(phoneOf).filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  document.getElementById('bcCount').textContent = phones.length+' customer'+(phones.length===1?'':'s')+' for this date.';
+  if (!bcEdited) document.getElementById('bcMsg').value = buildGeneral();
+}
 function readReport(){
   return { on:document.getElementById('repOn').checked, by:document.getElementById('repBy').value.trim(), village:document.getElementById('repVillage').value.trim(),
     weight:document.getElementById('repWeight').value.trim().replace(/[^0-9.]/g,''), checker:document.getElementById('repChecker').value.trim(),
@@ -292,6 +325,7 @@ document.getElementById('saveImp').addEventListener('click', async function(){
 });
 
 function render(){
+  refreshBroadcast();
   var date = document.getElementById('dateIn').value;
   var list = state.orders.filter(function(o){ return o.customer && o.customer.delivery_date===date && isLive(o); });
   var first = list[0];
@@ -343,6 +377,20 @@ document.getElementById('copyBtn').addEventListener('click',function(){
 });
 document.getElementById('resetBtn').addEventListener('click',function(){
   currentList().forEach(function(o){ try{ localStorage.removeItem(sentKey(o)); }catch(e){} }); render();
+});
+
+// ── Send to everyone ──
+document.getElementById('bcMsg').addEventListener('input', function(){ bcEdited = true; });
+['dateIn','timeIn'].forEach(function(id){ document.getElementById(id).addEventListener('input', function(){ bcEdited=false; }); });
+document.getElementById('typeChips').addEventListener('click', function(){ bcEdited=false; });
+document.querySelectorAll('[data-l]').forEach(function(b){ b.addEventListener('click', function(){ bcEdited=false; }); });
+document.getElementById('bcOpen').addEventListener('click', function(){ window.open('https://wa.me/?text='+encodeURIComponent(document.getElementById('bcMsg').value), '_blank'); });
+document.getElementById('bcCopyMsg').addEventListener('click', function(){
+  var b=this; navigator.clipboard.writeText(document.getElementById('bcMsg').value).then(function(){ b.textContent='Copied ✓'; setTimeout(function(){ b.textContent='Copy message'; },1500); });
+});
+document.getElementById('bcCopyNums').addEventListener('click', function(){
+  var nums = currentList().map(phoneOf).filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  var b=this; navigator.clipboard.writeText(nums.join('\n')).then(function(){ b.textContent='Copied '+nums.length+' ✓'; setTimeout(function(){ b.textContent='Copy all numbers'; },1800); });
 });
 
 // ── Google Sheet sync ──
