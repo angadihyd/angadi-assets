@@ -69,6 +69,17 @@ input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px so
     <div class="preview" id="preview"></div>
   </div>
 
+  <div class="panel" id="reportPanel">
+    <span class="label">Meat report (added to the ✅ Ready message)</span>
+    <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-bottom:.6rem;"><input type="checkbox" id="repOn" checked style="width:auto;"> Include this report when sending "Ready"</label>
+    <div class="row"><input type="text" id="repBy" placeholder="Raised by" value="Mallaya" style="flex:1;min-width:130px;"><input type="text" id="repVillage" placeholder="Village" value="Gollapalli" style="flex:1;min-width:130px;"></div>
+    <div class="row" style="margin-top:.5rem;"><input type="text" id="repWeight" placeholder="Weight after dressing (kg)" inputmode="decimal" style="flex:1;min-width:130px;"><input type="text" id="repChecker" placeholder="Checked by (name)" style="flex:1;min-width:130px;"></div>
+    <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.6rem;"><input type="checkbox" id="repOrgans" style="width:auto;"> Liver, lungs, heart, kidneys checked: normal colour, no spots</label>
+    <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.4rem;"><input type="checkbox" id="repGloves" style="width:auto;"> Cut with gloves and clean knives</label>
+    <div class="sub" style="margin:.6rem 0 0;">Only the lines you tick or fill are sent. If an animal fails the check, don't tick the organ line, and don't sell that meat.</div>
+    <button class="btn" id="repSave" style="margin-top:.6rem;">Save report for this date</button> <span class="count" id="repMsg"></span>
+  </div>
+
   <div class="panel">
     <span class="label">Google Sheet auto-sync → Orders</span>
     <div class="sub" style="margin-bottom:.6rem;">Your team types orders in a Google Sheet (same columns, one tab per day named like <b>22-11-2026</b>). New rows are saved into Orders every morning at 5:30 AM, or tap Sync now. Share the sheet as <b>Anyone with the link → Viewer</b>.</div>
@@ -116,7 +127,34 @@ function pad(n){ return String(n).padStart(2,'0'); }
 function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function phoneOf(o){ var p=String((o.customer&&o.customer.phone)||'').replace(/\D/g,'').slice(-10); return p.length===10?p:''; }
 function firstName(o){ return String((o.customer&&o.customer.name)||'there').trim().split(/\s+/)[0]; }
-function buildMsg(o){ return MSG[state.lang][state.type](firstName(o), o.order_id, document.getElementById('timeIn').value.trim()||'10 AM'); }
+// WhatsApp-entered orders have the phone number inside their id — show only a short code to the customer.
+function shortId(id){ id=String(id||''); return /^W[AF]-/.test(id) ? '#'+id.replace(/\D/g,'').slice(-4) : id; }
+function readReport(){
+  return { on:document.getElementById('repOn').checked, by:document.getElementById('repBy').value.trim(), village:document.getElementById('repVillage').value.trim(),
+    weight:document.getElementById('repWeight').value.trim().replace(/[^0-9.]/g,''), checker:document.getElementById('repChecker').value.trim(),
+    organs:document.getElementById('repOrgans').checked, gloves:document.getElementById('repGloves').checked };
+}
+function reportBlock(lang){
+  var r = readReport(); if (!r.on) return '';
+  var L = [];
+  if (lang==='te'){
+    if (r.by||r.village) L.push('🐐 '+(r.village?r.village+' గ్రామంలో ':'')+(r.by?r.by+' గారు ':'')+'స్వేచ్ఛగా పెంచారు');
+    if (r.weight) L.push('⚖️ డ్రెస్సింగ్ తర్వాత బరువు: '+r.weight+' కిలోలు');
+    if (r.organs) L.push('✅ కోసిన తర్వాత పరీక్ష: కాలేయం, ఊపిరితిత్తులు, గుండె, కిడ్నీలు సాధారణ రంగులో ఉన్నాయి'+(r.checker?' (పరిశీలించినవారు: '+r.checker+')':''));
+    if (r.gloves) L.push('🧤 గ్లవ్స్ మరియు శుభ్రమైన కత్తులతో కోయబడింది');
+  } else {
+    if (r.by||r.village) L.push('🐐 Raised free range'+(r.by?' by '+r.by:'')+(r.village?', '+r.village+' village':''));
+    if (r.weight) L.push('⚖️ Weight after dressing: '+r.weight+' kg');
+    if (r.organs) L.push('✅ Checked after slaughter: liver, lungs, heart and kidneys normal colour, no spots'+(r.checker?' (checked by '+r.checker+')':''));
+    if (r.gloves) L.push('🧤 Cut with gloves and clean knives');
+  }
+  return L.length ? '\n\n'+L.join('\n') : '';
+}
+function buildMsg(o){
+  var m = MSG[state.lang][state.type](firstName(o), shortId(o.order_id), document.getElementById('timeIn').value.trim()||'10 AM');
+  if (state.type==='ready') m += reportBlock(state.lang);
+  return m;
+}
 function sentKey(o){ return 'dd_sent_'+document.getElementById('dateIn').value+'_'+state.type+'_'+o.order_id; }
 function isSent(o){ try{ return localStorage.getItem(sentKey(o))==='1'; }catch(e){ return false; } }
 function markSent(o){ try{ localStorage.setItem(sentKey(o),'1'); }catch(e){} }
@@ -335,8 +373,39 @@ document.getElementById('sheetSync').addEventListener('click', async function(){
   load();
 });
 
+// ── Meat report: saved per delivery date in site_settings 'meat_report' ──
+var reportStore = { raised_by:'Mallaya', village:'Gollapalli', by_date:{} };
+function fillReport(){
+  var d = document.getElementById('dateIn').value, x = (reportStore.by_date||{})[d] || {};
+  document.getElementById('repBy').value = x.by || reportStore.raised_by || '';
+  document.getElementById('repVillage').value = x.village || reportStore.village || '';
+  document.getElementById('repWeight').value = x.weight || '';
+  document.getElementById('repChecker').value = x.checker || '';
+  document.getElementById('repOrgans').checked = !!x.organs;
+  document.getElementById('repGloves').checked = !!x.gloves;
+  document.getElementById('repMsg').textContent = x.saved ? 'Saved for this date' : '';
+  render();
+}
+async function loadReport(){
+  var r = await AdminAPI.db('site_settings','select',{ match:{ key:'meat_report' } });
+  if (r.data && r.data[0] && r.data[0].value) reportStore = Object.assign(reportStore, r.data[0].value);
+  fillReport();
+}
+['repOn','repBy','repVillage','repWeight','repChecker','repOrgans','repGloves'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', render); document.getElementById(id).addEventListener('change', render);
+});
+document.getElementById('dateIn').addEventListener('change', fillReport);
+document.getElementById('repSave').addEventListener('click', async function(){
+  var d = document.getElementById('dateIn').value, r = readReport();
+  reportStore.raised_by = r.by; reportStore.village = r.village;
+  reportStore.by_date = reportStore.by_date || {};
+  reportStore.by_date[d] = { by:r.by, village:r.village, weight:r.weight, checker:r.checker, organs:r.organs, gloves:r.gloves, saved:true };
+  var res = await AdminAPI.db('site_settings','upsert',{ values:{ key:'meat_report', value:reportStore } });
+  document.getElementById('repMsg').textContent = res.error ? ('Could not save: '+res.error) : 'Saved for '+d;
+});
+
 document.getElementById('dateIn').value = isoDate(new Date());
-if (AdminAPI.isAdmin()) { load(); loadSheetStatus(); }
+if (AdminAPI.isAdmin()) { load(); loadSheetStatus(); loadReport(); }
 </script>
 </body>
 </html>
