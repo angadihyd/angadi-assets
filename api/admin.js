@@ -375,11 +375,24 @@ module.exports = async (req, res) => {
         win ? '' : 'WARNING: no open order window, so every order is being rejected.',
         `Ready to post as WhatsApp status / groups:\n${status}`,
       ].filter(Boolean);
+      // Broadcast agent: when the open window closes within 24h, queue ONE
+      // "last call" push to opted-in customers (sent by the dispatch-notify cron).
+      let queued = false;
+      if (win && new Date(win.closes_at).getTime() - Date.now() < 24 * 3600 * 1000) {
+        const dupe = await q(`scheduled_notifications?select=id&title=eq.${encodeURIComponent('Last call for ' + dayName)}&send_at=gte.${encodeURIComponent(since)}&limit=1`);
+        if (!dupe.length) {
+          const pr = await rest(genv, 'scheduled_notifications', {
+            method: 'POST', headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ title: 'Last call for ' + dayName, body: `Fresh village mutton & chicken for ${dayName}. Orders close ${closes}.`, url: '/shop.html', send_at: new Date().toISOString() }),
+          });
+          queued = pr.ok;
+        }
+      }
       const r = await rest(genv, 'health_alerts', {
         method: 'POST', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify([{ severity: win ? 'info' : 'warning', title: 'Growth digest', description: lines.join('\n'), source: 'growth-agent' }]),
       });
-      res.status(200).json({ ok: r.ok, visitors: uniq.size, leads: leads.length, orders: good.length, windowOpen: !!win });
+      res.status(200).json({ ok: r.ok, visitors: uniq.size, leads: leads.length, orders: good.length, windowOpen: !!win, lastCallQueued: queued });
     } catch (e) {
       console.error('growth cron failed', e);
       res.status(500).json({ error: String(e.message || e) });
