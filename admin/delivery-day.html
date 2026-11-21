@@ -73,7 +73,7 @@ input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px so
     <span class="label">Meat report (added to the ✅ Ready message)</span>
     <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-bottom:.6rem;"><input type="checkbox" id="repOn" checked style="width:auto;"> Include this report when sending "Ready"</label>
     <div class="row"><input type="text" id="repBy" placeholder="Raised by" value="Mallaya" style="flex:1;min-width:130px;"><input type="text" id="repVillage" placeholder="Village" value="Gollapalli" style="flex:1;min-width:130px;"></div>
-    <div class="row" style="margin-top:.5rem;"><input type="text" id="repWeight" placeholder="Weight after dressing (kg)" inputmode="decimal" style="flex:1;min-width:130px;"><input type="text" id="repChecker" placeholder="Checked by (name)" style="flex:1;min-width:130px;"></div>
+    <div class="row" style="margin-top:.5rem;"><input type="text" id="repWeight" placeholder="Weight after dressing (kg)" inputmode="decimal" style="flex:1;min-width:130px;"><input type="text" id="repChecker" placeholder="Checked by" value="Angadi team" style="flex:1;min-width:130px;"></div>
     <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.6rem;"><input type="checkbox" id="repOrgans" style="width:auto;"> Liver, lungs, heart, kidneys checked: normal colour, no spots</label>
     <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.4rem;"><input type="checkbox" id="repGloves" style="width:auto;"> Cut with gloves and clean knives</label>
     <div class="sub" style="margin:.6rem 0 0;">Only the lines you tick or fill are sent. If an animal fails the check, don't tick the organ line, and don't sell that meat.</div>
@@ -110,16 +110,16 @@ var state = { type:'ready', lang:'en', orders:[] };
 
 var MSG = {
   en: {
-    ready: function(n,id,t){ return 'Hi '+n+'! 🙏 Your Angadi order '+id+' is packed fresh and ready. Our delivery boy is about to leave.'; },
-    onway: function(n,id,t){ return 'Hi '+n+'! 🛵 Your Angadi meat is on the way. Our delivery boy will reach you by '+t+'. Please keep your phone handy. Order '+id; },
-    delay: function(n,id,t){ return 'Hi '+n+', sorry for the small delay today. Your Angadi order '+id+' will reach you by '+t+'. Thank you for your patience 🙏'; },
-    thanks:function(n,id,t){ return 'Hi '+n+'! Your Angadi order '+id+' has been delivered. Thank you for ordering fresh village meat. Do tell us how it was 🙏'; }
+    ready: function(n,id,t){ return 'Dear '+n+' garu, namaste 🙏 Your Angadi order '+id+' is packed fresh and ready. Our delivery boy will be leaving shortly.'; },
+    onway: function(n,id,t){ return 'Dear '+n+' garu, namaste 🙏 Your Angadi order '+id+' is on the way 🛵 Our delivery boy will reach you by '+t+'. Kindly keep your phone handy. Thank you!'; },
+    delay: function(n,id,t){ return 'Dear '+n+' garu, namaste 🙏 We are sorry for the small delay today. Your Angadi order '+id+' will reach you by '+t+'. Thank you so much for your patience.'; },
+    thanks:function(n,id,t){ return 'Dear '+n+' garu, namaste 🙏 Your Angadi order '+id+' has been delivered. Thank you for choosing us. We would love to hear how it was!'; }
   },
   te: {
-    ready: function(n,id,t){ return 'నమస్తే '+n+'! 🙏 మీ Angadi ఆర్డర్ '+id+' తాజాగా ప్యాక్ అయి సిద్ధంగా ఉంది. డెలివరీ బాయ్ బయలుదేరబోతున్నారు.'; },
-    onway: function(n,id,t){ return 'నమస్తే '+n+'! 🛵 మీ Angadi మాంసం బయలుదేరింది. డెలివరీ బాయ్ '+t+' లోపు చేరుకుంటారు. దయచేసి ఫోన్ అందుబాటులో ఉంచండి. ఆర్డర్ '+id; },
-    delay: function(n,id,t){ return 'నమస్తే '+n+', ఈరోజు కొంచెం ఆలస్యం అయినందుకు క్షమించండి. మీ Angadi ఆర్డర్ '+id+' '+t+' లోపు చేరుతుంది. ఓపికకు ధన్యవాదాలు 🙏'; },
-    thanks:function(n,id,t){ return 'నమస్తే '+n+'! మీ Angadi ఆర్డర్ '+id+' డెలివరీ అయింది. తాజా పల్లె మాంసం ఆర్డర్ చేసినందుకు ధన్యవాదాలు 🙏'; }
+    ready: function(n,id,t){ return 'నమస్తే '+n+' గారు 🙏 మీ Angadi ఆర్డర్ '+id+' తాజాగా ప్యాక్ చేయబడి సిద్ధంగా ఉంది. మా డెలివరీ బాయ్ త్వరలో బయలుదేరుతారు.'; },
+    onway: function(n,id,t){ return 'నమస్తే '+n+' గారు 🙏 మీ Angadi ఆర్డర్ '+id+' బయలుదేరింది 🛵 మా డెలివరీ బాయ్ '+t+' లోపు మీ వద్దకు చేరుకుంటారు. దయచేసి మీ ఫోన్ అందుబాటులో ఉంచగలరు. ధన్యవాదాలు!'; },
+    delay: function(n,id,t){ return 'నమస్తే '+n+' గారు 🙏 ఈరోజు కొంచెం ఆలస్యం అయినందుకు క్షమించండి. మీ Angadi ఆర్డర్ '+id+' '+t+' లోపు చేరుతుంది. మీ ఓపికకు చాలా ధన్యవాదాలు.'; },
+    thanks:function(n,id,t){ return 'నమస్తే '+n+' గారు 🙏 మీ Angadi ఆర్డర్ '+id+' డెలివరీ అయింది. మమ్మల్ని ఎంచుకున్నందుకు ధన్యవాదాలు. మీ అభిప్రాయం తెలియజేయగలరు!'; }
   }
 };
 
@@ -140,12 +140,12 @@ function reportBlock(lang){
   if (lang==='te'){
     if (r.by||r.village) L.push('🐐 '+(r.village?r.village+' గ్రామంలో ':'')+(r.by?r.by+' గారు ':'')+'స్వేచ్ఛగా పెంచారు');
     if (r.weight) L.push('⚖️ డ్రెస్సింగ్ తర్వాత బరువు: '+r.weight+' కిలోలు');
-    if (r.organs) L.push('✅ కోసిన తర్వాత పరీక్ష: కాలేయం, ఊపిరితిత్తులు, గుండె, కిడ్నీలు సాధారణ రంగులో ఉన్నాయి'+(r.checker?' (పరిశీలించినవారు: '+r.checker+')':''));
+    if (r.organs) L.push('✅ కోసిన తర్వాత పరీక్ష: కాలేయం, ఊపిరితిత్తులు, గుండె, కిడ్నీలు సాధారణ రంగులో ఉన్నాయి'+(r.checker?' — పరిశీలించినవారు: '+r.checker:''));
     if (r.gloves) L.push('🧤 గ్లవ్స్ మరియు శుభ్రమైన కత్తులతో కోయబడింది');
   } else {
-    if (r.by||r.village) L.push('🐐 Raised free range'+(r.by?' by '+r.by:'')+(r.village?', '+r.village+' village':''));
+    if (r.by||r.village) L.push('🐐 Raised free range'+(r.by?' by '+r.by+' garu':'')+(r.village?' in '+r.village+' village':''));
     if (r.weight) L.push('⚖️ Weight after dressing: '+r.weight+' kg');
-    if (r.organs) L.push('✅ Checked after slaughter: liver, lungs, heart and kidneys normal colour, no spots'+(r.checker?' (checked by '+r.checker+')':''));
+    if (r.organs) L.push('✅ Checked after slaughter: liver, lungs, heart and kidneys normal colour, no spots'+(r.checker?' — checked by '+r.checker:''));
     if (r.gloves) L.push('🧤 Cut with gloves and clean knives');
   }
   return L.length ? '\n\n'+L.join('\n') : '';
@@ -380,7 +380,7 @@ function fillReport(){
   document.getElementById('repBy').value = x.by || reportStore.raised_by || '';
   document.getElementById('repVillage').value = x.village || reportStore.village || '';
   document.getElementById('repWeight').value = x.weight || '';
-  document.getElementById('repChecker').value = x.checker || '';
+  document.getElementById('repChecker').value = x.checker || 'Angadi team';
   document.getElementById('repOrgans').checked = !!x.organs;
   document.getElementById('repGloves').checked = !!x.gloves;
   document.getElementById('repMsg').textContent = x.saved ? 'Saved for this date' : '';
