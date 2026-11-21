@@ -330,6 +330,63 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // ── Daily growth agent (Vercel Cron, GET ?cron=growth) ──
+  // Reads yesterday's funnel (visitors → checkout started → orders), finds
+  // the best traffic source, lists people who left at checkout, and writes
+  // one "Growth digest" into health_alerts with a ready-to-post WhatsApp
+  // status text. It only READS and DRAFTS — it never messages customers.
+  if (cronParam === 'growth') {
+    const SUPABASE_URL = process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const CRON_SECRET = process.env.CRON_SECRET, HEALTH_AGENT_TOKEN = process.env.HEALTH_AGENT_TOKEN;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) { res.status(500).json({ error: 'Not configured' }); return; }
+    const authHeader = req.headers.authorization || '';
+    const okCron = CRON_SECRET && timingEq(authHeader, `Bearer ${CRON_SECRET}`);
+    const okManual = HEALTH_AGENT_TOKEN && timingEq(req.headers['x-health-token'] || '', HEALTH_AGENT_TOKEN);
+    if (!okCron && !okManual) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    const genv = { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY };
+    try {
+      const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const q = async (p) => { const r = await rest(genv, p); return r.ok ? r.json() : []; };
+      const [visits, leads, orders, wins] = await Promise.all([
+        q(`site_visits?select=visitor_id,source,path&created_at=gte.${encodeURIComponent(since)}&limit=5000`),
+        q(`checkout_leads?select=name,phone,total,source,updated_at&updated_at=gte.${encodeURIComponent(since)}&limit=500`),
+        q(`orders?select=total,status,customer&placed_at=gte.${encodeURIComponent(since)}&limit=500`),
+        q(`order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.${encodeURIComponent(new Date().toISOString())}&order=closes_at.asc&limit=1`),
+      ]);
+      const uniq = new Set(visits.map((v) => v.visitor_id).filter(Boolean));
+      const bySrc = {};
+      visits.forEach((v) => { const s = v.source || 'direct/unknown'; (bySrc[s] = bySrc[s] || new Set()).add(v.visitor_id); });
+      const srcLine = Object.entries(bySrc).sort((a, b) => b[1].size - a[1].size).slice(0, 5).map(([s, set]) => `${s}: ${set.size}`).join(', ') || 'none';
+      const good = orders.filter((o) => o.status !== 'cancelled');
+      const revenue = good.reduce((a, o) => a + (Number(o.total) || 0), 0);
+      const buyerPhones = new Set(good.map((o) => String((o.customer || {}).phone || '').slice(-10)));
+      const dropped = leads.filter((l) => l.phone && !buyerPhones.has(String(l.phone).slice(-10)));
+      const pct = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '–');
+      const win = wins[0];
+      const dayName = win ? new Date(win.delivery_date).toLocaleDateString('en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' }) : null;
+      const closes = win ? new Date(win.closes_at).toLocaleString('en-IN', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' }) : null;
+      const status = win
+        ? `Fresh village mutton & country chicken, delivered ${dayName} in Hyderabad. Order by ${closes}: https://www.angadi.farm/?src=wa-status`
+        : 'No order window is open. Open one in Admin → Order windows so the site can take orders.';
+      const lines = [
+        `Last 24h: ${uniq.size} visitors → ${leads.length} started checkout (${pct(leads.length, uniq.size)}) → ${good.length} orders (${pct(good.length, uniq.size)}), ₹${Math.round(revenue)}.`,
+        `Visitors by source: ${srcLine}.`,
+        dropped.length ? `Left at checkout, worth a personal WhatsApp: ${dropped.slice(0, 10).map((l) => `${l.name || 'customer'} ${l.phone}`).join('; ')}.` : 'Nobody left at checkout.',
+        win ? '' : 'WARNING: no open order window, so every order is being rejected.',
+        `Ready to post as WhatsApp status / groups:\n${status}`,
+      ].filter(Boolean);
+      const r = await rest(genv, 'health_alerts', {
+        method: 'POST', headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify([{ severity: win ? 'info' : 'warning', title: 'Growth digest', description: lines.join('\n'), source: 'growth-agent' }]),
+      });
+      res.status(200).json({ ok: r.ok, visitors: uniq.size, leads: leads.length, orders: good.length, windowOpen: !!win });
+    } catch (e) {
+      console.error('growth cron failed', e);
+      res.status(500).json({ error: String(e.message || e) });
+    }
+    return;
+  }
+
   // ── Daily Google Sheet sync (Vercel Cron, GET ?cron=sheet-sync) ──
   if (cronParam === 'sheet-sync') {
     const SUPABASE_URL = process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
