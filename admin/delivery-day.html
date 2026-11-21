@@ -70,6 +70,13 @@ input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px so
   </div>
 
   <div class="panel">
+    <span class="label">Google Sheet auto-sync → Orders</span>
+    <div class="sub" style="margin-bottom:.6rem;">Your team types orders in a Google Sheet (same columns, one tab per day named like <b>22-11-2026</b>). New rows are saved into Orders every morning at 5:30 AM, or tap Sync now. Share the sheet as <b>Anyone with the link → Viewer</b>.</div>
+    <div class="row"><input type="text" id="sheetUrl" placeholder="Paste Google Sheet link" style="flex:1;min-width:180px;"><button class="btn wa" id="sheetSync">Save link &amp; Sync now</button></div>
+    <div class="count" id="sheetMsg" style="margin:.6rem 0 0;line-height:1.5;"></div>
+  </div>
+
+  <div class="panel">
     <span class="label">WhatsApp orders from Excel / CSV → save into Orders</span>
     <div class="sub" style="margin-bottom:.6rem;">Columns it understands: <b>Name, Phone, Items, Total (amount), Payment, Date, Slot, Address, Status</b>. Only Phone and Total are essential. Orders are saved into the main Orders list, so revenue, repeat customers and analytics include them. Re-uploading the same file never makes duplicates.</div>
     <div class="row"><input type="file" id="xlsIn" accept=".xlsx,.xls,.csv" style="color:var(--cream);font-size:.8rem;max-width:100%;"></div>
@@ -300,8 +307,36 @@ document.getElementById('resetBtn').addEventListener('click',function(){
   currentList().forEach(function(o){ try{ localStorage.removeItem(sentKey(o)); }catch(e){} }); render();
 });
 
+// ── Google Sheet sync ──
+function describeSync(res, when){
+  if (!res) return '';
+  if (!res.ok) return '<span style="color:var(--red)">Last sync failed: '+esc(res.error||'unknown error')+'</span>';
+  return 'Last sync '+(when?new Date(when).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'')+': <b>'+res.inserted+' new</b>, '+res.updated+' updated, '+res.unchanged+' already saved'
+    +(res.tabs&&res.tabs.length?'<br>Tabs → '+esc(res.tabs.join(' · ')):'')
+    +(res.skippedWebsite?'<br>'+res.skippedWebsite+' "Website order" lines skipped':'')
+    +(res.skippedNoPhone?'<br>⚠ '+res.skippedNoPhone+' lines skipped: no valid phone':'')
+    +(res.pricedFromWebsite?'<br>'+res.pricedFromWebsite+' blank amounts priced from the website':'')
+    +(res.noAmount?'<br>⚠ '+res.noAmount+' lines have no amount and no website price (₹0)':'')
+    +(res.skippedTabs&&res.skippedTabs.length?'<br>Ignored tabs (name is not a date): '+esc(res.skippedTabs.join(', ')):'');
+}
+async function loadSheetStatus(){
+  var r = await AdminAPI.call('sheet-sync',{statusOnly:true});
+  var c = (r && r.config) || {};
+  if (c.url) document.getElementById('sheetUrl').value = c.url;
+  document.getElementById('sheetMsg').innerHTML = describeSync(c.last_result, c.last_sync);
+}
+document.getElementById('sheetSync').addEventListener('click', async function(){
+  var btn=this, url=document.getElementById('sheetUrl').value.trim();
+  btn.disabled=true; btn.textContent='Syncing…';
+  var r = await AdminAPI.call('sheet-sync', url?{url:url}:{});
+  btn.disabled=false; btn.textContent='Save link & Sync now';
+  if (r.error && !r.result){ document.getElementById('sheetMsg').innerHTML='<span style="color:var(--red)">'+esc(r.error)+'</span>'; return; }
+  document.getElementById('sheetMsg').innerHTML = describeSync(r.result, new Date().toISOString());
+  load();
+});
+
 document.getElementById('dateIn').value = isoDate(new Date());
-if (AdminAPI.isAdmin()) load();
+if (AdminAPI.isAdmin()) { load(); loadSheetStatus(); }
 </script>
 </body>
 </html>

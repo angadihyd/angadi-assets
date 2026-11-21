@@ -45,6 +45,7 @@
 
 const crypto = require('crypto');
 const webpush = require('web-push');
+const { syncFromSheet } = require('./_lib/sheet-orders');
 
 // Salted scrypt hash, stored in delivery_boys.password as "salt:hash" (hex).
 // Never store or return the plaintext password once this runs.
@@ -273,6 +274,29 @@ async function saveHealthAlert(env, f) {
   }
 }
 
+// ── Google Sheet → Orders sync (site_settings key 'orders_sheet' = {url, last_sync, last_result}) ──
+async function getSheetSetting(env) {
+  const r = await rest(env, 'site_settings?key=eq.orders_sheet&select=value');
+  const rows = r.ok ? await r.json() : [];
+  return (rows[0] && rows[0].value) || {};
+}
+async function saveSheetSetting(env, value) {
+  await rest(env, 'site_settings?on_conflict=key', {
+    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ key: 'orders_sheet', value }),
+  });
+}
+async function runSheetSync(env, urlOverride) {
+  const cfg = await getSheetSetting(env);
+  const url = urlOverride || cfg.url;
+  if (!url) throw new Error('No Google Sheet link saved yet.');
+  let result;
+  try { result = await syncFromSheet(env, rest, url); }
+  catch (e) { result = { ok: false, error: String(e.message || e) }; }
+  await saveSheetSetting(env, { url, last_sync: new Date().toISOString(), last_result: result });
+  return { url, result };
+}
+
 module.exports = async (req, res) => {
   // ── Vercel Cron hits this with GET ?cron=health-check, never POST ──
   const cronParam = req.method === 'GET' ? new URL(req.url, 'http://x').searchParams.get('cron') : null;
@@ -303,6 +327,19 @@ module.exports = async (req, res) => {
       console.error('health-check cron failed', e);
       res.status(500).json({ error: String(e.message || e) });
     }
+    return;
+  }
+
+  // ── Daily Google Sheet sync (Vercel Cron, GET ?cron=sheet-sync) ──
+  if (cronParam === 'sheet-sync') {
+    const SUPABASE_URL = process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const CRON_SECRET = process.env.CRON_SECRET;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) { res.status(500).json({ error: 'Not configured' }); return; }
+    if (!(CRON_SECRET && timingEq(req.headers.authorization || '', `Bearer ${CRON_SECRET}`))) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    try {
+      const out = await runSheetSync({ SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY });
+      res.status(200).json(out.result);
+    } catch (e) { res.status(200).json({ ok: false, error: String(e.message || e) }); }
     return;
   }
 
@@ -840,6 +877,21 @@ module.exports = async (req, res) => {
         reconciled: !!(captured && !order.payment_id),
         capturedPaymentId: captured ? captured.id : null,
       });
+      return;
+    }
+
+    if (action === 'sheet-sync') {
+      // {url?, statusOnly?} → saves the link (if given) and syncs now.
+      try {
+        if (payload.statusOnly) { res.status(200).json({ ok: true, config: await getSheetSetting(env) }); return; }
+        const url = payload.url ? String(payload.url).trim() : '';
+        if (url && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//.test(url)) {
+          res.status(400).json({ error: 'Paste a Google Sheets link (https://docs.google.com/spreadsheets/d/…).' });
+          return;
+        }
+        const out = await runSheetSync(env, url);
+        res.status(200).json({ ok: out.result.ok, url: out.url, result: out.result });
+      } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
       return;
     }
 

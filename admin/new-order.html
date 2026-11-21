@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>New WhatsApp Order — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#25D366;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.1rem 1.1rem 6rem;max-width:640px;margin:0 auto;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.3rem;flex-wrap:wrap;}
+h1{font-family:'Playfair Display',serif;font-size:1.45rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:.85rem;}
+.sub{font-size:.8rem;color:rgba(246,237,216,.45);margin-bottom:1rem;line-height:1.5;}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;margin-bottom:.9rem;}
+.label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(246,237,216,.5);margin:.6rem 0 .3rem;display:block;}
+.label:first-child{margin-top:0;}
+input,select{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.6rem .7rem;color:var(--cream);font-family:inherit;font-size:.95rem;color-scheme:dark;}
+select option{background:#1a0c04;color:var(--cream);}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;}
+.row>*{flex:1;min-width:120px;}
+.item{border:1px solid var(--border);border-radius:12px;padding:.7rem;margin-bottom:.6rem;background:rgba(255,255,255,.02);}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;}
+.chip{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--cream);border-radius:100px;padding:.4rem .8rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.chip.on{background:var(--clay);border-color:var(--clay);color:#fff;}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--cream);border-radius:9px;padding:.6rem 1rem;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;text-align:center;}
+.btn.wa{background:var(--green);border-color:var(--green);color:#06210f;}
+.btn.big{width:100%;padding:.9rem;font-size:1rem;}
+.line{display:flex;justify-content:space-between;font-size:.9rem;padding:.2rem 0;}
+.line.total{font-weight:700;font-size:1.1rem;color:var(--gold);border-top:1px solid var(--border);margin-top:.3rem;padding-top:.5rem;}
+.warn{background:rgba(229,115,115,.1);border:1px solid rgba(229,115,115,.3);color:var(--red);border-radius:10px;padding:.6rem .8rem;font-size:.82rem;margin-bottom:.8rem;line-height:1.5;}
+.ok{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.35);border-radius:12px;padding:.9rem;margin-bottom:.9rem;line-height:1.6;}
+.x{background:none;border:none;color:var(--red);font-size:.8rem;cursor:pointer;font-family:inherit;}
+#guard{display:none;text-align:center;padding:3rem 1rem;}
+</style>
+</head>
+<body>
+<div id="guard">
+  <h1>Admin login needed</h1>
+  <p class="sub" style="margin-top:.6rem;">Open the admin dashboard and log in first, then come back here.</p>
+  <a class="btn wa" href="dashboard.html">Go to dashboard</a>
+</div>
+
+<div id="app">
+  <div class="top"><h1>New WhatsApp order</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <p class="sub">Type what the customer asked for on WhatsApp. Prices come from the website, so nothing is typed twice. It lands in Orders straight away.</p>
+
+  <div id="done"></div>
+  <div id="warn"></div>
+
+  <div class="panel">
+    <span class="label">Customer name</span><input id="name" autocomplete="off" placeholder="e.g. Rishi">
+    <span class="label">WhatsApp / phone (10 digits)</span><input id="phone" inputmode="numeric" autocomplete="off" placeholder="98451 78269">
+    <span class="label">Area / address</span><input id="area" autocomplete="off" placeholder="e.g. Miyapur">
+    <div class="row">
+      <div><span class="label">Delivery date</span><input type="date" id="date"></div>
+      <div><span class="label">Payment</span><select id="pay"><option value="cod">Cash on delivery</option><option value="upi">Already paid (UPI)</option></select></div>
+    </div>
+    <span class="label">Notes (optional)</span><input id="notes" autocomplete="off" placeholder="e.g. Less bones / deliver after 12 PM">
+  </div>
+
+  <div class="panel">
+    <span class="label">Items</span>
+    <div id="items"></div>
+    <button class="btn" id="addItem" style="width:100%;">+ Add item</button>
+  </div>
+
+  <div class="panel">
+    <div class="line"><span>Items</span><span id="sub">₹0</span></div>
+    <div class="line"><span>Delivery <input id="fee" type="number" min="0" style="width:90px;margin-left:.4rem;padding:.3rem .5rem;font-size:.85rem;"></span><span id="feeNote" style="font-size:.75rem;opacity:.6;"></span></div>
+    <div class="line total"><span>Total</span><span id="total">₹0</span></div>
+  </div>
+
+  <button class="btn wa big" id="save">Save order</button>
+</div>
+
+<script src="admin-api.js"></script>
+<script>
+if (!AdminAPI.isAdmin()) { document.getElementById('guard').style.display='block'; document.getElementById('app').style.display='none'; }
+
+var products = [], existing = [], delivery = { free_above:3000, standard_fee:50 }, feeTouched = false;
+var WEIGHTS = [{l:'250 g',kg:.25},{l:'500 g',kg:.5},{l:'750 g',kg:.75},{l:'1 kg',kg:1},{l:'1.5 kg',kg:1.5},{l:'2 kg',kg:2},{l:'3 kg',kg:3}];
+var rows = [];  // {pid, kg, count, price, priceEdited}
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function inr(n){ return '₹'+Number(n||0).toLocaleString('en-IN'); }
+function prod(id){ return products.find(function(p){ return p.id===id; }); }
+function perKg(p){ return String(p.unit||'').toLowerCase()==='kg'; }
+
+function calcPrice(r){
+  var p = prod(r.pid); if (!p) return 0;
+  var rate = Number(p.price)||0;
+  return perKg(p) ? Math.round(rate*(r.kg||0)) : Math.round(rate*(r.count||1));
+}
+function itemName(r){
+  var p = prod(r.pid); if (!p) return '';
+  var base = String(p.name).replace(/\s*\(.*?\)\s*/g,' ').trim();
+  if (perKg(p)){ var w = WEIGHTS.find(function(x){ return x.kg===r.kg; }); return base+' · '+(w?w.l:(r.kg*1000)+' g'); }
+  return base+' · '+(r.count||1)+(String(p.unit).toLowerCase()==='egg'?' eggs':' × '+p.unit);
+}
+
+function addRow(){
+  var first = products.find(function(p){ return p.active!==false; }) || products[0];
+  if (!first) return;
+  rows.push({ pid:first.id, kg:1, count:1, price:0, priceEdited:false });
+  drawItems(); recalc();
+}
+function drawItems(){
+  document.getElementById('items').innerHTML = rows.map(function(r,i){
+    var p = prod(r.pid), kg = p && perKg(p);
+    var opts = products.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===r.pid?' selected':'')+'>'+esc(x.name)+(x.active===false?' (hidden)':'')+' — '+inr(x.price)+'/'+esc(x.unit)+'</option>'; }).join('');
+    var qty = kg
+      ? '<div class="chips">'+WEIGHTS.map(function(w){ return '<button class="chip'+(w.kg===r.kg?' on':'')+'" data-i="'+i+'" data-kg="'+w.kg+'">'+w.l+'</button>'; }).join('')+'</div>'
+      : '<div class="row" style="margin-top:.5rem;"><div><span class="label">How many ('+esc(p?p.unit:'')+')</span><input type="number" min="1" value="'+(r.count||1)+'" data-i="'+i+'" data-count="1"></div></div>';
+    return '<div class="item"><select data-i="'+i+'" data-pid="1">'+opts+'</select>'+qty
+      +'<div class="row" style="margin-top:.5rem;align-items:flex-end;"><div><span class="label">Price (₹)</span><input type="number" min="0" value="'+r.price+'" data-i="'+i+'" data-price="1"></div>'
+      +'<div style="flex:0 0 auto;min-width:0;"><button class="x" data-i="'+i+'" data-del="1">Remove</button></div></div></div>';
+  }).join('');
+}
+function recalc(){
+  rows.forEach(function(r){ if (!r.priceEdited) r.price = calcPrice(r); });
+  var sub = rows.reduce(function(s,r){ return s+(Number(r.price)||0); },0);
+  if (!feeTouched) document.getElementById('fee').value = (sub>0 && sub<delivery.free_above) ? delivery.standard_fee : 0;
+  var fee = Number(document.getElementById('fee').value)||0;
+  document.getElementById('sub').textContent = inr(sub);
+  document.getElementById('feeNote').textContent = sub>=delivery.free_above ? 'free above '+inr(delivery.free_above) : '';
+  document.getElementById('total').textContent = inr(sub+fee);
+  // keep visible price inputs in sync without stealing focus
+  document.querySelectorAll('input[data-price]').forEach(function(inp){ if (document.activeElement!==inp) inp.value = rows[+inp.dataset.i].price; });
+}
+
+document.getElementById('items').addEventListener('click',function(e){
+  var b = e.target.closest('button'); if (!b) return;
+  var i = +b.dataset.i;
+  if (b.dataset.kg){ rows[i].kg = parseFloat(b.dataset.kg); rows[i].priceEdited=false; drawItems(); recalc(); }
+  if (b.dataset.del){ rows.splice(i,1); drawItems(); recalc(); }
+});
+document.getElementById('items').addEventListener('change',function(e){
+  var t = e.target, i = +t.dataset.i;
+  if (t.dataset.pid){ rows[i].pid = t.value; rows[i].priceEdited=false; rows[i].kg = rows[i].kg||1; drawItems(); recalc(); }
+});
+document.getElementById('items').addEventListener('input',function(e){
+  var t = e.target, i = +t.dataset.i;
+  if (t.dataset.count){ rows[i].count = Math.max(1,parseInt(t.value,10)||1); rows[i].priceEdited=false; recalc(); }
+  if (t.dataset.price){ rows[i].price = Number(t.value)||0; rows[i].priceEdited=true; recalc(); }
+});
+document.getElementById('fee').addEventListener('input',function(){ feeTouched=true; recalc(); });
+document.getElementById('addItem').addEventListener('click',addRow);
+
+function cleanPhone(v){ var d=String(v||'').replace(/\D/g,''); return d.length>=10?d.slice(-10):''; }
+function checkDup(){
+  var ph = cleanPhone(document.getElementById('phone').value), d = document.getElementById('date').value, w = document.getElementById('warn');
+  var dup = ph && existing.filter(function(o){ return cleanPhone(o.customer&&o.customer.phone)===ph && o.customer.delivery_date===d && o.status!=='cancelled'; });
+  w.innerHTML = (dup&&dup.length) ? '<div class="warn">⚠ This phone number already has '+dup.length+' order'+(dup.length>1?'s':'')+' for that day ('+dup.map(function(o){return esc(o.order_id)+' '+inr(o.total);}).join(', ')+'). Save only if this is a separate order.</div>' : '';
+}
+document.getElementById('phone').addEventListener('input',checkDup);
+document.getElementById('date').addEventListener('change',checkDup);
+
+document.getElementById('save').addEventListener('click', async function(){
+  var btn=this, name=document.getElementById('name').value.trim(), phone=cleanPhone(document.getElementById('phone').value), date=document.getElementById('date').value;
+  var errs=[];
+  if (!name) errs.push('customer name'); if (phone.length!==10) errs.push('a valid 10-digit phone'); if (!date) errs.push('delivery date'); if (!rows.length) errs.push('at least one item');
+  if (errs.length){ alert('Please add: '+errs.join(', ')); return; }
+  var sub = rows.reduce(function(s,r){ return s+(Number(r.price)||0); },0), fee = Number(document.getElementById('fee').value)||0;
+  if (!sub && !confirm('Total is ₹0 — save anyway?')) return;
+  var paid = document.getElementById('pay').value==='upi', area=document.getElementById('area').value.trim();
+  var order = {
+    order_id:'WF-'+date.replace(/-/g,'')+'-'+phone+'-'+Date.now().toString(36).slice(-4).toUpperCase(),
+    customer:{ name:name, phone:phone, address:{area:area}, area:area, notes:document.getElementById('notes').value.trim(), delivery_date:date, slot:'', source:'whatsapp' },
+    items: rows.map(function(r){ return { name:itemName(r), qty:1, price:Number(r.price)||0 }; }),
+    subtotal:sub, delivery:fee, discount:0, total:sub+fee,
+    payment: paid?'upi':'cod', payment_id: paid?'manual-whatsapp':null,
+    status: date < iso(new Date()) ? 'delivered' : 'confirmed',
+    placed_at: new Date().toISOString()
+  };
+  btn.disabled=true; btn.textContent='Saving…';
+  var r = await AdminAPI.db('orders','insert',{ values:[order] });
+  btn.disabled=false; btn.textContent='Save order';
+  if (r.error){ alert('Could not save: '+r.error); return; }
+  existing.push(order);
+  var msg = 'Hi '+name.split(/\s+/)[0]+'! Your Angadi order is confirmed.\n'+order.items.map(function(i){ return '• '+i.name+' — '+inr(i.price); }).join('\n')
+    +'\nDelivery: '+(fee?inr(fee):'Free')+'\nTotal: '+inr(order.total)+(paid?' (paid)':' (cash on delivery)')+'\nDelivery on '+new Date(date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})+'. Thank you! 🙏';
+  document.getElementById('done').innerHTML = '<div class="ok"><b>✅ Saved: '+esc(name)+' · '+inr(order.total)+'</b><br><a class="btn wa" style="margin-top:.5rem;" target="_blank" href="https://wa.me/91'+phone+'?text='+encodeURIComponent(msg)+'">Send confirmation on WhatsApp</a></div>';
+  rows=[]; feeTouched=false;
+  ['name','phone','area','notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('warn').innerHTML='';
+  addRow(); window.scrollTo({top:0,behavior:'smooth'});
+});
+
+async function init(){
+  document.getElementById('date').value = iso(new Date(Date.now()+86400000));
+  var results = await Promise.all([
+    AdminAPI.db('products','select',{ order:'name' }),
+    AdminAPI.db('orders','select',{ order:'placed_at.desc', limit:1000 }),
+    AdminAPI.db('site_settings','select',{ match:{ key:'delivery' } }),
+    AdminAPI.db('order_windows','select',{ order:'closes_at.desc', limit:20 })
+  ]);
+  if (results[0].error){ document.getElementById('warn').innerHTML='<div class="warn">Could not load products: '+esc(results[0].error)+'</div>'; return; }
+  products = (results[0].data||[]).sort(function(a,b){ return (b.active!==false)-(a.active!==false); });
+  existing = results[1].data||[];
+  var s = results[2].data && results[2].data[0]; if (s && s.value){ delivery.free_above = Number(s.value.free_above)||delivery.free_above; delivery.standard_fee = Number(s.value.standard_fee)||delivery.standard_fee; }
+  // Default the date to the next open delivery window, if there is one.
+  var now = new Date().toISOString(), win = (results[3].data||[]).filter(function(w){ return w.is_active && w.closes_at>=now; }).sort(function(a,b){ return a.closes_at<b.closes_at?-1:1; })[0];
+  if (win) document.getElementById('date').value = win.delivery_date;
+  addRow();
+}
+if (AdminAPI.isAdmin()) init();
+</script>
+</body>
+</html>
