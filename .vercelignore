@@ -17,3 +17,9 @@ ux ui design/*
 !ux ui design/*.webp
 !ux ui design/6ccbeb50a9a2ed023989c42b3b686f61.jpg
 !ux ui design/hero-shepherd-sunset.png
+
+# WhatsApp ordering bot is not set up yet. Excluded so the deployment stays within
+# the Hobby plan limit of 12 serverless functions. Remove these two lines (and free up
+# other functions or upgrade) to deploy the bot.
+api/whatsapp-webhook.js
+api/whatsapp-payment-webhook.js
