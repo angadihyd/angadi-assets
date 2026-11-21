@@ -74,7 +74,7 @@ input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px so
     <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-bottom:.6rem;"><input type="checkbox" id="repOn" checked style="width:auto;"> Include this report when sending "Ready"</label>
     <div class="row"><input type="text" id="repBy" placeholder="Raised by" value="Mallaya" style="flex:1;min-width:130px;"><input type="text" id="repVillage" placeholder="Village" value="Gollapalli" style="flex:1;min-width:130px;"></div>
     <div class="row" style="margin-top:.5rem;"><input type="text" id="repWeight" placeholder="Weight after dressing (kg)" inputmode="decimal" style="flex:1;min-width:130px;"><input type="text" id="repChecker" placeholder="Checked by" value="Angadi team" style="flex:1;min-width:130px;"></div>
-    <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.6rem;"><input type="checkbox" id="repOrgans" style="width:auto;"> Liver, lungs, heart, kidneys checked: normal colour, no spots</label>
+    <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.6rem;"><input type="checkbox" id="repOrgans" style="width:auto;"> Liver, lungs, heart, kidneys checked: normal, animal healthy, processed further</label>
     <label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin-top:.4rem;"><input type="checkbox" id="repGloves" style="width:auto;"> Cut with gloves and clean knives</label>
     <div class="sub" style="margin:.6rem 0 0;">Only the lines you tick or fill are sent. If an animal fails the check, don't tick the organ line, and don't sell that meat.</div>
     <button class="btn" id="repSave" style="margin-top:.6rem;">Save report for this date</button> <span class="count" id="repMsg"></span>
@@ -173,12 +173,12 @@ function reportBlock(lang){
   if (lang==='te'){
     if (r.by||r.village) L.push('🐐 '+(r.village?r.village+' గ్రామంలో ':'')+(r.by?r.by+' గారు ':'')+'స్వేచ్ఛగా పెంచారు');
     if (r.weight) L.push('⚖️ డ్రెస్సింగ్ తర్వాత బరువు: '+r.weight+' కిలోలు');
-    if (r.organs) L.push('✅ కోసిన తర్వాత పరీక్ష: కాలేయం, ఊపిరితిత్తులు, గుండె, కిడ్నీలు సాధారణ రంగులో ఉన్నాయి'+(r.checker?' — పరిశీలించినవారు: '+r.checker:''));
+    if (r.organs) L.push('✅ కోసిన తర్వాత పరీక్ష: కాలేయం, ఊపిరితిత్తులు, గుండె, కిడ్నీలు సాధారణ రంగులో ఉన్నాయి, మచ్చలు లేవు. జంతువు ఆరోగ్యంగా ఉంది, కాబట్టి తదుపరి ప్రాసెసింగ్ చేశాము'+(r.checker?' — పరిశీలించినవారు: '+r.checker:''));
     if (r.gloves) L.push('🧤 గ్లవ్స్ మరియు శుభ్రమైన కత్తులతో కోయబడింది');
   } else {
     if (r.by||r.village) L.push('🐐 Raised free range'+(r.by?' by '+r.by+' garu':'')+(r.village?' in '+r.village+' village':''));
     if (r.weight) L.push('⚖️ Weight after dressing: '+r.weight+' kg');
-    if (r.organs) L.push('✅ Checked after slaughter: liver, lungs, heart and kidneys normal colour, no spots'+(r.checker?' — checked by '+r.checker:''));
+    if (r.organs) L.push('✅ Checked after slaughter: liver, lungs, heart and kidneys normal colour, no spots. The animal is healthy, so we processed it further'+(r.checker?' — checked by '+r.checker:''));
     if (r.gloves) L.push('🧤 Cut with gloves and clean knives');
   }
   return L.length ? '\n\n'+L.join('\n') : '';
