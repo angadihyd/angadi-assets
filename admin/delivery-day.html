@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Delivery Day Messages — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#25D366;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.1rem;max-width:760px;margin:0 auto;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.3rem;flex-wrap:wrap;}
+h1{font-family:'Playfair Display',serif;font-size:1.45rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:.85rem;}
+.sub{font-size:.8rem;color:rgba(246,237,216,.45);margin-bottom:1.1rem;line-height:1.5;}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;margin-bottom:.9rem;}
+.label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(246,237,216,.45);margin-bottom:.4rem;display:block;}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+input[type=date],input[type=text]{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;color:var(--cream);font-family:inherit;font-size:.9rem;color-scheme:dark;}
+.chip{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--cream);border-radius:100px;padding:.5rem .95rem;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.chip.on{background:var(--clay);border-color:var(--clay);color:#fff;}
+.preview{white-space:pre-wrap;font-size:.85rem;line-height:1.5;background:rgba(37,211,102,.07);border:1px solid rgba(37,211,102,.25);border-radius:12px;padding:.8rem .9rem;margin-top:.7rem;}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--cream);border-radius:9px;padding:.55rem 1rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+.btn.wa{background:var(--green);border-color:var(--green);color:#06210f;}
+.btn.big{padding:.8rem 1.2rem;font-size:.95rem;width:100%;text-align:center;margin-bottom:.9rem;}
+.order{display:flex;align-items:center;gap:.8rem;padding:.7rem .9rem;border:1px solid var(--border);border-radius:12px;margin-bottom:.5rem;background:rgba(255,255,255,.025);}
+.order.sent{opacity:.45;}
+.order .who{flex:1;min-width:0;}
+.order .nm{font-weight:700;font-size:.92rem;}
+.order .meta{font-size:.74rem;color:rgba(246,237,216,.5);margin-top:.15rem;line-height:1.4;}
+.count{font-size:.8rem;color:rgba(246,237,216,.6);margin:.2rem 0 .7rem;}
+.empty{text-align:center;padding:2rem 1rem;color:rgba(246,237,216,.5);font-size:.9rem;}
+#guard{display:none;text-align:center;padding:3rem 1rem;}
+</style>
+</head>
+<body>
+<div id="guard">
+  <h1>Admin login needed</h1>
+  <p class="sub" style="margin-top:.6rem;">Open the admin dashboard and log in first, then come back here.</p>
+  <a class="btn wa" href="dashboard.html">Go to dashboard</a>
+</div>
+
+<div id="app">
+  <div class="top"><h1>Delivery day messages</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <p class="sub">Pick the day, pick the message, then tap Send next. WhatsApp opens with the customer's number and the message already typed — you just press send. No hunting for numbers.</p>
+
+  <div class="panel">
+    <span class="label">Delivery date</span>
+    <div class="row"><input type="date" id="dateIn"><button class="chip" id="todayBtn">Today</button><button class="chip" id="tmrBtn">Tomorrow</button></div>
+  </div>
+
+  <div class="panel">
+    <span class="label">Message</span>
+    <div class="row" id="typeChips">
+      <button class="chip on" data-t="ready">✅ Ready</button>
+      <button class="chip" data-t="onway">🛵 On the way</button>
+      <button class="chip" data-t="delay">⏰ Delayed</button>
+      <button class="chip" data-t="thanks">🙏 Delivered</button>
+    </div>
+    <div class="row" style="margin-top:.7rem;" id="timeRow">
+      <span class="label" style="margin:0;">Arrive by</span><input type="text" id="timeIn" value="10 AM" size="9">
+    </div>
+    <div class="row" style="margin-top:.7rem;">
+      <span class="label" style="margin:0;">Language</span>
+      <button class="chip on" data-l="en">English</button><button class="chip" data-l="te">తెలుగు</button>
+    </div>
+    <div class="preview" id="preview"></div>
+  </div>
+
+  <div class="panel">
+    <span class="label">WhatsApp orders from Excel / CSV → save into Orders</span>
+    <div class="sub" style="margin-bottom:.6rem;">Columns it understands: <b>Name, Phone, Items, Total (amount), Payment, Date, Slot, Address, Status</b>. Only Phone and Total are essential. Orders are saved into the main Orders list, so revenue, repeat customers and analytics include them. Re-uploading the same file never makes duplicates.</div>
+    <div class="row"><input type="file" id="xlsIn" accept=".xlsx,.xls,.csv" style="color:var(--cream);font-size:.8rem;max-width:100%;"></div>
+    <div class="count" id="impMsg" style="margin:.6rem 0 0;"></div>
+    <button class="btn wa" id="saveImp" style="display:none;margin-top:.6rem;">Save to Orders</button>
+  </div>
+
+  <button class="btn wa big" id="nextBtn">Send next →</button>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+  <div class="row" style="margin-top:1rem;"><button class="btn" id="copyBtn">Copy all numbers</button><button class="btn" id="resetBtn">Reset sent ticks</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="admin-api.js"></script>
+<script>
+if (!AdminAPI.isAdmin()) { document.getElementById('guard').style.display='block'; document.getElementById('app').style.display='none'; }
+
+var state = { type:'ready', lang:'en', orders:[] };
+
+var MSG = {
+  en: {
+    ready: function(n,id,t){ return 'Hi '+n+'! 🙏 Your Angadi order '+id+' is packed fresh and ready. Our delivery boy is about to leave.'; },
+    onway: function(n,id,t){ return 'Hi '+n+'! 🛵 Your Angadi meat is on the way. Our delivery boy will reach you by '+t+'. Please keep your phone handy. Order '+id; },
+    delay: function(n,id,t){ return 'Hi '+n+', sorry for the small delay today. Your Angadi order '+id+' will reach you by '+t+'. Thank you for your patience 🙏'; },
+    thanks:function(n,id,t){ return 'Hi '+n+'! Your Angadi order '+id+' has been delivered. Thank you for ordering fresh village meat. Do tell us how it was 🙏'; }
+  },
+  te: {
+    ready: function(n,id,t){ return 'నమస్తే '+n+'! 🙏 మీ Angadi ఆర్డర్ '+id+' తాజాగా ప్యాక్ అయి సిద్ధంగా ఉంది. డెలివరీ బాయ్ బయలుదేరబోతున్నారు.'; },
+    onway: function(n,id,t){ return 'నమస్తే '+n+'! 🛵 మీ Angadi మాంసం బయలుదేరింది. డెలివరీ బాయ్ '+t+' లోపు చేరుకుంటారు. దయచేసి ఫోన్ అందుబాటులో ఉంచండి. ఆర్డర్ '+id; },
+    delay: function(n,id,t){ return 'నమస్తే '+n+', ఈరోజు కొంచెం ఆలస్యం అయినందుకు క్షమించండి. మీ Angadi ఆర్డర్ '+id+' '+t+' లోపు చేరుతుంది. ఓపికకు ధన్యవాదాలు 🙏'; },
+    thanks:function(n,id,t){ return 'నమస్తే '+n+'! మీ Angadi ఆర్డర్ '+id+' డెలివరీ అయింది. తాజా పల్లె మాంసం ఆర్డర్ చేసినందుకు ధన్యవాదాలు 🙏'; }
+  }
+};
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function phoneOf(o){ var p=String((o.customer&&o.customer.phone)||'').replace(/\D/g,'').slice(-10); return p.length===10?p:''; }
+function firstName(o){ return String((o.customer&&o.customer.name)||'there').trim().split(/\s+/)[0]; }
+function buildMsg(o){ return MSG[state.lang][state.type](firstName(o), o.order_id, document.getElementById('timeIn').value.trim()||'10 AM'); }
+function sentKey(o){ return 'dd_sent_'+document.getElementById('dateIn').value+'_'+state.type+'_'+o.order_id; }
+function isSent(o){ try{ return localStorage.getItem(sentKey(o))==='1'; }catch(e){ return false; } }
+function markSent(o){ try{ localStorage.setItem(sentKey(o),'1'); }catch(e){} }
+
+// Only orders that will actually be delivered: not cancelled, not unpaid/abandoned.
+var SKIP = ['cancelled','pending','refunded'];
+function isLive(o){
+  var s=String(o.status||'').toLowerCase();
+  if (SKIP.indexOf(s)>-1) return false;
+  if (state.type==='thanks') return true;
+  return s!=='delivered' && s!=='completed';
+}
+
+async function load(){
+  var r = await AdminAPI.db('orders','select',{ order:'placed_at.desc', limit:1000 });
+  if (r.error){ document.getElementById('list').innerHTML='<div class="empty">Could not load orders — '+r.error+'</div>'; return; }
+  state.orders = r.data||[];
+  render();
+}
+
+// ── Excel / CSV import: saves WhatsApp orders into the real orders table ──
+var pendingImport = [];
+function normDate(v, fallback){
+  v = String(v||'').trim();
+  var m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);
+  m = v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m){ var y=m[3].length===2?'20'+m[3]:m[3]; return y+'-'+pad(m[2])+'-'+pad(m[1]); }
+  return fallback;
+}
+function pick(row, words){
+  var keys = Object.keys(row);
+  for (var i=0;i<keys.length;i++){ var k=keys[i].toLowerCase(); for (var j=0;j<words.length;j++){ if (k.indexOf(words[j])>-1) return row[keys[i]]; } }
+  return '';
+}
+function money(v){ var n = parseFloat(String(v||'').replace(/[^0-9.]/g,'')); return isFinite(n)?n:0; }
+function mapStatus(v, date){
+  v = String(v||'').toLowerCase();
+  if (/cancel/.test(v)) return 'cancelled';
+  if (/deliver|done|complete/.test(v)) return 'delivered';
+  if (v) return 'confirmed';
+  return date < isoDate(new Date()) ? 'delivered' : 'confirmed';
+}
+// Your sheet has no header row: A=Name, B=Item, C=Qty, D=Amount, E=Delivery fee (e.g. 50/-), F=Phone, G=Area, H=Notes.
+// One tab per delivery day, named dd-mm-yyyy. Rows are grouped by phone into ONE order per customer per day.
+function cleanPhone(v){ var d=String(v||'').replace(/\D/g,''); return d.length>=10 ? d.slice(-10) : ''; }
+function looksLikeHeader(r){ return r && /name|phone|mobile|item|amount|total/i.test((r||[]).join(' ')); }
+function sheetDate(name, fallback){ var m=String(name).match(/(\d{1,2})[\-\/.](\d{1,2})[\-\/.](\d{4})/); return m ? m[3]+'-'+pad(m[2])+'-'+pad(m[1]) : fallback; }
+function parseSheetPositional(rows, date){
+  var groups = {}, order = [], skippedNoPhone = 0, skippedWebsite = 0, noAmount = 0;
+  rows.forEach(function(r){
+    var name = String(r[0]||'').trim(), item = String(r[1]||'').trim(), qty = String(r[2]||'').trim();
+    if (!name && !item && !r[5]) return;                      // blank spacer row
+    var phone = cleanPhone(r[5]);
+    if (!phone){ skippedNoPhone++; return; }
+    var note = String(r[7]||'').toLowerCase();
+    if (/website/.test(note)){ skippedWebsite++; return; }    // already in Orders from the website
+    var amt = money(r[3]), fee = money(r[4]);
+    if (!amt) noAmount++;
+    var g = groups[phone];
+    if (!g){ g = groups[phone] = { name:name, phone:phone, area:String(r[6]||'').trim(), notes:[], items:[], subtotal:0, fee:0 }; order.push(phone); }
+    if (note && g.notes.indexOf(String(r[7]).trim())<0) g.notes.push(String(r[7]).trim());
+    g.items.push({ name:(item+(qty?' · '+qty:'')).trim(), qty:1, price:amt });
+    g.subtotal += amt; if (fee) g.fee = Math.max(g.fee, fee);
+  });
+  var out = order.map(function(ph){
+    var g = groups[ph], total = g.subtotal + g.fee;
+    return { order_id:'WA-'+date.replace(/-/g,'')+'-'+ph,
+      customer:{ name:g.name||'Customer', phone:ph, address:{area:g.area}, area:g.area, notes:g.notes.join('; '), delivery_date:date, slot:'', source:'whatsapp' },
+      items:g.items, subtotal:g.subtotal, delivery:g.fee, discount:0, total:total,
+      payment:'cod', payment_id:null, status: date < isoDate(new Date()) ? 'delivered' : 'confirmed',
+      placed_at: date+'T08:00:00+05:30' };
+  });
+  return { orders:out, skippedNoPhone:skippedNoPhone, skippedWebsite:skippedWebsite, noAmount:noAmount };
+}
+function parseSheetHeaders(rowsObj, fallback){
+  var out=[], bad=0, seq={};
+  rowsObj.forEach(function(row){
+    var phone = cleanPhone(pick(row,['phone','mobile','number','contact','whatsapp']));
+    if (!phone){ bad++; return; }
+    var date = normDate(pick(row,['date','deliver']), fallback);
+    var k = date+'-'+phone; seq[k]=(seq[k]||0)+1;
+    var total = money(pick(row,['total','amount','price','bill','rs']));
+    var items = String(pick(row,['item','order','product','meat'])||'').trim();
+    var pay = String(pick(row,['payment','paid','mode'])||'').toLowerCase(), online = /upi|gpay|phonepe|paytm|online|paid|card/.test(pay);
+    out.push({ order_id:'WA-'+date.replace(/-/g,'')+'-'+phone+'-'+seq[k],
+      customer:{ name:String(pick(row,['name','customer'])||'Customer').trim(), phone:phone, address:String(pick(row,['address','area','location'])||'').trim(), delivery_date:date, slot:String(pick(row,['slot','time'])||'').trim(), source:'whatsapp' },
+      items: items?[{name:items,qty:1,price:total}]:[], subtotal:total, delivery:0, discount:0, total:total,
+      payment:online?'upi':'cod', payment_id:online?'manual-whatsapp':null, status:mapStatus(pick(row,['status']),date), placed_at:date+'T08:00:00+05:30' });
+  });
+  return { orders:out, skippedNoPhone:bad, skippedWebsite:0, noAmount:out.filter(function(o){return !o.total;}).length };
+}
+document.getElementById('xlsIn').addEventListener('change', function(e){
+  var f = e.target.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try {
+      var wb = XLSX.read(rd.result, {type:'array'});
+      var fallback = document.getElementById('dateIn').value, all = [], t = {skippedNoPhone:0, skippedWebsite:0, noAmount:0}, tabs = [];
+      wb.SheetNames.forEach(function(sn){
+        var grid = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, defval:'', raw:false});
+        if (!grid.length) return;
+        var res = looksLikeHeader(grid[0]) ? parseSheetHeaders(XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:'', raw:false}), sheetDate(sn, fallback))
+                                          : parseSheetPositional(grid, sheetDate(sn, fallback));
+        all = all.concat(res.orders); t.skippedNoPhone += res.skippedNoPhone; t.skippedWebsite += res.skippedWebsite; t.noAmount += res.noAmount;
+        tabs.push(sn+': '+res.orders.length);
+      });
+      pendingImport = all;
+      var sum = all.reduce(function(s,o){ return o.status==='cancelled'?s:s+o.total; },0);
+      document.getElementById('impMsg').innerHTML = all.length
+        ? 'Ready: <b>'+all.length+' orders</b>, ₹'+sum.toLocaleString('en-IN')+' total<br>Tabs → '+esc(tabs.join(' · '))
+          +(t.skippedWebsite?'<br>Skipped '+t.skippedWebsite+' lines marked "Website order" (already in Orders)':'')
+          +(t.skippedNoPhone?'<br>Skipped '+t.skippedNoPhone+' lines with no valid phone':'')
+          +(t.noAmount?'<br>⚠ '+t.noAmount+' lines have no amount (counted as ₹0)':'')
+        : 'No valid rows found.';
+      document.getElementById('saveImp').style.display = all.length?'inline-block':'none';
+    } catch(err){ document.getElementById('impMsg').textContent = 'Could not read that file — save it as .xlsx or .csv and try again.'; }
+  };
+  rd.readAsArrayBuffer(f);
+});
+document.getElementById('saveImp').addEventListener('click', async function(){
+  if (!pendingImport.length) return;
+  var btn = this; btn.disabled = true; btn.textContent = 'Saving…';
+  var have = {}; state.orders.forEach(function(o){ have[o.order_id]=1; });
+  var fresh = pendingImport.filter(function(o){ return !have[o.order_id]; });
+  var skipped = pendingImport.length - fresh.length, saved = 0, err = '';
+  for (var i=0;i<fresh.length;i+=50){
+    var r = await AdminAPI.db('orders','insert',{ values: fresh.slice(i,i+50) });
+    if (r.error){ err = r.error; break; }
+    saved += Math.min(50, fresh.length-i);
+  }
+  btn.disabled = false; btn.textContent = 'Save to Orders';
+  document.getElementById('impMsg').textContent = err ? ('Saved '+saved+', then failed: '+err) : ('Saved '+saved+' new orders'+(skipped?' · '+skipped+' were already in Orders':'')+'.');
+  if (!err){ pendingImport = []; btn.style.display='none'; document.getElementById('xlsIn').value=''; }
+  load();
+});
+
+function render(){
+  var date = document.getElementById('dateIn').value;
+  var list = state.orders.filter(function(o){ return o.customer && o.customer.delivery_date===date && isLive(o); });
+  var first = list[0];
+  document.getElementById('preview').textContent = first ? buildMsg(first) : buildMsg({customer:{name:'Ravi'},order_id:'AGD-1234'});
+  document.getElementById('timeRow').style.display = (state.type==='onway'||state.type==='delay') ? 'flex':'none';
+  var box = document.getElementById('list');
+  if (!list.length){ box.innerHTML='<div class="empty">No active orders for this delivery date.</div>'; document.getElementById('count').textContent=''; return; }
+  var pending = list.filter(function(o){ return phoneOf(o) && !isSent(o); }).length;
+  document.getElementById('count').textContent = list.length+' orders · '+pending+' still to message';
+  box.innerHTML = list.map(function(o){
+    var ph = phoneOf(o), sent = isSent(o);
+    var items = (o.items||[]).map(function(i){ return String(i.name).split(' · ')[0]+(i.qty?' ×'+i.qty:''); }).join(', ');
+    return '<div class="order'+(sent?' sent':'')+'"><div class="who"><div class="nm">'+esc((o.customer&&o.customer.name)||'Customer')+(sent?' ✓':'')+'</div>'
+      +'<div class="meta">'+(ph?'+91 '+ph:'<span style="color:var(--red)">No valid phone</span>')+' · '+esc(String((o.customer&&o.customer.slot)||'').split(' ')[0])+'<br>'+esc(items)+'</div></div>'
+      +(ph?'<button class="btn wa" data-id="'+esc(o.order_id)+'">Send</button>':'')+'</div>';
+  }).join('');
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+function send(o){
+  window.open('https://wa.me/91'+phoneOf(o)+'?text='+encodeURIComponent(buildMsg(o)),'_blank');
+  markSent(o); render();
+}
+function currentList(){ var date=document.getElementById('dateIn').value; return state.orders.filter(function(o){ return o.customer && o.customer.delivery_date===date && isLive(o); }); }
+
+document.getElementById('list').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-id]'); if(!b) return;
+  var o=state.orders.find(function(x){ return x.order_id===b.dataset.id; }); if(o) send(o);
+});
+document.getElementById('nextBtn').addEventListener('click',function(){
+  var o=currentList().find(function(x){ return phoneOf(x) && !isSent(x); });
+  if(!o){ alert('Everyone for this date has been messaged with this type of message.'); return; }
+  send(o);
+});
+document.getElementById('typeChips').addEventListener('click',function(e){
+  var b=e.target.closest('[data-t]'); if(!b) return;
+  state.type=b.dataset.t; [].forEach.call(this.children,function(c){ c.classList.toggle('on',c===b); }); render();
+});
+document.querySelectorAll('[data-l]').forEach(function(b){ b.addEventListener('click',function(){
+  state.lang=b.dataset.l; document.querySelectorAll('[data-l]').forEach(function(c){ c.classList.toggle('on',c===b); }); render();
+}); });
+document.getElementById('timeIn').addEventListener('input',render);
+document.getElementById('dateIn').addEventListener('change',render);
+document.getElementById('todayBtn').addEventListener('click',function(){ document.getElementById('dateIn').value=isoDate(new Date()); render(); });
+document.getElementById('tmrBtn').addEventListener('click',function(){ var d=new Date(); d.setDate(d.getDate()+1); document.getElementById('dateIn').value=isoDate(d); render(); });
+document.getElementById('copyBtn').addEventListener('click',function(){
+  var nums=currentList().map(phoneOf).filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; }).join('\n');
+  if(navigator.clipboard) navigator.clipboard.writeText(nums).then(function(){ alert('Copied '+nums.split('\n').length+' numbers'); });
+});
+document.getElementById('resetBtn').addEventListener('click',function(){
+  currentList().forEach(function(o){ try{ localStorage.removeItem(sentKey(o)); }catch(e){} }); render();
+});
+
+document.getElementById('dateIn').value = isoDate(new Date());
+if (AdminAPI.isAdmin()) load();
+</script>
+</body>
+</html>
