@@ -185,8 +185,14 @@ function reportBlock(lang){
 }
 function buildMsg(o){
   var m = MSG[state.lang][state.type](firstName(o), shortId(o.order_id), document.getElementById('timeIn').value.trim()||'10 AM');
-  if (state.type==='ready') m += reportBlock(state.lang);
+  if (state.type==='ready' && hasGoat(o)) m += reportBlock(state.lang);
   return m;
+}
+// The meat report is about goat. Orders with only chicken / eggs get the plain message.
+function hasGoat(o){
+  var items = o.items||[];
+  if (!items.length) return true;
+  return items.some(function(i){ return !/chicken|kodi|egg/i.test(String(i.name||'')); });
 }
 function sentKey(o){ return 'dd_sent_'+document.getElementById('dateIn').value+'_'+state.type+'_'+o.order_id; }
 function isSent(o){ try{ return localStorage.getItem(sentKey(o))==='1'; }catch(e){ return false; } }
