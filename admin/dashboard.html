@@ -690,7 +690,7 @@ async function loadHealthAlerts() {
       <span class="alert-icon">${icon[a.severity] || '🔔'}</span>
       <span class="alert-text">
         <strong>${healthEsc(a.title)}</strong><br>
-        <span style="opacity:0.85;">${healthEsc(a.description)}</span>
+        <span style="opacity:0.85;white-space:pre-line;">${healthEsc(a.description)}</span>
         ${a.proposed_fix ? `<br><span style="opacity:0.7;font-style:italic;">Proposed fix: ${healthEsc(a.proposed_fix)}</span>` : ''}
         <br><span style="font-size:0.72rem;opacity:0.5;">${new Date(a.created_at).toLocaleString('en-IN')} · ${healthEsc(a.source)}</span>
       </span>
