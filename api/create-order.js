@@ -146,6 +146,37 @@ module.exports = async (req, res) => {
   }
   const normalisedCustomer = { ...(customer || {}), name: customerName, phone: phone10, email: customerEmail };
 
+  // ── Load the live catalog (source of truth for prices) ──
+  // The query filters active=true, so a disabled product is simply ABSENT from
+  // the rows — it is never returned as active:false. Seeding this map from
+  // FALLBACK_PRICES and merging on top therefore left every disabled product
+  // still priced and orderable. Build it only from live rows, and fall back to
+  // the hardcoded list solely when the catalog is genuinely unreachable.
+  let catalog = null;
+  const stockOut = new Set();
+  const ambiguous = new Set();
+  const gheeNames = new Set();   // ghee is a pantry item — not tied to the Sunday meat delivery window
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?select=name,price,in_stock,category&active=eq.true`,
+      { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
+    );
+    if (r.ok) {
+      const rows = await r.json();
+      catalog = {};
+      for (const p of rows) {
+        // Two live products sharing one name would make the price depend on row
+        // order (e.g. 250 g / 500 g / 1 kg variants all called "Bilona Ghee").
+        // Fail closed rather than charge the wrong price.
+        if (p.name in catalog) ambiguous.add(p.name);
+        catalog[p.name] = Number(p.price);
+        if (p.category === 'ghee') gheeNames.add(p.name);
+        if (p.in_stock === false) stockOut.add(p.name);
+      }
+    }
+  } catch (e) { /* handled below */ }
+  if (!catalog) catalog = { ...FALLBACK_PRICES };
+
   // ── Ordering is open for any not-yet-closed delivery date (see
   // admin/order-windows.html) — no separate "opens at" concept, a date is
   // orderable from the moment it's added until its own cutoff. Multiple
@@ -154,8 +185,11 @@ module.exports = async (req, res) => {
   // server-side (never trust the client's chosen date as-is) so this can't
   // be bypassed by calling the API directly — this is the one place an
   // order actually gets created.
+  // Exception: a cart containing ONLY ghee can be ordered any day, so skip the
+  // window entirely (no delivery date). Any meat item in the cart → normal window rules.
+  const gheeOnly = items.every((it) => gheeNames.has(String((it && it.name) || '').split(' · ')[0].trim()));
   let deliveryDate = null;
-  try {
+  if (!gheeOnly) try {
     const now = new Date().toISOString();
     const wr = await fetch(
       `${SUPABASE_URL}/rest/v1/order_windows?select=delivery_date&is_active=eq.true&closes_at=gte.${now}&order=closes_at.asc`,
@@ -180,35 +214,6 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: 'Could not verify the order window. Please try again.' });
     return;
   }
-
-  // ── Load the live catalog (source of truth for prices) ──
-  // The query filters active=true, so a disabled product is simply ABSENT from
-  // the rows — it is never returned as active:false. Seeding this map from
-  // FALLBACK_PRICES and merging on top therefore left every disabled product
-  // still priced and orderable. Build it only from live rows, and fall back to
-  // the hardcoded list solely when the catalog is genuinely unreachable.
-  let catalog = null;
-  const stockOut = new Set();
-  const ambiguous = new Set();
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=name,price,in_stock&active=eq.true`,
-      { headers: sbHeaders(SUPABASE_SERVICE_ROLE_KEY) }
-    );
-    if (r.ok) {
-      const rows = await r.json();
-      catalog = {};
-      for (const p of rows) {
-        // Two live products sharing one name would make the price depend on row
-        // order (e.g. 250 g / 500 g / 1 kg variants all called "Bilona Ghee").
-        // Fail closed rather than charge the wrong price.
-        if (p.name in catalog) ambiguous.add(p.name);
-        catalog[p.name] = Number(p.price);
-        if (p.in_stock === false) stockOut.add(p.name);
-      }
-    }
-  } catch (e) { /* handled below */ }
-  if (!catalog) catalog = { ...FALLBACK_PRICES };
 
   // ── Validate & recompute every line ──
   let subtotal = 0;
@@ -365,7 +370,7 @@ module.exports = async (req, res) => {
         body: JSON.stringify([{
           order_id: orderId,
           user_id: userId || null,
-          customer: { ...normalisedCustomer, delivery_date: deliveryDate },
+          customer: { ...normalisedCustomer, delivery_date: deliveryDate, ...(gheeOnly ? { ghee_only: true } : {}) },
           items: validatedItems,
           subtotal, delivery, discount, total,
           promo_code: appliedCode,
@@ -428,7 +433,7 @@ module.exports = async (req, res) => {
         order_id: orderId,
         razorpay_order_id: rzpOrder.id,
         user_id: userId || null,
-        customer: { ...normalisedCustomer, delivery_date: deliveryDate },
+        customer: { ...normalisedCustomer, delivery_date: deliveryDate, ...(gheeOnly ? { ghee_only: true } : {}) },
         items: validatedItems,
         subtotal, delivery, discount, total,
         promo_code: appliedCode,

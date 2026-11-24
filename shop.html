@@ -364,6 +364,7 @@ nav.scrolled{height:60px;}
 .ghee-te{font-size:0.8rem;color:var(--gold-l);letter-spacing:0.08em;}
 .ghee-title{font-family:'Playfair Display',serif;font-size:2rem;line-height:1.1;color:var(--cream);}
 .ghee-desc{font-size:0.92rem;line-height:1.6;color:rgba(246,237,216,0.7);max-width:46ch;}
+.ghee-anytime{display:inline-block;align-self:flex-start;font-size:.78rem;font-weight:700;color:var(--gold-l);background:rgba(212,160,23,.12);border:1px solid var(--border-gold);padding:.35rem .8rem;border-radius:100px;}
 .ghee-sizes{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.4rem;}
 .ghee-size{background:rgba(255,255,255,0.04);border:1px solid var(--border-gold);color:rgba(246,237,216,0.8);border-radius:12px;padding:0.55rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
 .ghee-size:hover{border-color:var(--gold);}
@@ -1509,6 +1510,7 @@ function drawGhee(){
     + (p.name_te ? `<div class="ghee-te">${gEsc(p.name_te)}</div>` : '')
     + `<h2 class="ghee-title">${gEsc(gheeTitle(p.name))}</h2>`
     + `<p class="ghee-desc">${gEsc(desc)}</p>`
+    + `<div class="ghee-anytime">✓ Order anytime — not limited to Sunday delivery</div>`
     + `<div class="ghee-sizes">${GHEE.map((x,i)=>`<button type="button" class="ghee-size${i===gheeSel?' active':''}" onclick="selectGhee(${i})">${gEsc(x.unit)}</button>`).join('')}</div>`
     + `<div class="ghee-buy"><div class="ghee-price">₹${Math.round(Number(p.price)).toLocaleString('en-IN')}<small>for ${gEsc(p.unit)}</small></div>`
     + `<button type="button" class="ghee-add" ${sold?'disabled':''} onclick="addGheeToCart(this)">${sold?'Sold out':'Add to cart'}</button></div>`

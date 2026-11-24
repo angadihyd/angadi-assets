@@ -651,6 +651,22 @@ function fmtDeliveryDate(dateStr, opts){
 async function checkOrderWindow(){
   const banner = document.getElementById('windowBanner');
   try{
+    // Ghee is a pantry item: a cart with ONLY ghee can be ordered any day — no Sunday window.
+    let gheeSet = {};
+    try{
+      const gr = await fetch(SUPABASE_URL+'/rest/v1/products?select=name&category=eq.ghee&active=eq.true', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY } });
+      if(gr.ok) (await gr.json()).forEach(x => { gheeSet[x.name] = 1; });
+    }catch(e){}
+    const gN = cart.filter(i => gheeSet[String(i.name).split(' · ')[0]]).length;
+    if(cart.length && gN === cart.length){
+      orderWindowOpen = true; selectedDeliveryDate = null;
+      banner.style.display='block';
+      banner.innerHTML = `<div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);color:#F5C842;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ghee can be ordered any day — not tied to the Sunday delivery.</div>`;
+      const slotDate0 = document.getElementById('slotDeliveryDate'); if(slotDate0) slotDate0.style.display='none';
+      const dg0 = document.getElementById('dateGrid'); if(dg0) dg0.style.display='none';
+      return;
+    }
+    window.__cartHasGhee = gN > 0;
     const now = new Date().toISOString();
     const r = await fetch(SUPABASE_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc', {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY }

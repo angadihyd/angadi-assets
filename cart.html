@@ -710,6 +710,11 @@ let promoCode   = null;
 let promoDiscount = 0;
 let appliedCoupon = null;   // {code,type,value,min_order,label} from DB or PROMOS
 var deliveryWhenHTML = '';
+var gheeSet = {};   // names of ghee products — a pantry item, orderable any day (no Sunday window)
+function cartGheeState(){
+  var n = cart.length, g = cart.filter(function(i){ return gheeSet[i.name.split(' · ')[0]]; }).length;
+  return { only: n>0 && g===n, mixed: g>0 && g<n };
+}
 let selectedDelivery = 'standard';
 
 const COUPON_URL = 'https://www.angadi.farm/api/supabase';
@@ -910,7 +915,7 @@ function renderCartBody() {
   document.getElementById('cartBody').innerHTML = `
     <!-- LEFT COL -->
     <div class="cart-items-col">
-      ${deliveryWhenHTML}
+      ${cartGheeState().only ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)"><strong>Ghee — order anytime</strong><br><span style="opacity:.75">Not limited to Sunday delivery. No cutoff.</span></div>' : deliveryWhenHTML + (cartGheeState().mixed ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)">Ghee in your cart is delivered together with your meat on this date. Order ghee alone any day.</div>' : '')}
       ${nudgeHTML}
       <div class="cart-section-label">Items in Your Cart</div>
       ${itemsHTML}
@@ -1128,6 +1133,7 @@ async function loadDeliveryConfig(){
 // One clear line about WHEN this order will arrive and the cutoff, from the open order window.
 async function loadDeliveryWhen(){
   try{
+    try{ const gr = await fetch(COUPON_URL+'/rest/v1/products?select=name&category=eq.ghee&active=eq.true',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}}); if(gr.ok) (await gr.json()).forEach(function(x){ gheeSet[x.name]=1; }); }catch(e){}
     const now = new Date().toISOString();
     const r = await fetch(COUPON_URL+'/rest/v1/order_windows?select=delivery_date,closes_at&is_active=eq.true&closes_at=gte.'+now+'&order=closes_at.asc&limit=1',{headers:{apikey:COUPON_KEY,Authorization:'Bearer '+COUPON_KEY}});
     const a = r.ok ? await r.json() : [];
