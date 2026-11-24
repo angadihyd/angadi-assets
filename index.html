@@ -1279,6 +1279,29 @@ footer{
   .steps-grid{grid-template-columns:1fr;}
   .why-image-main{height:240px;}   /* old single-image layout only — mosaic must keep its natural height */
 }
+/* ── HOME GHEE SHOWCASE ── */
+.hg-wrap{max-width:1000px;margin:0 auto;}
+.hg-eyebrow{display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;}
+.hg-eyebrow span{font-size:.72rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#F5C842;white-space:nowrap;}
+.hg-eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(212,160,23,.3),transparent);}
+.hg-card{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);border:1px solid rgba(212,160,23,.4);border-radius:22px;overflow:hidden;background:radial-gradient(ellipse 90% 120% at 0% 0%,rgba(212,160,23,.18),transparent 60%),linear-gradient(135deg,#2a1c08 0%,#19110A 60%);box-shadow:0 18px 50px rgba(0,0,0,.35);}
+.hg-img{position:relative;min-height:320px;background:#120b04;}
+.hg-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.hg-badge{position:absolute;top:1rem;left:1rem;background:#D4A017;color:#2a1c08;font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:.35rem .8rem;border-radius:100px;}
+.hg-body{padding:2rem 2.2rem;display:flex;flex-direction:column;justify-content:center;gap:.7rem;}
+.hg-te{font-size:.8rem;color:#F5C842;letter-spacing:.08em;}
+.hg-title{font-family:'Playfair Display',serif;font-size:2rem;line-height:1.1;color:#F6EDD8;margin:0;}
+.hg-desc{font-size:.92rem;line-height:1.6;color:rgba(246,237,216,.72);max-width:46ch;margin:0;}
+.hg-sizes{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem;}
+.hg-size{background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.35);color:rgba(246,237,216,.85);border-radius:12px;padding:.55rem 1rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;}
+.hg-size.active{background:#D4A017;border-color:#D4A017;color:#2a1c08;}
+.hg-buy{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.8rem;flex-wrap:wrap;}
+.hg-price{font-family:'Playfair Display',serif;font-size:2rem;color:#F5C842;line-height:1;}
+.hg-price small{display:block;font-family:'DM Sans',sans-serif;font-size:.75rem;color:rgba(246,237,216,.55);margin-top:.3rem;}
+.hg-add{background:#D4A017;color:#2a1c08;border:0;border-radius:100px;padding:.85rem 1.8rem;font-weight:800;font-size:.9rem;cursor:pointer;font-family:inherit;}
+.hg-add:disabled{opacity:.4;cursor:not-allowed;}
+.hg-more{font-size:.82rem;color:#F5C842;text-decoration:none;}
+@media(max-width:720px){.hg-card{grid-template-columns:1fr;}.hg-img{min-height:0;aspect-ratio:4/3;}.hg-body{padding:1.4rem 1.2rem 1.6rem;}.hg-title{font-size:1.6rem;}.hg-add{width:100%;}}
 </style>
 <!-- ══ EDITORIAL DESIGN SYSTEM ══ -->
 <style>
@@ -1471,6 +1494,14 @@ footer{
   </div>
 </section>
 
+<!-- GHEE showcase — pantry product, separate from meat, shown above the meat grid -->
+<section id="homeGhee" style="display:none;padding:2rem clamp(1.2rem,5vw,4rem) 0;">
+  <div class="hg-wrap">
+    <div class="hg-eyebrow"><span>New · Pantry · Not meat</span></div>
+    <div class="hg-card" id="hgCard"></div>
+  </div>
+</section>
+
 <section class="products-section" id="products">
   <div class="products-header">
     <div>
@@ -1482,11 +1513,6 @@ footer{
   <div class="products-grid" id="homeGrid">
     <p id="homeGridMsg" style="grid-column:1/-1;text-align:center;opacity:.7;padding:2rem 0;">Loading today's fresh cuts…</p>
   </div>
-  <a id="homeGhee" href="shop.html#ghee" style="display:none;margin:1.6rem auto 0;max-width:1000px;align-items:center;gap:1.1rem;padding:1rem 1.3rem;border:1px solid rgba(212,160,23,0.35);border-radius:16px;background:linear-gradient(135deg,rgba(212,160,23,0.16),rgba(26,12,4,0.9));text-decoration:none;color:#F6EDD8;">
-    <img id="homeGheeImg" alt="Bilona Ghee" width="64" height="64" style="width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none;" onerror="this.style.display='none'">
-    <span style="flex:1;min-width:0;"><span style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#F5C842;">New · Pantry</span><span id="homeGheeText" style="display:block;font-family:'Playfair Display',serif;font-size:1.15rem;">Bilona Ghee</span></span>
-    <span style="font-weight:700;color:#F5C842;white-space:nowrap;">Shop ghee →</span>
-  </a>
   <div style="text-align:center;margin-top:1.6rem;">
     <a href="shop.html" class="view-all-link" style="font-size:1rem;">View all products →</a>
   </div>
@@ -1848,20 +1874,35 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
   var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
 
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var HG=[], hgSel=-1;
+  function hgTitle(n){return String(n||'').replace(/\s*\([^)]*\)\s*$/,'').trim()||'Ghee';}
+  function renderHomeGhee(list){
+    var sec=document.getElementById('homeGhee'); if(!sec) return;
+    HG=list.slice().sort(function(a,b){return Number(a.price)-Number(b.price);});
+    if(!HG.length){sec.style.display='none';return;}
+    if(hgSel<0||hgSel>=HG.length){var m=HG.findIndex(function(x){return /500/.test(x.unit||'');});hgSel=m>=0?m:0;}
+    sec.style.display='block'; drawHomeGhee();
+  }
+  function drawHomeGhee(){
+    var p=HG[hgSel]; if(!p) return; var sold=p.in_stock===false;
+    var desc=(HG.find(function(x){return x.short_desc;})||{}).short_desc||'Traditional bilona-method ghee. Rich aroma, slow-made in small batches.';
+    document.getElementById('hgCard').innerHTML=
+      '<div class="hg-img">'+(p.image?'<img src="'+esc(p.image)+'" alt="'+esc(hgTitle(p.name))+'" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">':'')+'<div class="hg-badge">'+esc(p.badge||'New')+'</div></div>'+
+      '<div class="hg-body">'+(p.name_te?'<div class="hg-te">'+esc(p.name_te)+'</div>':'')+
+      '<h2 class="hg-title">'+esc(hgTitle(p.name))+'</h2><p class="hg-desc">'+esc(desc)+'</p>'+
+      '<div class="hg-sizes">'+HG.map(function(x,i){return '<button type="button" class="hg-size'+(i===hgSel?' active':'')+'" data-i="'+i+'">'+esc(x.unit)+'</button>';}).join('')+'</div>'+
+      '<div class="hg-buy"><div class="hg-price">₹'+Math.round(Number(p.price)).toLocaleString('en-IN')+'<small>for '+esc(p.unit)+'</small></div>'+
+      '<button type="button" class="hg-add"'+(sold?' disabled':'')+'>'+(sold?'Sold out':'Add to cart')+'</button></div>'+
+      '<a class="hg-more" href="shop.html#ghee">See ghee in shop →</a></div>';
+    document.querySelectorAll('#hgCard .hg-size').forEach(function(b){b.onclick=function(){hgSel=+b.dataset.i;drawHomeGhee();};});
+    var add=document.querySelector('#hgCard .hg-add');
+    if(add&&!sold) add.onclick=function(){addToCart(p.name,Math.round(Number(p.price)),add);};
+  }
   function renderHomeGrid(list){
     var grid=document.getElementById('homeGrid'); if(!grid) return;
     var ghee=Array.isArray(list)?list.filter(function(p){return p.category==='ghee';}):[];
     if(Array.isArray(list)) list=list.filter(function(p){return p.category!=='ghee';});   // ghee is not meat: own banner, never in the meat grid
-    var gb=document.getElementById('homeGhee');
-    if(gb){
-      if(ghee.length){
-        ghee.sort(function(a,b){return Number(a.price)-Number(b.price);});
-        var g0=ghee[0], nm=String(g0.name||'Ghee').replace(/\s*\([^)]*\)\s*$/,'');
-        document.getElementById('homeGheeText').textContent=nm+' · from ₹'+Math.round(Number(g0.price)).toLocaleString('en-IN');
-        var gi=document.getElementById('homeGheeImg'); if(g0.image) gi.src=g0.image; else gi.style.display='none';
-        gb.style.display='flex';
-      } else gb.style.display='none';
-    }
+    renderHomeGhee(ghee);
     if(!Array.isArray(list)||!list.length){
       grid.innerHTML='<p style="grid-column:1/-1;text-align:center;padding:2rem 0;"><a href="shop.html" class="view-all-link">Browse all products →</a></p>'; return;
     }
