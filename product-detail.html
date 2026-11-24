@@ -276,6 +276,9 @@ nav.scrolled{height:60px;}
 }
 .weight-btn:hover{border-color:rgba(196,98,45,0.4);color:var(--cream);}
 .weight-btn.active{background:rgba(196,98,45,0.15);border-color:var(--clay);color:var(--cream);font-weight:600;}
+.size-link{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:0.55rem 1.1rem;font-size:0.82rem;font-weight:500;color:rgba(246,237,216,0.6);text-decoration:none;transition:all 0.25s;}
+.size-link:hover{border-color:rgba(196,98,45,0.4);color:var(--cream);}
+.size-link.active{background:rgba(196,98,45,0.15);border-color:var(--clay);color:var(--cream);font-weight:600;}
 
 /* Cut type */
 .cut-options{
@@ -1387,7 +1390,11 @@ function renderProduct(p) {
   `).join('');
   const _isCustomQ = (p.unit === 'kg' || p.unit === 'egg');
   const _qBtn = 'width:44px;flex-shrink:0;background:rgba(196,98,45,0.14);border:none;color:var(--cream);font-size:1.2rem;line-height:1;cursor:pointer;padding:0.65rem 0;font-family:inherit;';
-  const customQHTML = _isCustomQ ? `
+  const _isGhee = p.category === 'ghee';
+  const customQHTML = _isGhee ? `
+      <div class="option-label" id="weightLabel">Size: <span>${p.unit}</span></div>
+      <div class="weight-options">${GHEE_SIZES.map(s => `<a class="size-link ${s.slug===p.id?'active':''}" href="product-detail.html?id=${s.slug}">${s.label}</a>`).join('')}</div>`
+    : _isCustomQ ? `
       <div class="option-label" id="weightLabel">Choose quantity</div>
       <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);max-width:260px;">
         <button type="button" id="wMinus" style="${_qBtn}">−</button>
@@ -1471,15 +1478,15 @@ function renderProduct(p) {
 
       <div class="delivery-info">
         <div class="delivery-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
-        <p><strong id="deliveryNoteText">Checking delivery schedule…</strong><br>Insulated cold packaging · Hyderabad-wide delivery</p>
+        <p><strong id="deliveryNoteText">Checking delivery schedule…</strong><br>${_isGhee ? GHEE_CONTENT.deliveryLine : 'Insulated cold packaging · Hyderabad-wide delivery'}</p>
       </div>
 
-      <div class="trust-bar">
+      ${_isGhee ? `<div class="trust-bar">${GHEE_CONTENT.trust.map(t => `<div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg></div><div class="trust-text">${t[0]}<br>${t[1]}</div></div>`).join('')}</div>` : `<div class="trust-bar">
         <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22V10"/><path d="M12 10C12 6 9 3.5 4 3.5 4 8 7 10 12 10z"/><path d="M12 13c0-3.2 3-5.5 8-5.5 0 4-3 5.5-8 5.5z"/></svg></div><div class="trust-text">Village<br>Sourced</div></div>
         <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="trust-text">Hygienically<br>Processed</div></div>
         <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><line x1="3.3" y1="7" x2="20.7" y2="17"/><line x1="20.7" y1="7" x2="3.3" y2="17"/></svg></div><div class="trust-text">Cold<br>Chain</div></div>
         <div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></div><div class="trust-text">Cut to<br>Order</div></div>
-      </div>
+      </div>`}
     </div>
   `;
 
@@ -1515,6 +1522,8 @@ function renderProduct(p) {
     </div>
   `;
   document.getElementById('tab-howtocook').innerHTML = `<div class="tab-body">${p.cooking}</div>`;
+  const _cookBtn = document.querySelector('.tab-btn[data-tab="howtocook"]');
+  if (_cookBtn) _cookBtn.textContent = p.category === 'ghee' ? 'How to Use' : 'How to Cook';
 
   // ── RELATED
   renderRelated(p.id);
@@ -1598,7 +1607,7 @@ function bindInteractions(p) {
   // ADD TO CART
   document.getElementById('addCartBtn')?.addEventListener('click', () => {
     const productName = (p.name || '').split('/').pop().trim() || p.name; // guard against path contamination
-    const weight = curLabel();
+    const weight = curLabel() || (p.category === 'ghee' ? p.unit : '');
     const cut = document.querySelector('.cut-btn.active')?.dataset.cut || '';
     const label = [productName, weight, cut].filter(Boolean).join(' · ');
     addToCart(label, unitPrice(), qty);
@@ -1650,6 +1659,61 @@ function bindInteractions(p) {
 // ─────────────────────────────────────────────
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('id') || 'goat-meat';
+
+// ── GHEE: one product per jar size (DB slugs below); shared editorial content
+const GHEE_SIZES = [
+  { slug:'bilona-ghee-1kg',  label:'1 kg' },
+  { slug:'bilona-ghee-500g', label:'500 g' },
+  { slug:'bilona-ghee-250g', label:'250 g' },
+];
+const GHEE_CONTENT = {
+  description: `
+    <p>Angadi Bilona Ghee (<strong>పెరుగు చిలికిన నెయ్యి</strong>) is made the traditional way: desi cow milk is set into curd, the curd is churned to bring up white butter (venna), and the butter is slow cooked on a low flame until it turns golden and grainy.</p>
+    <p>The result is ghee with a <strong>rich, nutty aroma and a soft, grainy texture</strong>, the way it was made at home.</p>
+    <p><strong>Best for:</strong></p>
+    <ul>
+      <li>A spoon on hot rice with pappu or podi</li>
+      <li>Rotis, dosas and pesarattu</li>
+      <li>Sweets, pulihora and tadka</li>
+      <li>Deepam and pooja</li>
+    </ul>
+    <p>Available in 1 kg, 500 g and 250 g glass jars.</p>
+  `,
+  sourcing: { steps: [
+    { num:'01', title:'Desi Cow Milk', desc:'Fresh milk from desi cows raised in villages.' },
+    { num:'02', title:'Set into Curd', desc:'The milk is boiled and set into thick curd.' },
+    { num:'03', title:'Churned', desc:'The curd is churned to separate white butter (venna) from buttermilk.' },
+    { num:'04', title:'Slow Cooked', desc:'The butter is slow cooked on a low flame until golden, grainy and aromatic.' },
+    { num:'05', title:'Filtered & Jarred', desc:'Filtered and packed in sealed glass jars.' },
+    { num:'06', title:'Delivered', desc:'Delivered across Hyderabad on your chosen delivery date.' },
+  ]},
+  nutrition: [
+    { val:'~900', label:'Calories', sub:'per 100g' },
+    { val:'~100g', label:'Total Fat', sub:'per 100g' },
+    { val:'0g', label:'Protein', sub:'per 100g' },
+    { val:'0g', label:'Carbs', sub:'per 100g' },
+  ],
+  nutritionNote: 'Typical values for cow ghee, approximate. Ghee is almost entirely milk fat.',
+  cooking: `
+    <p><strong>How to use</strong></p>
+    <ul>
+      <li>Add a spoon to hot rice, dal or sambar just before eating</li>
+      <li>Use for tadka: heat ghee, add jeera, mustard and curry leaves</li>
+      <li>Brush on rotis and dosas, or use for sweets and halwa</li>
+    </ul>
+    <p><strong>Storage:</strong> keep the jar closed at room temperature in a cool, dry place. Always use a dry spoon. It is normal for ghee to be grainy, or to turn liquid on warm days.</p>
+  `,
+  trust: [['Desi Cow','Milk'],['Curd','Churned'],['Slow','Cooked'],['Glass','Jar']],
+  deliveryLine: 'Sealed glass jar · Hyderabad-wide delivery',
+};
+function applyGhee(p){
+  if (!p || p.category !== 'ghee') return p;
+  return Object.assign(p, {
+    description: GHEE_CONTENT.description, sourcing: GHEE_CONTENT.sourcing,
+    nutrition: GHEE_CONTENT.nutrition, nutritionNote: GHEE_CONTENT.nutritionNote,
+    cooking: GHEE_CONTENT.cooking, weights: [], cuts: [],
+  });
+}
 
 // Build a minimal product object for DB-only products (added via admin, no editorial content)
 function baseFromDb(d){
@@ -1800,6 +1864,7 @@ async function initDetail(){
   } catch(e){ /* offline → use static product */ }
 
   if (!product){ showNotFound(); return; }
+  applyGhee(product);
   renderProduct(product);
   window.gaTrack?.('view_item', { currency: 'INR', value: product.price, items: [{ item_name: product.name, price: product.price, quantity: 1 }] });
   loadReviews(productId);
