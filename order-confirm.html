@@ -547,6 +547,7 @@ const PRODUCT_META = {
 
 function getImg(name){
   const base = name.split(' · ')[0].trim();
+  if (!PRODUCT_META[base] && /ghee/i.test(base)) return 'product/bilona-ghee.webp';
   return (PRODUCT_META[base] || { img:'product/mutton.webp' }).img;
 }
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }

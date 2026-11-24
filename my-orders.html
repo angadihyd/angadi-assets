@@ -428,7 +428,7 @@ const PRODUCT_META = {
   'Goat Liver':        { img:'product/liver.webp' },
   'Goat Head':         { img:'product/head.webp' },
 };
-function getImg(name){ return (PRODUCT_META[name.split(' · ')[0].trim()] || { img:'product/mutton.webp' }).img; }
+function getImg(name){ const b = name.split(' · ')[0].trim(); if (!PRODUCT_META[b] && /ghee/i.test(b)) return 'product/bilona-ghee.webp'; return (PRODUCT_META[b] || { img:'product/mutton.webp' }).img; }
 function fmt(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
 function formatDate(iso){
   const d = new Date(iso);

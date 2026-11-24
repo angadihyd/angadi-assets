@@ -360,7 +360,7 @@ const PRODUCT_IMGS = {
   'Full Goat':'../product/mutton.webp',
   'Baby Goat Legs':'../product/baby-goat-legs.webp',
 };
-function getImg(name){ return PRODUCT_IMGS[name.split(' · ')[0].trim()]||'../product/mutton.webp'; }
+function getImg(name){ const b = name.split(' · ')[0].trim(); if (!PRODUCT_IMGS[b] && /ghee/i.test(b)) return '../product/bilona-ghee.webp'; return PRODUCT_IMGS[b]||'../product/mutton.webp'; }
 
 // ─────────────────────────────────────────────
 //  STATE

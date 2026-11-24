@@ -1478,7 +1478,7 @@ function renderProduct(p) {
 
       <div class="delivery-info">
         <div class="delivery-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
-        <p><strong id="deliveryNoteText">Checking delivery schedule…</strong><br>${_isGhee ? GHEE_CONTENT.deliveryLine : 'Insulated cold packaging · Hyderabad-wide delivery'}</p>
+        <p><strong id="deliveryNoteText"${_isGhee ? ' data-ghee="1"' : ''}>${_isGhee ? 'Order anytime — not limited to Sunday delivery' : 'Checking delivery schedule…'}</strong><br>${_isGhee ? GHEE_CONTENT.deliveryLine : 'Insulated cold packaging · Hyderabad-wide delivery'}</p>
       </div>
 
       ${_isGhee ? `<div class="trust-bar">${GHEE_CONTENT.trust.map(t => `<div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg></div><div class="trust-text">${t[0]}<br>${t[1]}</div></div>`).join('')}</div>` : `<div class="trust-bar">
@@ -1758,7 +1758,7 @@ async function loadFreeDeliveryNote(){
 // of the old hardcoded "same-day / 4–6 hours" claim (see admin/order-windows.html)
 async function loadDeliveryWindow(){
   const el = document.getElementById('deliveryNoteText');
-  if (!el) return;
+  if (!el || el.dataset.ghee) return;   // ghee is orderable any day — no Sunday window message
   const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqdmt2Z216ampod3Zyd3RsYWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MDU2MDcsImV4cCI6MjA5NjA4MTYwN30.Kv1uqldZdoWjNnMbHMD2xuZ5i5tnl6cdvapgIIN6vJQ';
   try{
     const now = new Date().toISOString();

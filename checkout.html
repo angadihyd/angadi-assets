@@ -857,6 +857,7 @@ function total(){ return subtotal() - promoDiscount + deliveryCost(); }
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
 function getItemMeta(name){
   const base = name.split(' · ')[0].trim();
+  if (!PRODUCT_META[base] && /ghee/i.test(base)) return { img:'product/bilona-ghee.webp', nameTE:'Perugu Chilikina Neyyi' };
   return PRODUCT_META[base] || { img:'product/mutton.webp', nameTE:'' };
 }
 

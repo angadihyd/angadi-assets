@@ -792,6 +792,10 @@ function getItemMeta(name) {
   if (PRODUCT_META[name]) return PRODUCT_META[name];
   // Try matching base product name (before ' · ')
   const base = name.split(' · ')[0].trim();
+  if (!PRODUCT_META[base] && /ghee/i.test(base)) {
+    const sz = (base.match(/\(\s*([\d.]+)\s*(kg|g)\s*\)/i) || []);
+    return { img:'product/bilona-ghee.webp', nameTE:'Perugu Chilikina Neyyi', id: sz[1] ? 'bilona-ghee-' + sz[1] + sz[2].toLowerCase() : 'bilona-ghee-500g' };
+  }
   return PRODUCT_META[base] || { img:'product/mutton.webp', nameTE:'', id:'shop' };
 }
 
