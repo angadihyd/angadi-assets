@@ -919,7 +919,7 @@ function renderCartBody() {
   document.getElementById('cartBody').innerHTML = `
     <!-- LEFT COL -->
     <div class="cart-items-col">
-      ${cartGheeState().only ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)"><strong>Ghee — order anytime</strong><br><span style="opacity:.75">Not limited to Sunday delivery. No cutoff.</span></div>' : deliveryWhenHTML + (cartGheeState().mixed ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)">Ghee in your cart is delivered together with your meat on this date. Order ghee alone any day.</div>' : '')}
+      ${cartGheeState().only ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)"><strong>Ghee — order anytime</strong><br><span style="opacity:.75">Delivered anywhere in Telangana. No Sunday cutoff.</span></div>' : deliveryWhenHTML + (cartGheeState().mixed ? '<div class="delivery-nudge" style="border-color:rgba(212,160,23,.4);background:rgba(212,160,23,.07)">Ghee in your cart is delivered together with your meat on this date. Order ghee alone any day.</div>' : '')}
       ${nudgeHTML}
       <div class="cart-section-label">Items in Your Cart</div>
       ${itemsHTML}

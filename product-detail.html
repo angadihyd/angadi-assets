@@ -1478,7 +1478,7 @@ function renderProduct(p) {
 
       <div class="delivery-info">
         <div class="delivery-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg></div>
-        <p><strong id="deliveryNoteText"${_isGhee ? ' data-ghee="1"' : ''}>${_isGhee ? 'Order anytime — not limited to Sunday delivery' : 'Checking delivery schedule…'}</strong><br>${_isGhee ? GHEE_CONTENT.deliveryLine : 'Insulated cold packaging · Hyderabad-wide delivery'}</p>
+        <p><strong id="deliveryNoteText"${_isGhee ? ' data-ghee="1"' : ''}>${_isGhee ? 'Order anytime — delivered across Telangana' : 'Checking delivery schedule…'}</strong><br>${_isGhee ? GHEE_CONTENT.deliveryLine : 'Insulated cold packaging · Hyderabad-wide delivery'}</p>
       </div>
 
       ${_isGhee ? `<div class="trust-bar">${GHEE_CONTENT.trust.map(t => `<div class="trust-item"><div class="trust-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/></svg></div><div class="trust-text">${t[0]}<br>${t[1]}</div></div>`).join('')}</div>` : `<div class="trust-bar">
@@ -1704,7 +1704,7 @@ const GHEE_CONTENT = {
     <p><strong>Storage:</strong> keep the jar closed at room temperature in a cool, dry place. Always use a dry spoon. It is normal for ghee to be grainy, or to turn liquid on warm days.</p>
   `,
   trust: [['Desi Cow','Milk'],['Curd','Churned'],['Slow','Cooked'],['Glass','Jar']],
-  deliveryLine: 'Sealed glass jar · Hyderabad-wide delivery',
+  deliveryLine: 'Sealed glass jar · Delivered across Telangana',
 };
 function applyGhee(p){
   if (!p || p.category !== 'ghee') return p;

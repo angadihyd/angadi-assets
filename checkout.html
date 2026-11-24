@@ -658,10 +658,12 @@ async function checkOrderWindow(){
       if(gr.ok) (await gr.json()).forEach(x => { gheeSet[x.name] = 1; });
     }catch(e){}
     const gN = cart.filter(i => gheeSet[String(i.name).split(' · ')[0]]).length;
+    window.__gheeOnly = cart.length > 0 && gN === cart.length;   // ghee-only: delivered anywhere in Telangana
+    setTimeout(() => { const pe = document.getElementById('fpincode'); if (pe && pe.value) pe.dispatchEvent(new Event('input')); }, 0);
     if(cart.length && gN === cart.length){
       orderWindowOpen = true; selectedDeliveryDate = null;
       banner.style.display='block';
-      banner.innerHTML = `<div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);color:#F5C842;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ghee can be ordered any day — not tied to the Sunday delivery.</div>`;
+      banner.innerHTML = `<div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);color:#F5C842;border-radius:12px;padding:0.85rem 1.2rem;font-size:0.85rem;font-weight:600;">✓ Ghee can be ordered any day — and is delivered anywhere in Telangana.</div>`;
       const slotDate0 = document.getElementById('slotDeliveryDate'); if(slotDate0) slotDate0.style.display='none';
       const dg0 = document.getElementById('dateGrid'); if(dg0) dg0.style.display='none';
       return;
@@ -938,7 +940,7 @@ function validateAddress(){
   // be refused, with no way forward and no explanation of how to continue.
   // A typed address plus a phone number is enough to deliver.
   if (window.deliveryGeo && window.deliveryGeo.lat && window.deliveryGeo.serviceable === false){
-    setLocStatus('Sorry, we currently deliver only in Hyderabad.', 'bad');
+    setLocStatus(window.__gheeOnly ? 'Sorry, ghee is delivered within Telangana only.' : 'Sorry, we currently deliver only in Hyderabad.', 'bad');
     ok = false;
   } else if (!window.deliveryGeo || !window.deliveryGeo.lat){
     window.deliveryGeo = Object.assign({}, window.deliveryGeo, { lat:null, lng:null, serviceable:true, unpinned:true });
@@ -1479,6 +1481,8 @@ function setLocStatus(msg, cls){
   el.textContent = msg; el.classList.remove('ok','bad'); if(cls) el.classList.add(cls);
 }
 function isHyderabad(lat,lng){ return lat>17.10 && lat<17.75 && lng>78.05 && lng<78.85; }
+// Ghee-only carts are delivered across Telangana (rough bounding box of the state).
+function isTelangana(lat,lng){ return lat>15.8 && lat<19.95 && lng>77.2 && lng<81.9; }
 function pickAddr(a){
   a = a || {};
   const area = [a.neighbourhood,a.suburb,a.quarter,a.road,a.village].filter(Boolean).slice(0,2).join(', ')
@@ -1492,7 +1496,7 @@ async function reverseGeocode(lat,lng){
   }catch(e){ return { area:'', pincode:'', city:'Hyderabad' }; }
 }
 async function applyPlace(lat,lng, presetArea){
-  const serviceable = isHyderabad(lat,lng);
+  const serviceable = window.__gheeOnly ? isTelangana(lat,lng) : isHyderabad(lat,lng);
   const _si = document.getElementById('locSearch');
   if (_si) _si.classList.remove('loc-search-highlight');
   window.deliveryGeo = { lat:+(+lat).toFixed(6), lng:+(+lng).toFixed(6), serviceable };
@@ -1507,7 +1511,7 @@ async function applyPlace(lat,lng, presetArea){
   if(fpin && info.pincode) fpin.value = info.pincode;
   if(fcity && info.city) fcity.value = info.city;
   if(serviceable) setLocStatus('✓ Pinned'+(info.area?' · '+info.area:'')+(info.pincode?' · '+info.pincode:'')+' — drag the pin onto your building for an exact spot','ok');
-  else setLocStatus('Sorry, we currently deliver only in Hyderabad.','bad');
+  else setLocStatus(window.__gheeOnly ? 'Sorry, ghee is delivered within Telangana only.' : 'Sorry, we currently deliver only in Hyderabad.','bad');
 }
 function detectLocation(){
   if(!navigator.geolocation){ setLocStatus('Search or drag the pin to set your location.'); return; }
@@ -1686,7 +1690,13 @@ function closeMobile(){ document.getElementById('mobileMenu').classList.remove('
       if (mine !== seq) return;
       if (!d || !d.ok){ show(''); return; }
       if (d.found === false){ show('We could not find this pincode — please double-check it.', '#E8956A'); return; }
-      if (d.zone === 'in'){
+      if (window.__gheeOnly && d.zone !== 'out'){
+        show('✓ Ghee is delivered to ' + (d.areas && d.areas[0] ? d.areas[0] + ', ' : '') + d.district, '#4CAF50');
+        if (area && !area.value.trim() && d.areas && d.areas[0]) area.value = d.areas[0];
+        const fc = document.getElementById('fcity'); if (fc && d.district) fc.value = d.district;   // not 'Hyderabad' for out-of-city ghee orders
+      } else if (window.__gheeOnly){
+        show('Sorry, ghee is delivered within Telangana only.', '#E57373');
+      } else if (d.zone === 'in'){
         show('✓ We deliver to ' + d.areas[0] + ', ' + d.district, '#4CAF50');
         if (area && !area.value.trim()) area.value = d.areas[0];
       } else if (d.zone === 'unsure'){

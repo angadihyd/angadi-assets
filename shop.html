@@ -1510,7 +1510,7 @@ function drawGhee(){
     + (p.name_te ? `<div class="ghee-te">${gEsc(p.name_te)}</div>` : '')
     + `<h2 class="ghee-title">${gEsc(gheeTitle(p.name))}</h2>`
     + `<p class="ghee-desc">${gEsc(desc)}</p>`
-    + `<div class="ghee-anytime">✓ Order anytime — not limited to Sunday delivery</div>`
+    + `<div class="ghee-anytime">✓ Order anytime · Delivered across Telangana</div>`
     + `<div class="ghee-sizes">${GHEE.map((x,i)=>`<button type="button" class="ghee-size${i===gheeSel?' active':''}" onclick="selectGhee(${i})">${gEsc(x.unit)}</button>`).join('')}</div>`
     + `<div class="ghee-buy"><div class="ghee-price">₹${Math.round(Number(p.price)).toLocaleString('en-IN')}<small>for ${gEsc(p.unit)}</small></div>`
     + `<button type="button" class="ghee-add" ${sold?'disabled':''} onclick="addGheeToCart(this)">${sold?'Sold out':'Add to cart'}</button></div>`

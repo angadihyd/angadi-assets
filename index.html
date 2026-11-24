@@ -1891,7 +1891,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
       '<div class="hg-img">'+(p.image?'<img src="'+esc(p.image)+'" alt="'+esc(hgTitle(p.name))+'" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">':'')+'<div class="hg-badge">'+esc(p.badge||'New')+'</div></div>'+
       '<div class="hg-body">'+(p.name_te?'<div class="hg-te">'+esc(p.name_te)+'</div>':'')+
       '<h2 class="hg-title">'+esc(hgTitle(p.name))+'</h2><p class="hg-desc">'+esc(desc)+'</p>'+
-      '<div class="hg-anytime">✓ Order anytime — not limited to Sunday delivery</div>'+
+      '<div class="hg-anytime">✓ Order anytime · Delivered across Telangana</div>'+
       '<div class="hg-sizes">'+HG.map(function(x,i){return '<button type="button" class="hg-size'+(i===hgSel?' active':'')+'" data-i="'+i+'">'+esc(x.unit)+'</button>';}).join('')+'</div>'+
       '<div class="hg-buy"><div class="hg-price">₹'+Math.round(Number(p.price)).toLocaleString('en-IN')+'<small>for '+esc(p.unit)+'</small></div>'+
       '<button type="button" class="hg-add"'+(sold?' disabled':'')+'>'+(sold?'Sold out':'Add to cart')+'</button></div>'+
