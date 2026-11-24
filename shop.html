@@ -350,6 +350,39 @@ nav.scrolled{height:60px;}
 .sort-select:hover{border-color:rgba(196,98,45,0.4);}
 .sort-select option{background:var(--ink-2);color:var(--cream);}
 
+/* ── GHEE FEATURE (own section, never mixed into the meat grid) ── */
+.ghee-section{display:none;margin:3rem 0 0;scroll-margin-top:90px;}
+.ghee-section.show{display:block;}
+.ghee-eyebrow{display:flex;align-items:center;gap:0.9rem;margin-bottom:1rem;}
+.ghee-eyebrow span{font-size:0.72rem;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-l);white-space:nowrap;}
+.ghee-eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border-gold),transparent);}
+.ghee-card{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);border:1px solid var(--border-gold);border-radius:22px;overflow:hidden;background:radial-gradient(ellipse 90% 120% at 0% 0%,rgba(212,160,23,0.16),transparent 60%),linear-gradient(135deg,#2a1c08 0%,#19110A 60%);box-shadow:0 18px 50px rgba(0,0,0,0.35);}
+.ghee-img{position:relative;min-height:320px;background:#120b04;}
+.ghee-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.ghee-badge{position:absolute;top:1rem;left:1rem;background:var(--gold);color:#2a1c08;font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:0.35rem 0.8rem;border-radius:100px;}
+.ghee-body{padding:2rem 2.2rem;display:flex;flex-direction:column;justify-content:center;gap:0.7rem;}
+.ghee-te{font-size:0.8rem;color:var(--gold-l);letter-spacing:0.08em;}
+.ghee-title{font-family:'Playfair Display',serif;font-size:2rem;line-height:1.1;color:var(--cream);}
+.ghee-desc{font-size:0.92rem;line-height:1.6;color:rgba(246,237,216,0.7);max-width:46ch;}
+.ghee-sizes{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.4rem;}
+.ghee-size{background:rgba(255,255,255,0.04);border:1px solid var(--border-gold);color:rgba(246,237,216,0.8);border-radius:12px;padding:0.55rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.ghee-size:hover{border-color:var(--gold);}
+.ghee-size.active{background:var(--gold);border-color:var(--gold);color:#2a1c08;}
+.ghee-buy{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:0.8rem;flex-wrap:wrap;}
+.ghee-price{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold-l);line-height:1;}
+.ghee-price small{display:block;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:rgba(246,237,216,0.55);margin-top:0.3rem;}
+.ghee-add{background:var(--gold);color:#2a1c08;border:0;border-radius:100px;padding:0.85rem 1.8rem;font-weight:800;font-size:0.9rem;letter-spacing:0.04em;cursor:pointer;font-family:inherit;}
+.ghee-add:disabled{opacity:.4;cursor:not-allowed;}
+.filter-tab.ghee-tab{border-color:var(--border-gold);color:var(--gold-l);}
+.filter-tab.ghee-tab.active{background:var(--gold);border-color:var(--gold);color:#2a1c08;}
+@media(max-width:720px){
+  .ghee-card{grid-template-columns:1fr;}
+  .ghee-img{min-height:0;aspect-ratio:4/3;}
+  .ghee-body{padding:1.4rem 1.2rem 1.6rem;}
+  .ghee-title{font-size:1.6rem;}
+  .ghee-add{width:100%;}
+}
+
 /* ── PRODUCT GRID ── */
 .shop-grid{
   display:grid;
@@ -991,6 +1024,7 @@ footer{
       <button class="filter-tab" data-filter="chicken">Chicken <span class="tab-count" id="count-chicken">1</span></button>
       <button class="filter-tab" data-filter="fish">Fish <span class="tab-count" id="count-fish">1</span></button>
       <button class="filter-tab" data-filter="eggs">Eggs <span class="tab-count" id="count-eggs">1</span></button>
+      <button class="filter-tab ghee-tab" id="gheeTab" data-filter="ghee" style="display:none">Ghee <span class="tab-count" id="count-ghee">0</span></button>
     </div>
     <select class="sort-select" id="sortSelect">
       <option value="default">Sort: Featured</option>
@@ -1147,6 +1181,12 @@ footer{
     </div>
 
   </div>
+
+  <!-- GHEE — its own section, separate from the meat grid -->
+  <section class="ghee-section" id="gheeSection" data-has="0">
+    <div class="ghee-eyebrow"><span>Pantry · Not meat</span></div>
+    <div class="ghee-card" id="gheeCard"></div>
+  </section>
 </div>
 
 <!-- WHY ANGADI -->
@@ -1443,6 +1483,44 @@ function addCardToCart(slug, btn){
   if (window.angadiBounce) angadiBounce(btn);
 }
 
+// ── GHEE: all sizes (250 g / 500 g / 1 kg rows) collapse into ONE feature card
+let GHEE = [], gheeSel = 0;
+function gEsc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function gheeTitle(n){ return String(n||'').replace(/\s*\([^)]*\)\s*$/,'').trim() || 'Ghee'; }
+function renderGhee(list){
+  const sec = document.getElementById('gheeSection'), tab = document.getElementById('gheeTab');
+  if (!sec) return;
+  GHEE = list.slice().sort((a,b)=>Number(a.price)-Number(b.price));
+  if (!GHEE.length){ sec.dataset.has = '0'; if (tab) tab.style.display = 'none'; return; }
+  sec.dataset.has = '1'; if (tab) tab.style.display = '';
+  const mid = GHEE.findIndex(p => /500/.test(p.unit||''));
+  if (gheeSel >= GHEE.length || gheeSel < 0) gheeSel = 0;
+  if (!sec.dataset.init){ gheeSel = mid >= 0 ? mid : 0; sec.dataset.init = '1'; }
+  drawGhee();
+}
+function drawGhee(){
+  const p = GHEE[gheeSel]; if (!p) return;
+  const sold = p.in_stock === false;
+  const desc = (GHEE.find(x => x.short_desc) || {}).short_desc || 'Traditional bilona-method ghee. Rich aroma, slow-made in small batches.';
+  const img = p.image ? `<img src="${gEsc(p.image)}" alt="${gEsc(gheeTitle(p.name))}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
+  document.getElementById('gheeCard').innerHTML =
+    `<div class="ghee-img">${img}<div class="ghee-badge">${gEsc(p.badge || 'New')}</div></div>`
+    + `<div class="ghee-body">`
+    + (p.name_te ? `<div class="ghee-te">${gEsc(p.name_te)}</div>` : '')
+    + `<h2 class="ghee-title">${gEsc(gheeTitle(p.name))}</h2>`
+    + `<p class="ghee-desc">${gEsc(desc)}</p>`
+    + `<div class="ghee-sizes">${GHEE.map((x,i)=>`<button type="button" class="ghee-size${i===gheeSel?' active':''}" onclick="selectGhee(${i})">${gEsc(x.unit)}</button>`).join('')}</div>`
+    + `<div class="ghee-buy"><div class="ghee-price">₹${Math.round(Number(p.price)).toLocaleString('en-IN')}<small>for ${gEsc(p.unit)}</small></div>`
+    + `<button type="button" class="ghee-add" ${sold?'disabled':''} onclick="addGheeToCart(this)">${sold?'Sold out':'Add to cart'}</button></div>`
+    + `</div>`;
+}
+function selectGhee(i){ gheeSel = i; drawGhee(); }
+function addGheeToCart(btn){
+  const p = GHEE[gheeSel]; if (!p || p.in_stock === false) return;
+  addToCart(p.name, Math.round(Number(p.price)), btn);   // exact catalog name — the server prices by it
+  if (window.angadiBounce) angadiBounce(btn);
+}
+
 function productCardHTML(p){
   const sold = !p.in_stock;
   const _conf = qtyConf(p);
@@ -1477,6 +1555,8 @@ function productCardHTML(p){
 function renderProductCards(list){
   list.forEach(p => { PRODUCTS_BY_SLUG[p.slug] = p; });
   const grid = document.getElementById('shopGrid');
+  renderGhee(list.filter(p => p.category === 'ghee'));
+  list = list.filter(p => p.category !== 'ghee');
   const cards = list.map(productCardHTML).join('');
   grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><p>No products in this category yet.</p></div>`;
   updateCategoryCounts();
@@ -1493,6 +1573,7 @@ async function loadProducts(){
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) return;  // keep static fallback
     renderProductCards(data);
+    if (location.hash === '#ghee') { const t = document.getElementById('gheeTab'); if (t && t.style.display !== 'none') t.click(); }
   } catch(e){ console.warn('products load error', e); /* keep static fallback */ }
 }
 
@@ -1505,7 +1586,8 @@ let activeSort = 'default';
 
 function updateCategoryCounts() {
   const cards = document.querySelectorAll('#shopGrid .product-card');
-  const counts = { all: cards.length, goat:0, chicken:0, fish:0, eggs:0 };
+  const hasGhee = GHEE.length > 0;
+  const counts = { all: cards.length + (hasGhee?1:0), goat:0, chicken:0, fish:0, eggs:0, ghee: hasGhee?1:0 };
   cards.forEach(c => { const cat = c.dataset.category; if (counts[cat] !== undefined) counts[cat]++; });
   Object.keys(counts).forEach(k => { const el = document.getElementById('count-'+k); if (el) el.textContent = counts[k]; });
 }
@@ -1534,8 +1616,11 @@ function applyFiltersAndSort() {
 
   // Empty state (re-query: grid may have been re-rendered)
   const es = document.getElementById('emptyState');
-  if (es) es.classList.toggle('visible', visible.length === 0);
-  if (resultsNum) resultsNum.textContent = visible.length;
+  const gs = document.getElementById('gheeSection');
+  const gheeShown = !!gs && gs.dataset.has === '1' && (activeFilter === 'all' || activeFilter === 'ghee');
+  if (gs) gs.classList.toggle('show', gheeShown);
+  if (es) es.classList.toggle('visible', visible.length === 0 && !gheeShown);
+  if (resultsNum) resultsNum.textContent = visible.length + (gheeShown ? 1 : 0);
 }
 
 filterTabs.forEach(tab => {

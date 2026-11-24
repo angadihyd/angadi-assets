@@ -189,6 +189,7 @@ module.exports = async (req, res) => {
   // the hardcoded list solely when the catalog is genuinely unreachable.
   let catalog = null;
   const stockOut = new Set();
+  const ambiguous = new Set();
   try {
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/products?select=name,price,in_stock&active=eq.true`,
@@ -198,6 +199,10 @@ module.exports = async (req, res) => {
       const rows = await r.json();
       catalog = {};
       for (const p of rows) {
+        // Two live products sharing one name would make the price depend on row
+        // order (e.g. 250 g / 500 g / 1 kg variants all called "Bilona Ghee").
+        // Fail closed rather than charge the wrong price.
+        if (p.name in catalog) ambiguous.add(p.name);
         catalog[p.name] = Number(p.price);
         if (p.in_stock === false) stockOut.add(p.name);
       }
@@ -213,6 +218,10 @@ module.exports = async (req, res) => {
     const unitPrice = catalog[baseName];
     if (unitPrice == null) {
       res.status(400).json({ error: `"${baseName}" is not in our catalog. Please refresh the page and try again.` });
+      return;
+    }
+    if (ambiguous.has(baseName)) {
+      res.status(400).json({ error: `"${baseName}" is temporarily unavailable. Please try again shortly.` });
       return;
     }
     if (stockOut.has(baseName)) {
