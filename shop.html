@@ -376,6 +376,24 @@ nav.scrolled{height:60px;}
 .ghee-add:disabled{opacity:.4;cursor:not-allowed;}
 .filter-tab.ghee-tab{border-color:var(--border-gold);color:var(--gold-l);}
 .filter-tab.ghee-tab.active{background:var(--gold);border-color:var(--gold);color:#2a1c08;}
+/* ── GARDEN (goat manure) — WhatsApp-ordered, never in the cart ── */
+.garden-section{margin:3rem 0 0;scroll-margin-top:90px;}
+.garden-eyebrow{display:flex;align-items:center;gap:0.9rem;margin-bottom:1rem;}
+.garden-eyebrow span{font-size:0.72rem;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-l);white-space:nowrap;}
+.garden-eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border-gold),transparent);}
+.garden-note{font-size:0.88rem;line-height:1.6;color:rgba(246,237,216,0.65);max-width:60ch;margin:0 0 1.2rem;}
+.garden-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem;}
+.garden-card{border:1px solid var(--border-gold);border-radius:18px;padding:1.6rem 1.6rem 1.4rem;background:linear-gradient(135deg,#2a1c08 0%,#19110A 70%);display:flex;flex-direction:column;gap:0.55rem;}
+.garden-tag{align-self:flex-start;font-size:0.68rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#2a1c08;background:var(--gold);padding:0.3rem 0.7rem;border-radius:100px;}
+.garden-tag.soon{background:transparent;color:var(--gold-l);border:1px solid var(--border-gold);}
+.garden-title{font-family:'Playfair Display',serif;font-size:1.45rem;line-height:1.15;color:var(--cream);}
+.garden-desc{font-size:0.9rem;line-height:1.6;color:rgba(246,237,216,0.7);}
+.garden-sizes{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:0.3rem;}
+.garden-size{border:1px solid var(--border-gold);border-radius:12px;padding:0.6rem 0.8rem;color:rgba(246,237,216,0.85);font-size:0.85rem;}
+.garden-size strong{display:block;font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold-l);font-weight:700;}
+.garden-cta{margin-top:auto;padding-top:0.6rem;display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;background:var(--gold);color:#2a1c08;text-decoration:none;border-radius:100px;padding:0.8rem 1.4rem;font-weight:800;font-size:0.88rem;}
+.garden-cta.disabled{background:transparent;color:var(--gold-l);border:1px solid var(--border-gold);}
+@media(max-width:700px){.garden-grid{grid-template-columns:1fr;}}
 @media(max-width:720px){
   .ghee-card{grid-template-columns:1fr;}
   .ghee-img{min-height:0;aspect-ratio:4/3;}
@@ -1187,6 +1205,37 @@ footer{
   <section class="ghee-section" id="gheeSection" data-has="0">
     <div class="ghee-eyebrow"><span>Pantry · Not meat</span></div>
     <div class="ghee-card" id="gheeCard"></div>
+  </section>
+
+  <!-- GARDEN — goat manure products, ordered by WhatsApp only (not in the cart) -->
+  <section class="garden-section" id="gardenSection">
+    <div class="garden-eyebrow"><span>Garden · Goat manure</span></div>
+    <p class="garden-note">Natural goat manure for gardens, pots and terrace beds. Packed in a separate sealed bag, away from the meat. Orders are placed on WhatsApp.</p>
+    <div class="garden-grid">
+
+      <div class="garden-card">
+        <span class="garden-tag">Available</span>
+        <div class="garden-title">Aged Goat Pellets</div>
+        <div class="garden-desc">Aged, dry goat manure pellets. A mild, slow-release soil improver for pots, kitchen gardens and terrace beds.</div>
+        <div class="garden-sizes">
+          <div class="garden-size"><strong>₹110</strong>1 kg</div>
+          <div class="garden-size"><strong>₹450</strong>5 kg</div>
+        </div>
+        <a class="garden-cta" href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20Aged%20Goat%20Pellets%20(garden%20manure)" target="_blank" rel="noopener">Order on WhatsApp →</a>
+      </div>
+
+      <div class="garden-card">
+        <span class="garden-tag soon">Coming soon</span>
+        <div class="garden-title">Goat Compost</div>
+        <div class="garden-desc">Composted goat manure, ready about 3–4 months after preparation. Ask on WhatsApp and we will tell you when it is ready.</div>
+        <div class="garden-sizes">
+          <div class="garden-size"><strong>₹80</strong>1 kg</div>
+          <div class="garden-size"><strong>₹350</strong>5 kg</div>
+        </div>
+        <a class="garden-cta disabled" href="https://wa.me/919949950743?text=Hi%20Angadi!%20Please%20tell%20me%20when%20Goat%20Compost%20is%20ready" target="_blank" rel="noopener">Ask when ready →</a>
+      </div>
+
+    </div>
   </section>
 </div>
 
