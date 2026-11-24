@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-admin.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Day Profit — Angadi Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--clay:#C4622D;--clay-l:#E8956A;--gold:#D4A017;--cream:#F6EDD8;--border:rgba(196,98,45,0.2);--green:#4CAF50;--red:#E57373;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#080503,#1a0c04);color:var(--cream);min-height:100vh;padding:1.1rem 1.1rem 4rem;max-width:720px;margin:0 auto;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.3rem;flex-wrap:wrap;}
+h1{font-family:'Playfair Display',serif;font-size:1.45rem;}
+a.back{color:var(--clay-l);text-decoration:none;font-size:.85rem;}
+.sub{font-size:.8rem;color:rgba(246,237,216,.45);margin-bottom:1rem;line-height:1.5;}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;margin-bottom:.9rem;}
+.label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(246,237,216,.5);margin:.6rem 0 .3rem;display:block;}
+input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.55rem .7rem;color:var(--cream);font-family:inherit;font-size:.95rem;color-scheme:dark;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.9rem;}
+.card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:.7rem .8rem;}
+.card .k{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(246,237,216,.5);}
+.card .v{font-size:1.15rem;font-weight:700;margin-top:.2rem;}
+.pos{color:var(--green);} .neg{color:var(--red);}
+.line{display:flex;justify-content:space-between;font-size:.88rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.btn{border:1px solid var(--clay);background:var(--clay);color:#fff;border-radius:9px;padding:.65rem 1rem;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+th,td{padding:.45rem .4rem;text-align:right;border-bottom:1px solid rgba(255,255,255,.06);}
+th:first-child,td:first-child{text-align:left;}
+th{font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(246,237,216,.5);font-weight:600;}
+tr.sel td{background:rgba(196,98,45,.12);}
+tr[data-d]{cursor:pointer;}
+#guard{display:none;text-align:center;padding:3rem 1rem;}
+@media(max-width:480px){.cards{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div id="guard"><h1>Admin login needed</h1><p class="sub" style="margin-top:.6rem;">Open the admin dashboard and log in first, then come back here.</p><a class="btn" href="dashboard.html" style="text-decoration:none;display:inline-block;">Go to dashboard</a></div>
+
+<div id="app">
+  <div class="top"><h1>Day profit</h1><a class="back" href="dashboard.html">← Dashboard</a></div>
+  <p class="sub">Pick a delivery day, type that day's costs, and see profit. Sales come from Orders (cancelled orders are not counted).</p>
+
+  <div class="panel"><span class="label" style="margin-top:0;">Delivery day</span><input type="date" id="date"></div>
+
+  <div class="cards">
+    <div class="card"><div class="k">Revenue</div><div class="v" id="cRev">₹0</div></div>
+    <div class="card"><div class="k">Total cost</div><div class="v" id="cCost">₹0</div></div>
+    <div class="card"><div class="k">Profit</div><div class="v" id="cProfit">₹0</div></div>
+  </div>
+
+  <div class="panel">
+    <span class="label" style="margin-top:0;">Costs for this day (₹)</span>
+    <div class="grid">
+      <div><span class="label">Goat (meka) purchase</span><input type="number" min="0" id="goat"></div>
+      <div><span class="label">Number of goats</span><input type="number" min="0" id="goats"></div>
+      <div><span class="label">Chicken purchase</span><input type="number" min="0" id="chicken"></div>
+      <div><span class="label">Transport</span><input type="number" min="0" id="transport"></div>
+      <div><span class="label">Cutting</span><input type="number" min="0" id="cutting"></div>
+      <div><span class="label">Other</span><input type="number" min="0" id="other"></div>
+    </div>
+    <button class="btn" id="save" style="margin-top:.8rem;">Save costs for this day</button> <span class="sub" id="saveMsg"></span>
+  </div>
+
+  <div class="panel" id="detail"></div>
+
+  <div class="panel">
+    <span class="label" style="margin-top:0;">All days</span>
+    <table><thead><tr><th>Day</th><th>Orders</th><th>Revenue</th><th>Cost</th><th>Profit</th></tr></thead><tbody id="rows"></tbody></table>
+  </div>
+</div>
+
+<script src="admin-api.js"></script>
+<script>
+if (!AdminAPI.isAdmin()) { document.getElementById('guard').style.display='block'; document.getElementById('app').style.display='none'; }
+var orders = [], store = { by_date:{} };
+var FIELDS = ['goat','chicken','transport','cutting','other'];
+var INPUTS = FIELDS.concat(['goats']);   // 'goats' is a count, not a cost
+function inr(n){ n=Math.round(Number(n)||0); return (n<0?'-':'')+'₹'+Math.abs(n).toLocaleString('en-IN'); }
+function num(v){ return Number(v)||0; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function dayOf(o){ return (o.customer&&o.customer.delivery_date) || String(o.placed_at||'').slice(0,10); }
+
+// Sales for one delivery day. Cancelled orders never count (same rule as the dashboard).
+function sales(date){
+  var list = orders.filter(function(o){ return dayOf(o)===date && o.status!=='cancelled'; });
+  var s = { orders:list.length, revenue:0, fees:0, chickenRev:0, eggRev:0, goatRev:0, delivered:0, goatKg:0 };
+  list.forEach(function(o){
+    var tot = num(o.total) - num(o.refunded_amount), items = 0, ch = 0, eg = 0;
+    (o.items||[]).forEach(function(i){
+      var v = num(i.price)*(num(i.qty)||1), n = String(i.name||'');
+      items += v;
+      if (/egg/i.test(n)) eg += v; else if (/chicken|kodi/i.test(n)) ch += v;
+      else { var m = n.match(/(\d+(?:\.\d+)?)\s*(kg|gms|gm|g)\b/i); if (m) s.goatKg += (/^k/i.test(m[2]) ? parseFloat(m[1]) : parseFloat(m[1])/1000) * (num(i.qty)||1); }
+    });
+    s.revenue += tot; s.fees += num(o.delivery); s.chickenRev += ch; s.eggRev += eg;
+    if (o.status==='delivered' || o.status==='completed') s.delivered++;
+  });
+  s.goatRev = s.revenue - s.fees - s.chickenRev - s.eggRev;   // goat + everything else sold
+  return s;
+}
+function costs(date){ var c = (store.by_date||{})[date] || {}; var out = {}; FIELDS.forEach(function(f){ out[f]=num(c[f]); }); out.total = FIELDS.reduce(function(s,f){ return s+out[f]; },0); return out; }
+
+function render(){
+  var d = document.getElementById('date').value, s = sales(d), c = costs(d), profit = s.revenue - c.total;
+  document.getElementById('cRev').textContent = inr(s.revenue);
+  document.getElementById('cCost').textContent = inr(c.total);
+  var pe = document.getElementById('cProfit'); pe.textContent = inr(profit); pe.className = 'v '+(profit>=0?'pos':'neg');
+  var margin = s.revenue ? Math.round(profit/s.revenue*100) : 0;
+  var goatCost = c.goat + c.transport + c.cutting + c.other, goatProfit = (s.goatRev + s.fees) - goatCost, chProfit = (s.chickenRev + s.eggRev) - c.chicken;
+  var goats = num(((store.by_date||{})[d]||{}).goats);
+  var perGoat = (goats && c.total) ? '<div class="line"><span>Per goat ('+goats+' goats): cost '+inr(c.goat/goats)+' · sales '+inr((s.goatRev+s.fees)/goats)+' · profit</span><span class="'+(goatProfit>=0?'pos':'neg')+'">'+inr(goatProfit/goats)+'</span></div>'
+    + (s.goatKg ? '<div class="line"><span>Goat meat sold ≈ '+(Math.round(s.goatKg*10)/10)+' kg ('+(Math.round(s.goatKg/goats*10)/10)+' kg per goat) · all-in cost per kg</span><span>'+inr(goatCost/s.goatKg)+'</span></div>' : '') : '';
+  document.getElementById('detail').innerHTML =
+    '<span class="label" style="margin-top:0;">'+d+' breakdown</span>'
+    +'<div class="line"><span>Orders ('+s.delivered+' delivered)</span><span>'+s.orders+'</span></div>'
+    +'<div class="line"><span>Goat &amp; other sales</span><span>'+inr(s.goatRev)+'</span></div>'
+    +'<div class="line"><span>Chicken sales</span><span>'+inr(s.chickenRev)+'</span></div>'
+    +'<div class="line"><span>Egg sales</span><span>'+inr(s.eggRev)+'</span></div>'
+    +'<div class="line"><span>Delivery fees</span><span>'+inr(s.fees)+'</span></div>'
+    +'<div class="line"><b>Revenue</b><b>'+inr(s.revenue)+'</b></div>'
+    +'<div class="line"><span>Costs (goat, chicken, transport, cutting, other)</span><span>'+inr(c.total)+'</span></div>'
+    +'<div class="line"><b>Profit</b><b class="'+(profit>=0?'pos':'neg')+'">'+inr(profit)+' ('+margin+'%)</b></div>'
+    +(c.total ? '<div class="line"><span>Goat side (goat + fees − goat, transport, cutting, other)</span><span class="'+(goatProfit>=0?'pos':'neg')+'">'+inr(goatProfit)+'</span></div>'
+               +'<div class="line"><span>Chicken &amp; eggs (sales − chicken cost)</span><span class="'+(chProfit>=0?'pos':'neg')+'">'+inr(chProfit)+'</span></div>'+perGoat : '<div class="sub" style="margin-top:.5rem;">No costs saved for this day yet.</div>');
+  // all days
+  var days = {}; orders.forEach(function(o){ if (o.status!=='cancelled') days[dayOf(o)] = 1; }); Object.keys(store.by_date||{}).forEach(function(k){ days[k]=1; });
+  var keys = Object.keys(days).sort().reverse();
+  document.getElementById('rows').innerHTML = keys.map(function(k){
+    var ss = sales(k), cc = costs(k), p = ss.revenue - cc.total;
+    return '<tr data-d="'+k+'" class="'+(k===d?'sel':'')+'"><td>'+k+'</td><td>'+ss.orders+'</td><td>'+inr(ss.revenue)+'</td><td>'+(cc.total?inr(cc.total):'—')+'</td><td class="'+(cc.total?(p>=0?'pos':'neg'):'')+'">'+(cc.total?inr(p):'—')+'</td></tr>';
+  }).join('');
+}
+function fillInputs(){
+  var c = (store.by_date||{})[document.getElementById('date').value] || {};
+  INPUTS.forEach(function(f){ document.getElementById(f).value = c[f]!=null ? c[f] : ''; });
+  document.getElementById('saveMsg').textContent = '';
+  render();
+}
+INPUTS.forEach(function(f){ document.getElementById(f).addEventListener('input', function(){
+  var d = document.getElementById('date').value; store.by_date = store.by_date||{}; var c = store.by_date[d] = store.by_date[d]||{}; c[f] = num(this.value); render();
+}); });
+document.getElementById('date').addEventListener('change', fillInputs);
+document.getElementById('rows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-d]'); if (!tr) return; document.getElementById('date').value = tr.dataset.d; fillInputs(); window.scrollTo({top:0,behavior:'smooth'}); });
+document.getElementById('save').addEventListener('click', async function(){
+  var r = await AdminAPI.db('site_settings','upsert',{ values:{ key:'day_costs', value:store } });
+  document.getElementById('saveMsg').textContent = r.error ? ('Could not save: '+r.error) : 'Saved ✓';
+});
+
+async function init(){
+  var res = await Promise.all([ AdminAPI.db('orders','select',{ order:'placed_at.desc', limit:1000 }), AdminAPI.db('site_settings','select',{ match:{ key:'day_costs' } }) ]);
+  orders = res[0].data || [];
+  if (res[1].data && res[1].data[0] && res[1].data[0].value) store = res[1].data[0].value;
+  // default to the latest day that has orders
+  var latest = orders.filter(function(o){ return o.status!=='cancelled'; }).map(dayOf).filter(Boolean).sort().pop();
+  document.getElementById('date').value = latest || iso(new Date());
+  fillInputs();
+}
+if (AdminAPI.isAdmin()) init();
+</script>
+</body>
+</html>
