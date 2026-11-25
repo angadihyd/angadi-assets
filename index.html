@@ -1903,7 +1903,7 @@ document.querySelectorAll('video.lazy-video').forEach(v => videoObserver.observe
   function renderHomeGrid(list){
     var grid=document.getElementById('homeGrid'); if(!grid) return;
     var ghee=Array.isArray(list)?list.filter(function(p){return p.category==='ghee';}):[];
-    if(Array.isArray(list)) list=list.filter(function(p){return p.category!=='ghee';});   // ghee is not meat: own banner, never in the meat grid
+    if(Array.isArray(list)) list=list.filter(function(p){return p.category!=='ghee' && p.category!=='garden';});   // ghee is not meat: own banner, never in the meat grid; garden (manure) is shop-only
     renderHomeGhee(ghee);
     if(!Array.isArray(list)||!list.length){
       grid.innerHTML='<p style="grid-column:1/-1;text-align:center;padding:2rem 0;"><a href="shop.html" class="view-all-link">Browse all products →</a></p>'; return;
