@@ -1043,6 +1043,7 @@ footer{
       <button class="filter-tab" data-filter="chicken">Chicken <span class="tab-count" id="count-chicken">1</span></button>
       <button class="filter-tab" data-filter="fish">Fish <span class="tab-count" id="count-fish">1</span></button>
       <button class="filter-tab" data-filter="eggs">Eggs <span class="tab-count" id="count-eggs">1</span></button>
+      <button class="filter-tab" data-filter="garden">Garden <span class="tab-count" id="count-garden">0</span></button>
       <button class="filter-tab ghee-tab" id="gheeTab" data-filter="ghee" style="display:none">Ghee <span class="tab-count" id="count-ghee">0</span></button>
     </div>
     <select class="sort-select" id="sortSelect">
@@ -1207,36 +1208,6 @@ footer{
     <div class="ghee-card" id="gheeCard"></div>
   </section>
 
-  <!-- GARDEN — goat manure products, ordered by WhatsApp only (not in the cart) -->
-  <section class="garden-section" id="gardenSection">
-    <div class="garden-eyebrow"><span>Garden · Goat manure</span></div>
-    <p class="garden-note">Natural goat manure for gardens, pots and terrace beds. Packed in a separate sealed bag, away from the meat. Orders are placed on WhatsApp.</p>
-    <div class="garden-grid">
-
-      <div class="garden-card">
-        <span class="garden-tag">Available</span>
-        <div class="garden-title">Aged Goat Pellets</div>
-        <div class="garden-desc">Aged, dry goat manure pellets. A mild, slow-release soil improver for pots, kitchen gardens and terrace beds.</div>
-        <div class="garden-sizes">
-          <div class="garden-size"><strong>₹110</strong>1 kg</div>
-          <div class="garden-size"><strong>₹450</strong>5 kg</div>
-        </div>
-        <a class="garden-cta" href="https://wa.me/919949950743?text=Hi%20Angadi!%20I%20want%20to%20order%20Aged%20Goat%20Pellets%20(garden%20manure)" target="_blank" rel="noopener">Order on WhatsApp →</a>
-      </div>
-
-      <div class="garden-card">
-        <span class="garden-tag soon">Coming soon</span>
-        <div class="garden-title">Goat Compost</div>
-        <div class="garden-desc">Composted goat manure, ready about 3–4 months after preparation. Ask on WhatsApp and we will tell you when it is ready.</div>
-        <div class="garden-sizes">
-          <div class="garden-size"><strong>₹80</strong>1 kg</div>
-          <div class="garden-size"><strong>₹350</strong>5 kg</div>
-        </div>
-        <a class="garden-cta disabled" href="https://wa.me/919949950743?text=Hi%20Angadi!%20Please%20tell%20me%20when%20Goat%20Compost%20is%20ready" target="_blank" rel="noopener">Ask when ready →</a>
-      </div>
-
-    </div>
-  </section>
 </div>
 
 <!-- WHY ANGADI -->
@@ -1638,7 +1609,7 @@ let activeSort = 'default';
 function updateCategoryCounts() {
   const cards = document.querySelectorAll('#shopGrid .product-card');
   const hasGhee = GHEE.length > 0;
-  const counts = { all: cards.length + (hasGhee?1:0), goat:0, chicken:0, fish:0, eggs:0, ghee: hasGhee?1:0 };
+  const counts = { all: cards.length + (hasGhee?1:0), goat:0, chicken:0, fish:0, eggs:0, garden:0, ghee: hasGhee?1:0 };
   cards.forEach(c => { const cat = c.dataset.category; if (counts[cat] !== undefined) counts[cat]++; });
   Object.keys(counts).forEach(k => { const el = document.getElementById('count-'+k); if (el) el.textContent = counts[k]; });
 }
