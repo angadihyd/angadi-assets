@@ -46,6 +46,7 @@
 const crypto = require('crypto');
 const webpush = require('web-push');
 const { syncFromSheet } = require('./_lib/sheet-orders');
+const { getInstagramDigest } = require('./_lib/instagram');
 
 // Salted scrypt hash, stored in delivery_boys.password as "salt:hash" (hex).
 // Never store or return the plaintext password once this runs.
@@ -368,11 +369,26 @@ module.exports = async (req, res) => {
       const status = win
         ? `Fresh village mutton & country chicken, delivered ${dayName} in Hyderabad. Order by ${closes}: https://www.angadi.farm/?src=wa-status`
         : 'No order window is open. Open one in Admin → Order windows so the site can take orders.';
+      // Instagram: account + post stats (read-only), and how much site
+      // traffic it actually sent (?src=ig… links or instagram referrers).
+      const igPrevRows = await q('site_settings?key=eq.ig_stats&select=value');
+      const ig = await getInstagramDigest(process.env, igPrevRows[0] && igPrevRows[0].value);
+      if (typeof ig.followers === 'number') {
+        await rest(genv, 'site_settings?on_conflict=key', {
+          method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ key: 'ig_stats', value: { followers: ig.followers, at: new Date().toISOString() } }),
+        });
+      }
+      const isIg = (s) => /^ig|insta/i.test(String(s || ''));
+      const igVisitors = new Set(visits.filter((v) => isIg(v.source)).map((v) => v.visitor_id)).size;
+      const igLeads = leads.filter((l) => isIg(l.source)).length;
       const lines = [
         `Last 24h: ${uniq.size} visitors → ${leads.length} started checkout (${pct(leads.length, uniq.size)}) → ${good.length} orders (${pct(good.length, uniq.size)}), ₹${Math.round(revenue)}.`,
         `Visitors by source: ${srcLine}.`,
         dropped.length ? `Left at checkout, worth a personal WhatsApp: ${dropped.slice(0, 10).map((l) => `${l.name || 'customer'} ${l.phone}`).join('; ')}.` : 'Nobody left at checkout.',
         win ? '' : 'WARNING: no open order window, so every order is being rejected.',
+        ...ig.lines,
+        `Instagram → site (24h): ${igVisitors} visitors, ${igLeads} started checkout.`,
         `Ready to post as WhatsApp status / groups:\n${status}`,
       ].filter(Boolean);
       // Broadcast agent: when the open window closes within 24h, queue ONE
@@ -392,7 +408,7 @@ module.exports = async (req, res) => {
         method: 'POST', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify([{ severity: win ? 'info' : 'warning', title: 'Growth digest', description: lines.join('\n'), source: 'growth-agent' }]),
       });
-      res.status(200).json({ ok: r.ok, visitors: uniq.size, leads: leads.length, orders: good.length, windowOpen: !!win, lastCallQueued: queued });
+      res.status(200).json({ ok: r.ok, visitors: uniq.size, leads: leads.length, orders: good.length, windowOpen: !!win, lastCallQueued: queued, instagram: !ig.error && typeof ig.followers === 'number' });
     } catch (e) {
       console.error('growth cron failed', e);
       res.status(500).json({ error: String(e.message || e) });
