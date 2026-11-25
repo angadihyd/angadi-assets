@@ -1208,6 +1208,12 @@ footer{
     <div class="ghee-card" id="gheeCard"></div>
   </section>
 
+  <!-- GARDEN — goat manure, its own section after meat and ghee -->
+  <section class="garden-section" id="gardenSection" data-has="0" style="display:none">
+    <div class="garden-eyebrow"><span>Garden · Goat manure · Not meat</span></div>
+    <div class="shop-grid" id="gardenGrid"></div>
+  </section>
+
 </div>
 
 <!-- WHY ANGADI -->
@@ -1578,7 +1584,10 @@ function renderProductCards(list){
   list.forEach(p => { PRODUCTS_BY_SLUG[p.slug] = p; });
   const grid = document.getElementById('shopGrid');
   renderGhee(list.filter(p => p.category === 'ghee'));
-  list = list.filter(p => p.category !== 'ghee');
+  const garden = list.filter(p => p.category === 'garden');
+  const gsec = document.getElementById('gardenSection'), ggrid = document.getElementById('gardenGrid');
+  if (gsec && ggrid){ ggrid.innerHTML = garden.map(productCardHTML).join(''); gsec.dataset.has = garden.length ? '1' : '0'; }
+  list = list.filter(p => p.category !== 'ghee' && p.category !== 'garden');
   const cards = list.map(productCardHTML).join('');
   grid.innerHTML = cards + `<div class="empty-state" id="emptyState"><div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><p>No products in this category yet.</p></div>`;
   updateCategoryCounts();
@@ -1609,7 +1618,8 @@ let activeSort = 'default';
 function updateCategoryCounts() {
   const cards = document.querySelectorAll('#shopGrid .product-card');
   const hasGhee = GHEE.length > 0;
-  const counts = { all: cards.length + (hasGhee?1:0), goat:0, chicken:0, fish:0, eggs:0, garden:0, ghee: hasGhee?1:0 };
+  const gardenN = document.querySelectorAll('#gardenGrid .product-card').length;
+  const counts = { all: cards.length + (hasGhee?1:0) + gardenN, goat:0, chicken:0, fish:0, eggs:0, garden: gardenN, ghee: hasGhee?1:0 };
   cards.forEach(c => { const cat = c.dataset.category; if (counts[cat] !== undefined) counts[cat]++; });
   Object.keys(counts).forEach(k => { const el = document.getElementById('count-'+k); if (el) el.textContent = counts[k]; });
 }
@@ -1641,8 +1651,12 @@ function applyFiltersAndSort() {
   const gs = document.getElementById('gheeSection');
   const gheeShown = !!gs && gs.dataset.has === '1' && (activeFilter === 'all' || activeFilter === 'ghee');
   if (gs) gs.classList.toggle('show', gheeShown);
-  if (es) es.classList.toggle('visible', visible.length === 0 && !gheeShown);
-  if (resultsNum) resultsNum.textContent = visible.length + (gheeShown ? 1 : 0);
+  const gd = document.getElementById('gardenSection');
+  const gardenShown = !!gd && gd.dataset.has === '1' && (activeFilter === 'all' || activeFilter === 'garden');
+  if (gd) gd.style.display = gardenShown ? '' : 'none';
+  const gardenN = gardenShown ? document.querySelectorAll('#gardenGrid .product-card').length : 0;
+  if (es) es.classList.toggle('visible', visible.length === 0 && !gheeShown && !gardenShown);
+  if (resultsNum) resultsNum.textContent = visible.length + (gheeShown ? 1 : 0) + gardenN;
 }
 
 filterTabs.forEach(tab => {
